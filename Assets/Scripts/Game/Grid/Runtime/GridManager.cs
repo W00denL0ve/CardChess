@@ -18,8 +18,7 @@ public class GridManager : MonoBehaviour
 
     private List<Cell[,]> layers = new List<Cell[,]>();
 
-    // 事件：格子逻辑更新，可视化组件监听刷新
-    public event Action<int, int, int> OnCellUpdated;
+    private GridVisualizer gridVisualizer;
 
     void Awake()
     {
@@ -30,7 +29,7 @@ public class GridManager : MonoBehaviour
     /// <summary>
     /// 加载关卡数据并构建逻辑网格
     /// </summary>
-    public void LoadLevel(LevelData levelData)
+    public void LoadLevelData(LevelData levelData)
     {
         CurrentLevel = levelData;
         layers.Clear();
@@ -60,6 +59,8 @@ public class GridManager : MonoBehaviour
             }
             layers.Add(grid);
         }
+        gridVisualizer = FindAnyObjectByType<GridVisualizer>();
+        gridVisualizer.RebuildAllVisuals();
     }
 
     /// <summary>
@@ -94,23 +95,55 @@ public class GridManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 动态修改格子并触发可视化更新（建议6）
+    /// 动态修改格子并触发可视化更新
     /// </summary>
+    /// <param name="col"></param>
+    /// <param name="row"></param>
+    /// <param name="layer"></param>
+    /// <param name="updateAction"></param>
     public void SetCell(int col, int row, int layer, Action<Cell> updateAction)
     {
         Cell cell = GetCell(col, row, layer);
         if (cell == null) return;
 
         updateAction(cell);
-        OnCellUpdated?.Invoke(col, row, layer);
+        GameEventChannel.Dispatch(new CellUpdatedEvent(col, row, layer));
     }
 
+    /// <summary>
+    /// 触发某个格子的效果
+    /// </summary>
+    /// <param name="col"></param>
+    /// <param name="row"></param>
+    /// <param name="layer"></param>
+    public void TriggerCellEffect(int col, int row, int layer)
+    {
+        // todo
+    }
+
+
+
     // 便捷方法示例
+
+    /// <summary>
+    /// 便捷方法：设置一个格子是否可达
+    /// </summary>
+    /// <param name="col"></param>
+    /// <param name="row"></param>
+    /// <param name="layer"></param>
+    /// <param name="walkable"></param>
     public void SetCellWalkable(int col, int row, int layer, bool walkable)
     {
         SetCell(col, row, layer, cell => cell.isWalkable = walkable);
     }
 
+    /// <summary>
+    /// 便捷方法：为一个格子增加效果
+    /// </summary>
+    /// <param name="col"></param>
+    /// <param name="row"></param>
+    /// <param name="layer"></param>
+    /// <param name="effect"></param>
     public void AddCellEffect(int col, int row, int layer, Effect effect)
     {
         SetCell(col, row, layer, cell => cell.activeEffects.Add(effect));

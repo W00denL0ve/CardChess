@@ -138,13 +138,19 @@ public class GameManager : MonoBehaviour
     public void LoadLevelAsync(string sceneName, string levelDataAddress)
     {
         Debug.Log("正在加载场景...");
+        UIManager.Instance.SetLoadingTip("正在加载场景...");
+        UIManager.Instance.ChangePanelsWithMask(new string[] {"all"}, new string[] {"loading"});
         // 1. 异步加载关卡场景
         SceneManager.Instance.LoadSceneAsync(sceneName, () => 
         {
             Debug.Log("场景加载完成，正在加载关卡数据...");
+            UIManager.Instance.SetLoadingTip("正在加载关卡数据...");
+            // 实例化关内管理器
+            Instantiate(Resources.Load("Prefabs/ManagersInLevel"));
             StartCoroutine(LoadLevelCoroutine(levelDataAddress, () =>
             {
                 Debug.Log("关卡数据加载完成");
+                UIManager.Instance.ChangePanelsWithMask(new string[] { "loading" }, new string[] {"HUD"});
             }));
         });
     }

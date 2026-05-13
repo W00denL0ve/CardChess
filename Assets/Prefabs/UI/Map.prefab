@@ -148,7 +148,7 @@ GameObject:
   - component: {fileID: 8945226355638048163}
   - component: {fileID: 1614730537729030593}
   m_Layer: 5
-  m_Name: Episode1Button
+  m_Name: LevelHomeButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -384,7 +384,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_AspectMode: 0
-  m_AspectRatio: 1.3888283
+  m_AspectRatio: 1.3822886
 --- !u!1 &2441518529154147696
 GameObject:
   m_ObjectHideFlags: 0
@@ -398,6 +398,7 @@ GameObject:
   - component: {fileID: 5117913935512214899}
   - component: {fileID: 376132147472599671}
   - component: {fileID: 2810698094363557052}
+  - component: {fileID: 4435962767288650982}
   m_Layer: 5
   m_Name: Map
   m_TagString: Untagged
@@ -496,3 +497,16 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &4435962767288650982
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2441518529154147696}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a5bf092600fc264d8b6547e126a47ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  level1Button: {fileID: 8945226355638048163}

@@ -24,9 +24,13 @@ public class GridVisualizer : MonoBehaviour
     private List<GameObject> allCubes = new List<GameObject>();
 #endif
 
+    void Awake()
+    {
+        GameEventChannel.Register<CellUpdatedEvent>(OnCellUpdated);
+        Debug.Log("GriaVisualizer：已订阅格子更新事件");
+    }
     void Start()
     {
-        GridManager.Instance.OnCellUpdated += OnCellUpdated;
         if (targetCamera == null)
             targetCamera = Camera.main;
     }
@@ -89,13 +93,14 @@ public class GridVisualizer : MonoBehaviour
     }
 
     /// <summary>
-    /// 单个格子更新回调（建议6）
+    /// 单个格子更新回调
     /// </summary>
-    void OnCellUpdated(int col, int row, int layer)
+    void OnCellUpdated(CellUpdatedEvent evt)
     {
-        GameObject cube = FindVisualCube(col, row, layer);
+        Debug.Log("收到格子更新事件");
+        GameObject cube = FindVisualCube(evt.col, evt.row, evt.layer);
         if (cube != null)
-            ApplyTerrainMaterial(cube, col, row, layer);
+            ApplyTerrainMaterial(cube, evt.col, evt.row, evt.layer);
     }
 
     GameObject FindVisualCube(int col, int row, int layer)
@@ -235,7 +240,6 @@ public class GridVisualizer : MonoBehaviour
 
     void OnDestroy()
     {
-        if (GridManager.Instance != null)
-            GridManager.Instance.OnCellUpdated -= OnCellUpdated;
+        GameEventChannel.Unregister<CellUpdatedEvent>(OnCellUpdated);
     }
 }

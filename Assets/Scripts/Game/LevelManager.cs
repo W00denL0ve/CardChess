@@ -9,8 +9,7 @@ public class LevelManager : MonoBehaviour
     {
         this.levelName = lvlname;
     }
-    public TurnManager turnManager; // 可由预制体绑定，或动态创建
-    public GridManager gridManager; // 通过单例获取
+    public TurnManager turnManager = TurnManager.Instance; // 可由预制体绑定，或动态创建
 
     // private List<Unit> units;
     // private CardDeck deck;
@@ -19,7 +18,7 @@ public class LevelManager : MonoBehaviour
     void Start()
     {
         // turnManager.OnPhaseChanged += HandlePhaseChange;
-        turnManager.StartTurn();
+        // turnManager.StartTurn();
     }
 
     /// <summary>
@@ -27,13 +26,19 @@ public class LevelManager : MonoBehaviour
     /// </summary>
     public void Initialize(LevelData levelData)
     {
-        
+        // 调用GridManager(后续可能有EnemyManager)进行数据处理
+        GridManager.Instance.LoadLevelData(levelData);
     }
 
+    /// <summary>
+    /// 处理玩家打出手牌的事件
+    /// </summary>
+    /// <param name="card"></param>
+    /// <param name="targetPos"></param>
     public void OnPlayerUseCard(Card card, Vector3 targetPos)
     {
         // 解析目标格子
-        gridManager.WorldToGrid(targetPos, out int col, out int row);
+        GridManager.Instance.WorldToGrid(targetPos, out int col, out int row);
         // 应用效果...
         // 触发格子状态修改
     }

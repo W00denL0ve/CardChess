@@ -18,6 +18,6 @@ public class MapUITemp : MonoBehaviour
 
     private void OnLevel1Clicked()
     {
-        GameManager.Instance.EnterLevel("testLevel");
+        GameManager.Instance.EnterLevel("LevelHome");
     }
 }

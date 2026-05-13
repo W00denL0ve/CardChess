@@ -9,6 +9,6 @@ public class Cell : MonoBehaviour
     public TerrainType terrainType;
     public int height;
     public bool isWalkable;
-    public List<Effect> activeEffects = new List<Effect>();
+    public List<Effect> activeEffects;
     public Character occupyingCharacter;
 }

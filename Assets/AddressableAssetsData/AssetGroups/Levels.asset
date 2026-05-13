@@ -18,7 +18,7 @@ MonoBehaviour:
   m_GUID: 973f894d3a20e7c499ae91aefb3266b0
   m_SerializeEntries:
   - m_GUID: 3a5c1cd13c20b174a9d564678a03898b
-    m_Address: Assets/ScriptableObjects/LevelData/LevelHome_LevelData.asset
+    m_Address: LevelHome_LevelData
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
