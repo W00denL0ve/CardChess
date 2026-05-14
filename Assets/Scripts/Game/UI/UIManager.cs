@@ -194,7 +194,7 @@ public class UIManager : MonoBehaviour
             // 显示遮罩
             maskRadiusAnimator.gameObject.SetActive(true);
             // 调用MaskRadiusAnimator的PlayAnimation方法，播放前半段转场动画
-            Debug.Log("UIManager: 开始播放转场动画，等待动画结束后切换面板...");
+            // Debug.Log("UIManager: 开始播放转场动画，等待动画结束后切换面板...");
             maskRadiusAnimator.PlayAnimation();
             // duration秒后执行切换面板的逻辑，采用协程实现（便于传递参数）
             StartCoroutine(DelayedPanelSwitch(previousPanelNames, nextPanelNames, duration));
