@@ -7,5 +7,5 @@ public class CardData : ScriptableObject
     public string cardName;
     public Sprite artwork;
     public string description;
-    public List<EffectContext> effectContexts;
+    public List<Effect> effects;
 }

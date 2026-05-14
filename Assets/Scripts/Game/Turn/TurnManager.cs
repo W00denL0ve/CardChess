@@ -6,7 +6,7 @@ using UnityEngine;
 /// 回合内阶段枚举
 /// </summary>
 public enum TurnPhase
-{
+{ 
     Start,
     Draw,
     PlayerPlay,
@@ -21,6 +21,7 @@ public enum TurnPhase
 /// </summary>
 public class TurnManager : MonoBehaviour
 {
+    public static TurnManager Instance { get; private set; }
     public int currentTurn { get; private set; } = 0;
     public int maxPlayerActions = 3;
     public int playerActionsRemaining;
@@ -30,19 +31,34 @@ public class TurnManager : MonoBehaviour
 
     private Dictionary<TurnPhase, ITurnState> phaseStates = new Dictionary<TurnPhase, ITurnState>();
 
+    /// <summary>当前关卡的回合行动数据</summary>
+    private LevelTurnData turnData;
+
+    /// <summary>获取当前回合的预设行动列表（可能为空）</summary>
+    public List<TurnAction> CurrentRoundActions => turnData?.GetActions(currentTurn) ?? new List<TurnAction>();
+
+    /// <summary>当前关卡是否有回合行动数据</summary>
+    public bool HasTurnData => turnData != null;
+
     private void Awake()
     {
+         if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
         //处理订阅事件
     }
 
     private void Start()
     {
-        phaseStates.Add(TurnPhase.Start, new StartState(this));
-        phaseStates.Add(TurnPhase.Draw, new DrawState(this));
-        phaseStates.Add(TurnPhase.PlayerPlay, new PlayerPlayState(this));
-        phaseStates.Add(TurnPhase.PlayerAction, new PlayerActionState(this));
-        phaseStates.Add(TurnPhase.Enemy, new EnemyState(this));
-        phaseStates.Add(TurnPhase.End, new EndState(this));
+        phaseStates.Add(TurnPhase.Start, new StartState());
+        phaseStates.Add(TurnPhase.Draw, new DrawState());
+        phaseStates.Add(TurnPhase.PlayerPlay, new PlayerPlayState());
+        phaseStates.Add(TurnPhase.PlayerAction, new PlayerActionState());
+        phaseStates.Add(TurnPhase.Enemy, new EnemyState());
+        phaseStates.Add(TurnPhase.End, new EndState());
 
         currentState = phaseStates[TurnPhase.End];
     }
@@ -55,9 +71,13 @@ public class TurnManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 加载关卡回合行动数据，由 LevelManager 在关卡初始化时调用
+    /// </summary>
     public void LoadTurnData(LevelTurnData levelTurnData)
     {
-        // todo
+        turnData = levelTurnData;
+        Debug.Log($"[TurnManager] 已加载回合行动数据");
     }
 
 /// <summary>
@@ -110,30 +130,27 @@ public class TurnManager : MonoBehaviour
 /// </summary>
 class StartState : ITurnState
 {
-    public TurnManager turnManager { get; private set; }
-    public int currentTurn { get; private set; }
     public TurnPhase phaseName => TurnPhase.Start;
-    public StartState(TurnManager manager)
-    {
-        turnManager = manager;
-    }
 
     public void Enter()
     {
-        currentTurn = turnManager.currentTurn;
-        Debug.Log("Entering Start Phase");
-        // Initialize start phase logic here
+        int turn = TurnManager.Instance.currentTurn;
+        Debug.Log($"Entering Start Phase (Round {turn})");
+
+        // 执行当前回合的预设行动
+        var actions = TurnManager.Instance.CurrentRoundActions;
+        if (actions.Count > 0)
+        {
+            Debug.Log($"第 {turn} 回合有 {actions.Count} 个预设行动待执行");
+            TurnActionExecutor.ExecuteAll(actions);
+        }
     }
 
-    public void Update()
-    {
-        // Handle start phase updates here
-    }
+    public void Update() { }
 
     public void Exit()
     {
         Debug.Log("Exiting Start Phase");
-        // Clean up start phase logic here
     }
 }
 
@@ -142,30 +159,18 @@ class StartState : ITurnState
 /// </summary>
 class DrawState : ITurnState
 {
-    public TurnManager turnManager { get; private set; }
-    public int currentTurn { get; private set; }
     public TurnPhase phaseName => TurnPhase.Draw;
-    public DrawState(TurnManager manager)
-    {
-        turnManager = manager;
-    }
 
     public void Enter()
     {
-        currentTurn = turnManager.currentTurn;
         Debug.Log("Entering Draw Phase");
-        // Initialize draw phase logic here
     }
 
-    public void Update()
-    {
-        // Handle draw phase updates here
-    }
+    public void Update() { }
 
     public void Exit()
     {
         Debug.Log("Exiting Draw Phase");
-        // Clean up draw phase logic here
     }
 }
 
@@ -174,29 +179,18 @@ class DrawState : ITurnState
 /// </summary>
 class PlayerPlayState : ITurnState
 {
-    public TurnManager turnManager { get; private set; }
-    public int currentTurn { get; private set; }
     public TurnPhase phaseName => TurnPhase.PlayerPlay;
-    public PlayerPlayState(TurnManager manager)
-    {
-        turnManager = manager;
-    }
 
     public void Enter()
     {
         Debug.Log("Entering Player Play Phase");
-        // Initialize player play phase logic here
     }
 
-    public void Update()
-    {
-        // Handle player play phase updates here
-    }
+    public void Update() { }
 
     public void Exit()
     {
         Debug.Log("Exiting Player Play Phase");
-        // Clean up player play phase logic here
     }
 }
 
@@ -205,30 +199,18 @@ class PlayerPlayState : ITurnState
 /// </summary>
 class PlayerActionState : ITurnState
 {
-    public TurnManager turnManager { get; private set; }
-    public int currentTurn { get; private set; }
     public TurnPhase phaseName => TurnPhase.PlayerAction;
-    public PlayerActionState(TurnManager manager)
-    {
-        turnManager = manager;
-        currentTurn = turnManager.currentTurn;
-    }
 
     public void Enter()
     {
         Debug.Log("Entering Player Action Phase");
-        // Initialize player action phase logic here
     }
 
-    public void Update()
-    {
-        // Handle player action phase updates here
-    }
+    public void Update() { }
 
     public void Exit()
     {
         Debug.Log("Exiting Player Action Phase");
-        // Clean up player action phase logic here
     }
 }
 
@@ -237,30 +219,18 @@ class PlayerActionState : ITurnState
 /// </summary>
 class EnemyState : ITurnState
 {
-    public TurnManager turnManager { get; private set; }
-    public int currentTurn { get; private set; }
     public TurnPhase phaseName => TurnPhase.Enemy;
-    public EnemyState(TurnManager manager)
-    {
-        turnManager = manager;
-        currentTurn = turnManager.currentTurn;
-    }
 
     public void Enter()
     {
         Debug.Log("Entering Enemy Phase");
-        // Initialize enemy phase logic here
     }
 
-    public void Update()
-    {
-        // Handle enemy phase updates here
-    }
+    public void Update() { }
 
     public void Exit()
     {
         Debug.Log("Exiting Enemy Phase");
-        // Clean up enemy phase logic here
     }
 }
 
@@ -270,29 +240,17 @@ class EnemyState : ITurnState
 /// </summary>
 class EndState : ITurnState
 {
-    public TurnManager turnManager { get; private set; }
-    public int currentTurn { get; private set; }
     public TurnPhase phaseName => TurnPhase.End;
-    public EndState(TurnManager manager)
-    {
-        turnManager = manager;
-        currentTurn = turnManager.currentTurn;
-    }
 
     public void Enter()
     {
         Debug.Log("Entering End Phase");
-        // Initialize end phase logic here
     }
 
-    public void Update()
-    {
-        // Handle end phase updates here
-    }
+    public void Update() { }
 
     public void Exit()
     {
         Debug.Log("Exiting End Phase");
-        // Clean up end phase logic here
     }
 }

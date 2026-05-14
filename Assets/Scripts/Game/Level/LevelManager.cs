@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 public class LevelManager : MonoBehaviour
 {
+    public static LevelManager Instance { get; private set; }
     private string levelName;
 
     public LevelManager(string lvlname)
@@ -16,10 +17,14 @@ public class LevelManager : MonoBehaviour
     // private CardDeck deck;
     // private VictoryCondition victoryCondition;
 
-    void Start()
+    void Awake()
     {
-        // turnManager.OnPhaseChanged += HandlePhaseChange;
-        // turnManager.StartTurn();
+         if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
     }
 
     /// <summary>
@@ -51,5 +56,25 @@ public class LevelManager : MonoBehaviour
         gridManager.WorldToGrid(targetPos, out int col, out int row);
         // 应用效果...
         // 触发格子状态修改
+    }
+
+    /// <summary>
+    /// 获取指定单位的所有敌人
+    /// </summary>
+    public List<Unit> GetEnemiesOf(Unit unit)
+    {
+        // TODO: 根据阵营系统实现
+        Debug.LogWarning("GetEnemiesOf 尚未完全实现");
+        return new List<Unit>();
+    }
+
+    /// <summary>
+    /// 获取指定单位的所有友方
+    /// </summary>
+    public List<Unit> GetAlliesOf(Unit unit)
+    {
+        // TODO: 根据阵营系统实现
+        Debug.LogWarning("GetAlliesOf 尚未完全实现");
+        return new List<Unit>();
     }
 }

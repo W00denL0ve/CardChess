@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.Tilemaps;
@@ -61,10 +63,8 @@ public class LevelDataMenuExtractor : EditorWindow
         gridAsset.height = height;
         gridAsset.cells = cells;
 
-        // ---------- 3. 处理回合事件层（TODO） ----------
-        // 当前仅创建空的 LevelTurnData，后续会解析 RoundN Tilemap 填充
-        LevelTurnData turnAsset = ScriptableObject.CreateInstance<LevelTurnData>();
-        // TODO: 遍历名称匹配 "Round*" 的 Tilemap，解析事件并填充 turnAsset
+        // ---------- 3. 解析回合行动 Tilemap ----------
+        LevelTurnData turnAsset = ParseRoundTilemaps(baseTilemap);
 
         // ---------- 4. 创建主 LevelData 资产 ----------
         LevelData mainAsset = ScriptableObject.CreateInstance<LevelData>();
@@ -77,7 +77,7 @@ public class LevelDataMenuExtractor : EditorWindow
         if (!AssetDatabase.IsValidFolder(folderPath))
             System.IO.Directory.CreateDirectory(Application.dataPath + "/ScriptableObjects/LevelData");
         string gridDataPath = folderPath + "GridData/";
-        string turnDatarPath = folderPath + "TurnData/";
+        string turnDataPath = folderPath + "TurnData/";
 
         // 保存子资产
         gridAsset.name = sceneName + "_Grid";
@@ -85,7 +85,7 @@ public class LevelDataMenuExtractor : EditorWindow
         AssetDatabase.CreateAsset(gridAsset, gridPath);
 
         turnAsset.name = sceneName + "_Turns";
-        string turnPath = turnDatarPath + turnAsset.name + ".asset";
+        string turnPath = turnDataPath + turnAsset.name + ".asset";
         AssetDatabase.CreateAsset(turnAsset, turnPath);
 
         // 保存主资产
@@ -104,7 +104,7 @@ public class LevelDataMenuExtractor : EditorWindow
             }
             else
             {
-                // 覆盖：删除旧的主资产及其依赖（需手动处理子资产引用？简单起见直接删除旧主资产）
+                // 覆盖：删除旧的主资产及其依赖
                 AssetDatabase.DeleteAsset(mainPath);
             }
         }
@@ -150,8 +150,135 @@ public class LevelDataMenuExtractor : EditorWindow
             $"已生成以下资产：\n" +
             $"主关卡：{mainPath}\n" +
             $"地形网格：{gridPath}\n" +
-            $"回合事件：{turnPath}（待填充）", "确定");
+            $"回合事件：{turnPath}", "确定");
     }
+
+    // ====================================================================
+    //  回合行动解析
+    // ====================================================================
+
+    /// <summary>
+    /// 解析场景中所有名称匹配 "RoundX" 的 Tilemap，生成 LevelTurnData
+    /// </summary>
+    static LevelTurnData ParseRoundTilemaps(Tilemap baseTilemap)
+    {
+        BoundsInt baseBounds = baseTilemap.cellBounds;
+        Tilemap[] allTilemaps = FindObjectsOfType<Tilemap>();
+
+        // 正则匹配 "Round" 后跟数字的 Tilemap 名称（不区分大小写）
+        Regex roundRegex = new Regex(@"^Round(\d+)$", RegexOptions.IgnoreCase);
+
+        // 先收集数据（按回合号排序）
+        SortedDictionary<int, List<TurnAction>> roundActions = new SortedDictionary<int, List<TurnAction>>();
+
+        foreach (Tilemap tm in allTilemaps)
+        {
+            if (tm == baseTilemap) continue;
+
+            Match match = roundRegex.Match(tm.name);
+            if (!match.Success) continue;
+
+            int roundNumber = int.Parse(match.Groups[1].Value);
+            tm.CompressBounds();
+
+            List<TurnAction> actions = new List<TurnAction>();
+            BoundsInt cellBounds = tm.cellBounds;
+
+            foreach (Vector3Int pos in cellBounds.allPositionsWithin)
+            {
+                TileBase tile = tm.GetTile(pos);
+                if (tile == null) continue;
+
+                // 计算逻辑坐标（相对于基础网格原点）
+                int col = pos.x - baseBounds.xMin;
+                int row = pos.y - baseBounds.yMin;
+
+                // 检查坐标是否在基础网格范围内
+                if (col < 0 || col >= baseBounds.size.x || row < 0 || row >= baseBounds.size.y)
+                {
+                    Debug.LogWarning($"回合 Tilemap '{tm.name}' 的格子 ({pos.x},{pos.y}) 超出基础网格范围，已跳过");
+                    continue;
+                }
+
+                TurnAction action = CreateActionFromTile(tile, col, row, baseTilemap, pos);
+                if (action != null)
+                {
+                    actions.Add(action);
+                }
+            }
+
+            if (actions.Count > 0)
+            {
+                roundActions[roundNumber] = actions;
+            }
+        }
+
+        // 将收集的数据转为 LevelTurnData
+        LevelTurnData turnData = ScriptableObject.CreateInstance<LevelTurnData>();
+        turnData.rounds = new List<LevelTurnData.RoundActions>();
+
+        foreach (var kvp in roundActions)
+        {
+            turnData.rounds.Add(new LevelTurnData.RoundActions
+            {
+                roundNumber = kvp.Key,
+                actions = kvp.Value
+            });
+        }
+
+        return turnData;
+    }
+
+    /// <summary>
+    /// 根据 Tile 类型创建对应的 TurnAction
+    /// </summary>
+    static TurnAction CreateActionFromTile(TileBase tile, int col, int row, Tilemap baseTilemap, Vector3Int tilePos)
+    {
+        Vector2Int coord = new Vector2Int(col, row);
+
+        if (tile is EnemySpawnTile spawnTile)
+        {
+            return new EnemySpawnAction
+            {
+                coord = coord,
+                enemyId = spawnTile.enemyId,
+                spawnCount = spawnTile.count
+            };
+        }
+
+        if (tile is CellChangeTile changeTile)
+        {
+            // 计算最终绝对高度：基础高度 + heightDelta
+            int baseHeight = GetBaseHeight(baseTilemap, tilePos);
+            int finalHeight = baseHeight + changeTile.heightDelta;
+
+            return new CellChangeAction
+            {
+                coord = coord,
+                newTerrainType = changeTile.targetTerrain,
+                newHeight = finalHeight,
+                setWalkable = changeTile.setWalkable
+            };
+        }
+
+        // 未来可在此添加更多 Tile 类型的分支
+
+        Debug.LogWarning($"未处理的 Tile 类型：{tile.GetType().Name}，位置 ({col},{row})");
+        return null;
+    }
+
+    /// <summary>
+    /// 获取基础 Tilemap 上指定位置的高度
+    /// </summary>
+    static int GetBaseHeight(Tilemap baseTilemap, Vector3Int pos)
+    {
+        TerrainTile terrainTile = baseTilemap.GetTile<TerrainTile>(pos);
+        return terrainTile != null ? terrainTile.height : 0;
+    }
+
+    // ====================================================================
+    //  辅助方法
+    // ====================================================================
 
     // 辅助方法：按优先级获取 Tilemap
     static Tilemap GetTilemapByNames(params string[] names)
