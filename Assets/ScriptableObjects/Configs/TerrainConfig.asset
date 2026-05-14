@@ -22,3 +22,5 @@ MonoBehaviour:
   - type: 2
     defaultWalkable: 0
     visualMaterial: {fileID: 2100000, guid: 5e60f00eb22702a44befa9526970777d, type: 2}
+  hightlightMat: {fileID: 2100000, guid: 31b7db2a43f471e42ae7ac9f5a4940c3, type: 2}
+  selectedMat: {fileID: 2100000, guid: fe65e48965c5e1942bbea7c33acdc24c, type: 2}

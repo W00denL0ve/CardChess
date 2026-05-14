@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 /// <summary>
 /// 棋盘视觉管理器，从棋盘管理器剥离出的，单独负责棋盘视觉显示
@@ -24,15 +25,25 @@ public class GridVisualizer : MonoBehaviour
     private List<GameObject> allCubes;
 #endif
 
+    private Material hightlightMat;
+    private Material selectedMat;
+
     void Awake()
     {
         GameEventChannel.Register<CellUpdatedEvent>(OnCellUpdated);
-        Debug.Log("GriaVisualizer：已订阅格子更新事件");
+        Debug.Log("GridVisualizer：已订阅格子更新事件");
+        hightlightMat = GridManager.Instance.terrainConfig.hightlightMat;
+        selectedMat = GridManager.Instance.terrainConfig.selectedMat;
     }
     void Start()
     {
         if (targetCamera == null)
             targetCamera = Camera.main;
+    }
+
+    void OnDestroy()
+    {
+        GameEventChannel.Unregister<CellUpdatedEvent>(OnCellUpdated);
     }
 
     /// <summary>
@@ -79,14 +90,75 @@ public class GridVisualizer : MonoBehaviour
         return cube;
     }
 
+    /// <summary>
+    /// 为格子立方体根据格子类型应用材质
+    /// </summary>
+    /// <param name="cube"></param>
+    /// <param name="col"></param>
+    /// <param name="row"></param>
     void ApplyTerrainMaterial(GameObject cube, int col, int row)
     {
         Cell cell = GridManager.Instance.GetCell(col, row);
         if (cell == null) return;
 
         Material mat = GridManager.Instance.terrainConfig?.GetMaterial(cell.terrainType);
-        if (mat != null)
-            cube.GetComponent<Renderer>().material = mat;
+        ApplyMaterial(cube, mat);
+    }
+
+    /// <summary>
+    /// 工具方法，为格子立方体应用指定材质
+    /// </summary>
+    /// <param name="cube"></param>
+    /// <param name="mat"></param>
+    void ApplyMaterial(GameObject cube, Material mat)
+    {
+        if (cube != null)
+        {
+            if (mat != null)
+            {
+                cube.GetComponent<Renderer>().material = mat;
+                return;
+            }
+            Debug.LogWarning("GridVisualizer: 未找到材质");
+            return;
+        }
+        Debug.LogWarning("GridVisualizer: 试图为空物体应用材质");
+    }
+
+    /// <summary>
+    /// 根据给定坐标列表高亮格子
+    /// </summary>
+    /// <param name="positions">坐标列表</param>
+    public void HightlightCells(List<Vector2Int> positions)
+    {
+        if (hightlightMat != null)
+        {
+            foreach (Vector2Int position in positions)
+            {
+                GameObject cube = FindVisualCube(position.x, position.y);
+                ApplyMaterial(cube, hightlightMat);
+            }
+            return;
+        }
+        Debug.LogWarning("GridVisualizer: 未定义高亮材质");
+    }
+
+    /// <summary>
+    /// 根据给定的坐标列表设置格子为选中状态
+    /// </summary>
+    /// <param name="positions"></param>
+    public void SetSelectedCells(List<Vector2Int> positions)
+    {
+        if (selectedMat != null)
+        {
+            foreach (Vector2Int position in positions)
+            {
+                GameObject cube = FindVisualCube(position.x, position.y);
+                ApplyMaterial(cube, selectedMat);
+            }
+            return;
+        }
+        Debug.LogWarning("GridVisualizer: 未定义高亮材质");
     }
 
     /// <summary>
@@ -234,9 +306,4 @@ public class GridVisualizer : MonoBehaviour
         return Instantiate(cellVisualPrefab, Vector3.zero, Quaternion.identity, transform);
     }
 #endif
-
-    void OnDestroy()
-    {
-        GameEventChannel.Unregister<CellUpdatedEvent>(OnCellUpdated);
-    }
 }

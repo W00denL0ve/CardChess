@@ -20,7 +20,7 @@ public class Character : MonoBehaviour
             // currentCell.ClearOccupyingCharacter();
         }
         // targetCell.SetOccupyingCharacter(this);
-        transform.position = targetCell.transform.position;
+        // transform.position = targetCell.transform.position;
         // GameEventChannel.Instance.RaiseCharacterMoved(this);
     }
 

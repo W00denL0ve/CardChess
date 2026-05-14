@@ -1,6 +1,11 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[Obsolete("已弃用，请使用GridVisualizer实现")]
+/// <summary>
+/// 格子预览与高亮。已弃用，逻辑在GridVisualizer中实现
+/// </summary>
 public class GridHighlighter : MonoBehaviour
 {
     public static GridHighlighter Instance { get; private set; }
@@ -25,8 +30,8 @@ public class GridHighlighter : MonoBehaviour
         ClearHighlights();
         foreach (var cell in cells)
         {
-            GameObject highlight = Instantiate(highlightPrefab, cell.transform.position, Quaternion.identity);
-            highlights.Add(highlight);
+            // GameObject highlight = Instantiate(highlightPrefab, cell.transform.position, Quaternion.identity);
+            // highlights.Add(highlight);
         }
     }
 

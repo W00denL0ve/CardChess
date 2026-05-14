@@ -19,10 +19,10 @@ public class LevelGridData : ScriptableObject
         return new CellData { terrainType = TerrainType.unreachable, height = 0 };
     }
 
-public void SetGridData(int w, int h, CellData[] data)
-{
-    width = w;
-    height = h;
-    cells = data;
-}
+    public void SetGridData(int w, int h, CellData[] data)
+    {
+        width = w;
+        height = h;
+        cells = data;
+    }
 }

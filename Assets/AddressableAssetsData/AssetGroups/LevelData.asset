@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
-  m_Name: Levels
+  m_Name: LevelData
   m_EditorClassIdentifier: 
-  m_GroupName: Levels
+  m_GroupName: LevelData
   m_Data:
     m_SerializedData: []
   m_GUID: 973f894d3a20e7c499ae91aefb3266b0
   m_SerializeEntries:
-  - m_GUID: 3a5c1cd13c20b174a9d564678a03898b
-    m_Address: LevelHome_LevelData
+  - m_GUID: e118d754710e446449f646e1d7a49807
+    m_Address: LevelHome
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

@@ -122,12 +122,12 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 异步加载关卡重载方法，按照命名规范，关卡数据名称为场景名称+"_LevelData"
+    /// 异步加载关卡重载方法，按照命名规范，关卡数据名称为场景名称
     /// </summary>
     /// <param name="sceneName"></param>
     public void LoadLevelAsync(string sceneName)
     {
-        LoadLevelAsync(sceneName, sceneName + "_LevelData");
+        LoadLevelAsync(sceneName, sceneName);
     }
 
     /// <summary>

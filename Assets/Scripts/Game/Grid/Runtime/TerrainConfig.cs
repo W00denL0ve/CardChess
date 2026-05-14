@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 /// <summary>
@@ -15,6 +16,12 @@ public class TerrainConfig : ScriptableObject
     }
 
     public TerrainEntry[] entries;
+
+    [Header("高亮材质")]
+    public Material hightlightMat;
+
+    [Header("选中材质")]
+    public Material selectedMat;
 
     public Material GetMaterial(TerrainType type)
     {
