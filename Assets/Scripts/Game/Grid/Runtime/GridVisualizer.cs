@@ -22,7 +22,7 @@ public class GridVisualizer : MonoBehaviour
     private List<GameObject> activeCubes;
     private GameObject[,] visualObjects;
 #else
-    private List<GameObject> allCubes;
+    private List<GameObject> allCubes = new List<GameObject>();
 #endif
 
     private Material hightlightMat;

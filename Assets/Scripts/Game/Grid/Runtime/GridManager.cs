@@ -54,7 +54,7 @@ public class GridManager : MonoBehaviour
             };
             }
         }
-        gridVisualizer = gameObject.AddComponent<GridVisualizer>();
+        gridVisualizer = gameObject.GetComponent<GridVisualizer>();
         gridVisualizer.RebuildAllVisuals();
     }
 

@@ -135,6 +135,7 @@ GameObject:
   m_Component:
   - component: {fileID: 9196501597143136481}
   - component: {fileID: 6377780985239714557}
+  - component: {fileID: 2575461709682992496}
   m_Layer: 0
   m_Name: GridManager
   m_TagString: Untagged
@@ -171,6 +172,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cellSize: 1
   terrainConfig: {fileID: 11400000, guid: 9a72856382357954f9796f8d4ea73336, type: 2}
+--- !u!114 &2575461709682992496
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6981345928906795515}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14cb0a6f7fc570e419753881c33a28cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cellVisualPrefab: {fileID: 1347739052282629211, guid: 99e61797325b90342abc7397425ee320, type: 3}
+  visualScaleFactor: 0.9
+  visualHeight: 0.1
+  targetCamera: {fileID: 0}
+  poolInitialSize: 200
+  visibilityMargin: 1.5
 --- !u!1 &7987962047067861000
 GameObject:
   m_ObjectHideFlags: 0

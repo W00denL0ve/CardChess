@@ -99,7 +99,7 @@ public class MaskRadiusAnimator : MonoBehaviour
 
         if (animationCoroutine != null)
             StopCoroutine(animationCoroutine);
-        Debug.Log($"MaskRadiusAnimator：开始播放动画，startRadius={startRadius}, endRadius={endRadius}, duration={duration}");
+        // Debug.Log($"MaskRadiusAnimator：开始播放动画，startRadius={startRadius}, endRadius={endRadius}, duration={duration}");
         animationCoroutine = StartCoroutine(AnimateRadius(startRadius, endRadius, duration));
     }
 
