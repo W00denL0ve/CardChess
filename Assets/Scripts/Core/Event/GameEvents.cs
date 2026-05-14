@@ -31,6 +31,14 @@ public class GameOverEvent : GameEvent
 }
 
 /// <summary>
+/// 进入地图事件
+/// </summary>
+public class MapEnteredEvent : GameEvent
+{
+    
+}
+
+/// <summary>
 /// 进入关卡事件
 /// </summary>
 public class LevelEnteredEvent : GameEvent

@@ -7,7 +7,7 @@ public class HUDUI : MonoBehaviour
     [SerializeField] private Button mapButton;
     [SerializeField] private Button inventoryButton;
 
-    private void Start()
+    private void Awake()
     {
         if (pauseButton != null)
             pauseButton.onClick.AddListener(OnPauseClicked);
@@ -15,6 +15,14 @@ public class HUDUI : MonoBehaviour
             mapButton.onClick.AddListener(OnMapClicked);
         if (inventoryButton != null)
             inventoryButton.onClick.AddListener(OnInventoryClicked);
+        GameEventChannel.Register<LevelEnteredEvent>(OnLevelEntered);
+        GameEventChannel.Register<MapEnteredEvent>(OnMapEntered);
+    }
+
+    private void OnDestroy()
+    {
+        GameEventChannel.Unregister<LevelEnteredEvent>(OnLevelEntered);
+        GameEventChannel.Unregister<MapEnteredEvent>(OnMapEntered);
     }
 
     private void OnPauseClicked()
@@ -26,7 +34,10 @@ public class HUDUI : MonoBehaviour
 
     private void OnMapClicked()
     {
-        UIManager.Instance.Show("map");
+        if (UIManager.Instance.IsShown("map"))
+            UIManager.Instance.Hide("map");
+        else
+            UIManager.Instance.Show("map");
         // ...
     }
 
@@ -34,5 +45,16 @@ public class HUDUI : MonoBehaviour
     {
         // UIManager.Instance.Show("inventory"); //todo
         // ...
+    }
+
+    public void OnMapEntered(MapEnteredEvent e)
+    {
+        Debug.Log("收到地图进入消息");
+        mapButton.interactable = false;
+    }
+
+    public void OnLevelEntered(LevelEnteredEvent e)
+    {
+        mapButton.interactable = true;
     }
 }

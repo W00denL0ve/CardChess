@@ -65,7 +65,7 @@ public class GameManager : MonoBehaviour
             MapGenerator.Instance.GenerateMap(seed: UnityEngine.Random.Range(0, int.MaxValue));
             Debug.Log("地图生成完成，触发游戏开始事件...");
             UIManager.Instance.ChangePanelsWithMask(new string[] { "loading" }, new string[] { "map", "HUD" });
-            GameEventChannel.Dispatch(new GameStartEvent());
+            GameEventChannel.Dispatch(new MapEnteredEvent());
         }); // todo:地图生成器采用异步逻辑，UI更新放在第二个回调中
     }
 
@@ -150,6 +150,7 @@ public class GameManager : MonoBehaviour
             StartCoroutine(LoadLevelCoroutine(levelDataAddress, () =>
             {
                 Debug.Log("关卡数据加载完成");
+                GameEventChannel.Dispatch(new LevelEnteredEvent(sceneName));
                 UIManager.Instance.ChangePanelsWithMask(new string[] { "loading" }, new string[] {"HUD"});
             }));
         });

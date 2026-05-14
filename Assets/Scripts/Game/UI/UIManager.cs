@@ -74,6 +74,15 @@ public class UIManager : MonoBehaviour
     {
     }
 
+    /// <summary>
+    /// 获取面板显示状态
+    /// </summary>
+    /// <param name="panelName">面板名称</param>
+    public bool IsShown(string panelName)
+    {
+        return panels[panelName].activeSelf;
+    }
+
     public void SetLoadingTip(string tip)
     {
         var loadingScreen = GetPanel("loading")?.GetComponent<LoadingScreen>();

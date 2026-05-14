@@ -12,6 +12,8 @@ public class MapUITemp : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        GameEventChannel.Register<LevelEnteredEvent>(OnLevelEntered);
+        GameEventChannel.Register<MapEnteredEvent>(OnMapEntered);
         if(level1Button != null)
             level1Button.onClick.AddListener(OnLevel1Clicked);
     }
@@ -19,5 +21,21 @@ public class MapUITemp : MonoBehaviour
     private void OnLevel1Clicked()
     {
         GameManager.Instance.EnterLevel("LevelHome");
+    }
+
+    public void OnMapEntered(MapEnteredEvent e)
+    {
+        level1Button.interactable = true;
+    }
+
+    public void OnLevelEntered(LevelEnteredEvent e)
+    {
+        level1Button.interactable = false;
+    }
+
+    void OnDestroy()
+    {
+        GameEventChannel.Unregister<LevelEnteredEvent>(OnLevelEntered);
+        GameEventChannel.Unregister<MapEnteredEvent>(OnMapEntered);
     }
 }

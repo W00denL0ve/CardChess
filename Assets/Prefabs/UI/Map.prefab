@@ -384,7 +384,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_AspectMode: 0
-  m_AspectRatio: 1.3822886
+  m_AspectRatio: 1.3838755
 --- !u!1 &2441518529154147696
 GameObject:
   m_ObjectHideFlags: 0
@@ -399,6 +399,8 @@ GameObject:
   - component: {fileID: 376132147472599671}
   - component: {fileID: 2810698094363557052}
   - component: {fileID: 4435962767288650982}
+  - component: {fileID: 6811263672920223844}
+  - component: {fileID: 5112590297075956732}
   m_Layer: 5
   m_Name: Map
   m_TagString: Untagged
@@ -510,3 +512,31 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   level1Button: {fileID: 8945226355638048163}
+--- !u!225 &6811263672920223844
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2441518529154147696}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!114 &5112590297075956732
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2441518529154147696}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f21dcece72623f4ab0cc9dd2f0ce9ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animationDuration: 0.4
+  showEase: 27
+  hideEase: 26
+  startScale: 0.7
