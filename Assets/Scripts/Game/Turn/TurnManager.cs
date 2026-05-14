@@ -21,7 +21,6 @@ public enum TurnPhase
 /// </summary>
 public class TurnManager : MonoBehaviour
 {
-    public static TurnManager Instance { get; private set; }
     public int currentTurn { get; private set; } = 0;
     public int maxPlayerActions = 3;
     public int playerActionsRemaining;
@@ -33,14 +32,7 @@ public class TurnManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
+        //处理订阅事件
     }
 
     private void Start()
@@ -61,6 +53,11 @@ public class TurnManager : MonoBehaviour
         {
             currentState.Update();
         }
+    }
+
+    public void LoadTurnData(LevelTurnData levelTurnData)
+    {
+        // todo
     }
 
 /// <summary>

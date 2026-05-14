@@ -17,11 +17,11 @@ public class GridVisualizer : MonoBehaviour
     public float visibilityMargin = 1.5f;
 
 #if USE_DYNAMIC_VISIBILITY
-    private Queue<GameObject> cubePool = new Queue<GameObject>();
-    private List<GameObject> activeCubes = new List<GameObject>();
-    private List<GameObject[,]> visualLayers = new List<GameObject[,]>();
+    private Queue<GameObject> cubePool;
+    private List<GameObject> activeCubes;
+    private GameObject[,] visualObjects;
 #else
-    private List<GameObject> allCubes = new List<GameObject>();
+    private List<GameObject> allCubes;
 #endif
 
     void Awake()
@@ -52,22 +52,19 @@ public class GridVisualizer : MonoBehaviour
 
     void GenerateAllCubes()
     {
-        for (int layer = 0; layer < GridManager.Instance.TotalLayers; layer++)
+        for (int col = 0; col < GridManager.Instance.CurrentLevel.width; col++)
         {
-            for (int col = 0; col < GridManager.Instance.CurrentLevel.GetLayer(layer).width; col++)
+            for (int row = 0; row < GridManager.Instance.CurrentLevel.height; row++)
             {
-                for (int row = 0; row < GridManager.Instance.CurrentLevel.GetLayer(layer).height; row++)
-                {
-                    GameObject cube = CreateCube(col, row, layer);
-                    allCubes.Add(cube);
-                }
+                GameObject cube = CreateCube(col, row);
+                allCubes.Add(cube);
             }
         }
     }
 
-    GameObject CreateCube(int col, int row, int layer)
+    GameObject CreateCube(int col, int row)
     {
-        Vector3 worldPos = GridManager.Instance.GetWorldPosition(col, row, layer);
+        Vector3 worldPos = GridManager.Instance.GetWorldPosition(col, row);
         GameObject cube = Instantiate(cellVisualPrefab, worldPos, Quaternion.identity, transform);
 
         float cellSize = GridManager.Instance.cellSize;
@@ -76,15 +73,15 @@ public class GridVisualizer : MonoBehaviour
             visualHeight,
             cellSize * visualScaleFactor
         );
-        cube.name = $"Cell_L{layer}_{col}_{row}";
+        cube.name = $"Cell_{col}_{row}";
 
-        ApplyTerrainMaterial(cube, col, row, layer);
+        ApplyTerrainMaterial(cube, col, row);
         return cube;
     }
 
-    void ApplyTerrainMaterial(GameObject cube, int col, int row, int layer)
+    void ApplyTerrainMaterial(GameObject cube, int col, int row)
     {
-        Cell cell = GridManager.Instance.GetCell(col, row, layer);
+        Cell cell = GridManager.Instance.GetCell(col, row);
         if (cell == null) return;
 
         Material mat = GridManager.Instance.terrainConfig?.GetMaterial(cell.terrainType);
@@ -98,14 +95,14 @@ public class GridVisualizer : MonoBehaviour
     void OnCellUpdated(CellUpdatedEvent evt)
     {
         Debug.Log("收到格子更新事件");
-        GameObject cube = FindVisualCube(evt.col, evt.row, evt.layer);
+        GameObject cube = FindVisualCube(evt.col, evt.row);
         if (cube != null)
-            ApplyTerrainMaterial(cube, evt.col, evt.row, evt.layer);
+            ApplyTerrainMaterial(cube, evt.col, evt.row);
     }
 
-    GameObject FindVisualCube(int col, int row, int layer)
+    GameObject FindVisualCube(int col, int row)
     {
-        string targetName = $"Cell_L{layer}_{col}_{row}";
+        string targetName = $"Cell_{col}_{row}";
 #if USE_DYNAMIC_VISIBILITY
         if (layer < visualLayers.Count && visualLayers[layer] != null)
             return visualLayers[layer][col, row];

@@ -7,10 +7,9 @@ public class CellUpdatedEvent : GameEvent
     public int row;
     public int layer;
 
-    public CellUpdatedEvent(int col, int row, int layer)
+    public CellUpdatedEvent(int col, int row)
     {
         this.col = col;
         this.row = row;
-        this.layer = layer;
     }
 }

@@ -19,7 +19,7 @@ public class LevelDataMenuExtractor : EditorWindow
         }
 
         // 创建LevelData
-        LevelData levelData = ScriptableObject.CreateInstance<LevelData>();
+        LevelGridData levelData = ScriptableObject.CreateInstance<LevelGridData>();
         foreach (Tilemap tilemap in layerTilemaps)
         {
             tilemap.CompressBounds(); // 立即缩小边界
@@ -73,7 +73,7 @@ public class LevelDataMenuExtractor : EditorWindow
         levelData.name = assetName;
         
         // 检查是否已存在，如果存在则覆盖
-        LevelData existing = AssetDatabase.LoadAssetAtPath<LevelData>(path);
+        LevelGridData existing = AssetDatabase.LoadAssetAtPath<LevelGridData>(path);
         if (existing != null)
         {
             EditorUtility.CopySerialized(levelData, existing);

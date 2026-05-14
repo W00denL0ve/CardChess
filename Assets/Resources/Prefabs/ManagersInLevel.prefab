@@ -44,8 +44,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a82ca358a381edf4abbff0e0e909f5a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxPlayerActions: 3
-  playerActionsRemaining: 0
 --- !u!1 &6596832822845159777
 GameObject:
   m_ObjectHideFlags: 0
@@ -89,9 +87,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9196501597143136481}
-  - component: {fileID: 5717879561478213899}
+  - component: {fileID: 6377780985239714557}
   m_Layer: 0
-  m_Name: GridVisualizer
+  m_Name: GridManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -112,7 +110,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 7309402844781760257}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5717879561478213899
+--- !u!114 &6377780985239714557
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -121,15 +119,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 6981345928906795515}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 14cb0a6f7fc570e419753881c33a28cc, type: 3}
+  m_Script: {fileID: 11500000, guid: b34177f958d3df3448f55517e46484be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cellVisualPrefab: {fileID: 1347739052282629211, guid: 99e61797325b90342abc7397425ee320, type: 3}
-  visualScaleFactor: 0.9
-  visualHeight: 0.1
-  targetCamera: {fileID: 0}
-  poolInitialSize: 200
-  visibilityMargin: 1.5
+  cellSize: 1
+  terrainConfig: {fileID: 0}
 --- !u!1 &7987962047067861000
 GameObject:
   m_ObjectHideFlags: 0
