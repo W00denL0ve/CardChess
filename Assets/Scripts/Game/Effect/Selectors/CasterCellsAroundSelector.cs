@@ -15,10 +15,10 @@ public class CasterCellsAroundSelector : TargetSelector
 
     public override List<ITarget> GetTargets(EffectContext context)
     {
-        Character casterChar = context.caster?.GetComponent<Character>();
-        if (casterChar?.currentCell == null) return new List<ITarget>();
+        Unit casterUnit = context.caster?.GetComponent<Unit>();
+        if (casterUnit == null) return new List<ITarget>();
 
-        Vector2Int center = new Vector2Int(casterChar.currentCell.col, casterChar.currentCell.row);
+        Vector2Int center = casterUnit.GridPosition;
 
         List<ITarget> cells = new List<ITarget>();
         for (int dx = -radius; dx <= radius; dx++)

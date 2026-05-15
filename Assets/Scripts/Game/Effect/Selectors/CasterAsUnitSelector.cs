@@ -11,15 +11,6 @@ public class CasterAsUnitSelector : TargetSelector
     {
         if (context.caster == null) return new List<ITarget>();
         Unit unit = context.caster.GetComponent<Unit>();
-        if (unit == null)
-        {
-            // 尝试获取 Character
-            Character character = context.caster.GetComponent<Character>();
-            if (character != null)
-            {
-                unit = character.GetComponent<Unit>();
-            }
-        }
         return unit != null
             ? new List<ITarget> { new UnitTarget(unit) }
             : new List<ITarget>();

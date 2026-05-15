@@ -12,5 +12,5 @@ public class Cell
     public int height;
     public bool isWalkable;
     public List<Effect> activeEffects;
-    public Character occupyingCharacter;
+    public Unit OccupyingUnit;
 }

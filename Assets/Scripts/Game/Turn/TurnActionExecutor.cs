@@ -64,7 +64,7 @@ public static class TurnActionExecutor
         }
 
         // 格子已被占用则不生成
-        if (cell.occupyingCharacter != null)
+        if (cell.OccupyingUnit != null)
         {
             Debug.LogWarning($"[TurnAction] 格子 ({coord.x},{coord.y}) 已被占用，跳过敌人生成");
             return;
@@ -78,7 +78,16 @@ public static class TurnActionExecutor
         //     Vector3 worldPos = GridManager.Instance.GetWorldPosition(coord.x, coord.y);
         //     GameObject go = Object.Instantiate(enemyPrefab, worldPos, Quaternion.identity);
         //     Unit unit = go.GetComponent<Unit>();
-        //     // 注册到战斗管理器...
+        //     if (unit != null)
+        //     {
+        //         UnitConfig config = Resources.Load<UnitConfig>($"UnitConfigs/{action.enemyId}");
+        //         if (config != null)
+        //         {
+        //             unit.Initialize(config, Faction.Enemy, coord);
+        //             LevelManager.Instance.RegisterUnit(unit);
+        //             GridManager.Instance.PlaceUnit(unit, coord);
+        //         }
+        //     }
         // }
     }
 

@@ -8,17 +8,15 @@ public class DamageEffect : Effect
 {
     /// <summary>伤害数值</summary>
     public int damageAmount;
+    public DamageType damageType = DamageType.Physical;
 
     protected override void ApplyToPair(ITarget source, ITarget target, EffectContext context)
     {
-        // 只关心 target 是否是单位
         UnitTarget unitTarget = target as UnitTarget;
         if (unitTarget?.unit == null) return;
 
-        Character character = unitTarget.unit.GetComponent<Character>();
-        if (character != null)
-        {
-            character.TakeDamage(damageAmount);
-        }
+        int defense = unitTarget.unit.GetDefenseFor(damageType);
+        int finalDamage = Mathf.Max(1, damageAmount - defense);
+        unitTarget.unit.TakeDamage(finalDamage, context);
     }
 }

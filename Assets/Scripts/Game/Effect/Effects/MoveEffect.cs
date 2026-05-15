@@ -11,25 +11,21 @@ public class MoveEffect : Effect
 
     protected override void ApplyToPair(ITarget source, ITarget target, EffectContext context)
     {
-        // 源必须是单位，目标必须是格子
         UnitTarget unitTarget = source as UnitTarget;
         CellTarget cellTarget = target as CellTarget;
         if (unitTarget?.unit == null || cellTarget == null) return;
 
-        Character character = unitTarget.unit.GetComponent<Character>();
-        if (character == null) return;
+        if (!unitTarget.unit.IsAlive) return;
 
-        // 获取目标格子对象
         Cell destCell = GridManager.Instance?.GetCell(cellTarget.coord.x, cellTarget.coord.y);
-        if (destCell == null) return;
+        if (destCell == null || !destCell.isWalkable) return;
 
-        // 如果要求路径可达，检查目的地是否可达
         if (requirePath)
         {
-            // 暂时直接移动，后续可以接入 Pathfinding 系统
+            var path = GridManager.Instance.FindPath(unitTarget.unit.GridPosition, cellTarget.coord);
+            if (path == null) return;
         }
 
-        // 执行移动
-        character.MoveTo(destCell);
+        unitTarget.unit.RequestMove(cellTarget.coord, context);
     }
 }

@@ -5,8 +5,8 @@ public class PoisonBuff : Buff
 {
     public float damagePerTurn = 10f;
 
-    public override void OnTurnEnd(Character target)
+    public override void OnTurnEnd(BuffInstance instance)
     {
-        target.TakeDamage(damagePerTurn);
+        instance.Host.TakeDamage((int)damagePerTurn, instance.SourceContext);
     }
 }

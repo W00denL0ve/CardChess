@@ -11,17 +11,12 @@ public class SwapEffect : Effect
         UnitTarget unitA = source as UnitTarget;
         UnitTarget unitB = target as UnitTarget;
         if (unitA?.unit == null || unitB?.unit == null) return;
+        if (!unitA.unit.IsAlive || !unitB.unit.IsAlive) return;
 
-        Character charA = unitA.unit.GetComponent<Character>();
-        Character charB = unitB.unit.GetComponent<Character>();
-        if (charA == null || charB == null) return;
+        Vector2Int posA = unitA.unit.GridPosition;
+        Vector2Int posB = unitB.unit.GridPosition;
 
-        Cell cellA = charA.currentCell;
-        Cell cellB = charB.currentCell;
-        if (cellA == null || cellB == null) return;
-
-        // 交换位置
-        charA.MoveTo(cellB);
-        charB.MoveTo(cellA);
+        unitA.unit.RequestMove(posB, context);
+        unitB.unit.RequestMove(posA, context);
     }
 }

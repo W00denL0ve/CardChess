@@ -1,10 +1,9 @@
-using System.Collections.Generic;
+using System;
 using System.Collections;
-using System.Diagnostics.SymbolStore;
+using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using UnityEngine;
-using System;
 
 /// <summary>
 /// 游戏管理器，负责整体游戏流程控制、全局状态管理等
@@ -14,7 +13,6 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     public Player player;
-    public List<Character> allCharacters = new List<Character>();
 
     private void Awake()
     {

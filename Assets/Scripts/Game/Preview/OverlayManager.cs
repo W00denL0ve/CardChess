@@ -19,16 +19,16 @@ public class OverlayManager : MonoBehaviour
         }
     }
 
-    public void ShowOverlayExcept(Character exceptCharacter)
+    public void ShowOverlayExcept(Unit exceptUnit)
     {
         overlayCanvas.SetActive(true);
-        // Set layer or mask to exclude exceptCharacter
+        // Set layer or mask to exclude exceptUnit
     }
 
-    public void ShowOverlayExcept(List<Character> exceptCharacters)
+    public void ShowOverlayExcept(List<Unit> exceptUnits)
     {
         overlayCanvas.SetActive(true);
-        // Logic to exclude multiple characters, e.g., set layers or masks
+        // Logic to exclude multiple units, e.g., set layers or masks
     }
 
     public void HideOverlay()

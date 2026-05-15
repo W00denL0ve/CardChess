@@ -5,13 +5,14 @@ public class DefenseStanceBuff : Buff
 {
     public float damageReduction = 0.5f;
 
-    public override void OnApply(Character target)
+    public override void OnApply(BuffInstance instance)
     {
-        target.attributeManager.AddModifier(AttributeType.DamageReduction, new Modifier(this, damageReduction, ModifierType.Multiply));
+        var mod = new Modifier(this, damageReduction, ModifierType.Multiply);
+        AddModifier(instance, AttributeType.PhysicalDefense, mod);
     }
 
-    public override void OnRemove(Character target)
+    public override void OnRemove(BuffInstance instance)
     {
-        target.attributeManager.RemoveModifiersFromSource(this);
+        // Modifiers are cleaned up by BuffInstance.Cleanup()
     }
 }

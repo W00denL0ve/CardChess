@@ -2,14 +2,29 @@ using UnityEngine;
 
 public abstract class Buff : ScriptableObject
 {
+    public string buffId;
     public string buffName;
     public Sprite icon;
-    public string description;
+    public int maxDuration; // -1 永久
+    public bool isDebuff;
+    public int maxStack = 1;
 
-    public virtual void OnApply(Character target) { }
-    public virtual void OnRemove(Character target) { }
-    public virtual void OnTurnStart(Character target) { }
-    public virtual void OnTurnEnd(Character target) { }
-    public virtual void OnMove(Character target) { }
-    public virtual void OnBeforeDamageTaken(Character target, ref float damage) { }
+    public virtual void OnApply(BuffInstance instance) { }
+    public virtual void OnRemove(BuffInstance instance) { }
+    public virtual void OnTurnStart(BuffInstance instance) { }
+    public virtual void OnTurnEnd(BuffInstance instance) { }
+    public virtual void OnUnitMove(BuffInstance instance, Vector2Int from, Vector2Int to) { }
+    public virtual void OnBeforeDamageTaken(BuffInstance instance, ref int damage, EffectContext context) { }
+    public virtual void OnAfterDamageTaken(BuffInstance instance, int damage, EffectContext context) { }
+
+    protected void AddModifier(BuffInstance instance, AttributeType type, Modifier modifier)
+    {
+        instance.Host.AttributeManager.AddModifier(type, modifier);
+        instance.RegisterModifier(type, modifier);
+    }
+    protected void RemoveModifier(BuffInstance instance, AttributeType type, Modifier modifier)
+    {
+        instance.Host.AttributeManager.RemoveModifier(type, modifier);
+        instance.UnregisterModifier(type, modifier);
+    }
 }

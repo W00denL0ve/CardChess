@@ -6,7 +6,7 @@ using UnityEngine;
 [System.Serializable]
 public struct EffectContext
 {
-    /// <summary>施法者 GameObject（通常挂有 Unit/Character 组件）</summary>
+    /// <summary>施法者 GameObject（通常挂有 Unit 组件）</summary>
     public GameObject caster;
 
     /// <summary>第一个锚点（例如用户选中的单位）</summary>
