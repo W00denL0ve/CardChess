@@ -15,14 +15,14 @@ public class MoveEffect : Effect
         CellTarget cellTarget = target as CellTarget;
         if (unitTarget?.unit == null || cellTarget == null) return;
 
-        if (!unitTarget.unit.IsAlive) return;
+        if (!unitTarget.unit.isAlive) return;
 
         Cell destCell = GridManager.Instance?.GetCell(cellTarget.coord.x, cellTarget.coord.y);
         if (destCell == null || !destCell.isWalkable) return;
 
         if (requirePath)
         {
-            var path = GridManager.Instance.FindPath(unitTarget.unit.GridPosition, cellTarget.coord);
+            var path = GridManager.Instance.FindPath(unitTarget.unit.gridPosition, cellTarget.coord);
             if (path == null) return;
         }
 

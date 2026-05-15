@@ -11,10 +11,10 @@ public class SwapEffect : Effect
         UnitTarget unitA = source as UnitTarget;
         UnitTarget unitB = target as UnitTarget;
         if (unitA?.unit == null || unitB?.unit == null) return;
-        if (!unitA.unit.IsAlive || !unitB.unit.IsAlive) return;
+        if (!unitA.unit.isAlive || !unitB.unit.isAlive) return;
 
-        Vector2Int posA = unitA.unit.GridPosition;
-        Vector2Int posB = unitB.unit.GridPosition;
+        Vector2Int posA = unitA.unit.gridPosition;
+        Vector2Int posB = unitB.unit.gridPosition;
 
         unitA.unit.RequestMove(posB, context);
         unitB.unit.RequestMove(posA, context);

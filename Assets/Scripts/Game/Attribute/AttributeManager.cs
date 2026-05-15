@@ -75,7 +75,9 @@ public class AttributeManager
         if (attributes.TryGetValue(type, out var attr))
         {
             attr.AddModifier(modifier);
+            return;
         }
+        Logger.Log($"找不到属性：{type}");
     }
 
     /// <summary>
@@ -86,7 +88,9 @@ public class AttributeManager
         if (attributes.TryGetValue(type, out var attr))
         {
             attr.modifiers.Remove(modifier);
+            return;
         }
+        Logger.Log($"找不到属性：{type}");
     }
 
     /// <summary>

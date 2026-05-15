@@ -49,7 +49,7 @@ public class MaskRadiusAnimator : MonoBehaviour
             if (image != null)
                 targetMaterial = image.material;
             else
-                Debug.LogWarning("MaskRadiusAnimator：未指定目标材质，也未找到 Image 组件。");
+                Logger.LogWarning("MaskRadiusAnimator：未指定目标材质，也未找到 Image 组件。");
         }
 
         SetRadius(startRadius); // 初始化半径
@@ -93,13 +93,13 @@ public class MaskRadiusAnimator : MonoBehaviour
     {
         if (targetMaterial == null)
         {
-            Debug.LogError("MaskRadiusAnimator：targetMaterial 为空，无法播放动画。");
+            Logger.LogError("MaskRadiusAnimator：targetMaterial 为空，无法播放动画。");
             return;
         }
 
         if (animationCoroutine != null)
             StopCoroutine(animationCoroutine);
-        // Debug.Log($"MaskRadiusAnimator：开始播放动画，startRadius={startRadius}, endRadius={endRadius}, duration={duration}");
+        // Logger.Log($"MaskRadiusAnimator：开始播放动画，startRadius={startRadius}, endRadius={endRadius}, duration={duration}");
         animationCoroutine = StartCoroutine(AnimateRadius(startRadius, endRadius, duration));
     }
 
@@ -110,7 +110,7 @@ public class MaskRadiusAnimator : MonoBehaviour
     {
         if (targetMaterial == null)
         {
-            Debug.LogError("MaskRadiusAnimator：targetMaterial 为空，无法播放动画。");
+            Logger.LogError("MaskRadiusAnimator：targetMaterial 为空，无法播放动画。");
             return;
         }
 

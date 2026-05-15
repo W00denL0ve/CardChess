@@ -77,7 +77,7 @@ public class TurnManager : MonoBehaviour
     public void LoadTurnData(LevelTurnData levelTurnData)
     {
         turnData = levelTurnData;
-        Debug.Log($"[TurnManager] 已加载回合行动数据");
+        Logger.Log($"[TurnManager] 已加载回合行动数据");
     }
 
 /// <summary>
@@ -91,11 +91,11 @@ public class TurnManager : MonoBehaviour
         {
             currentTurn++;
             ChangePhase(TurnPhase.Start);
-            Debug.Log("第" + currentTurn + "回合开始");
+            Logger.Log("第" + currentTurn + "回合开始");
         }
         else
         {
-            Debug.LogWarning("当前回合未结束，无法开始新回合");
+            Logger.LogWarning("当前回合未结束，无法开始新回合");
         }
     }
 
@@ -108,12 +108,12 @@ public class TurnManager : MonoBehaviour
         if (currentState != null)
         {
             oldState = currentState;
-            Debug.Log("来自" + oldState.phaseName + "的请求，切换到" + newPhase + "阶段");
+            Logger.Log("来自" + oldState.phaseName + "的请求，切换到" + newPhase + "阶段");
             currentState.Exit();
         }
 
         currentState = phaseStates[newPhase];
-        Debug.Log("切换到" + newPhase + "阶段");
+        Logger.Log("切换到" + newPhase + "阶段");
         currentState.Enter();
 
         GameEventChannel.Dispatch(new PhaseChangedEvent
@@ -135,13 +135,13 @@ class StartState : ITurnState
     public void Enter()
     {
         int turn = TurnManager.Instance.currentTurn;
-        Debug.Log($"Entering Start Phase (Round {turn})");
+        Logger.Log($"Entering Start Phase (Round {turn})");
 
         // 执行当前回合的预设行动
         var actions = TurnManager.Instance.CurrentRoundActions;
         if (actions.Count > 0)
         {
-            Debug.Log($"第 {turn} 回合有 {actions.Count} 个预设行动待执行");
+            Logger.Log($"第 {turn} 回合有 {actions.Count} 个预设行动待执行");
             TurnActionExecutor.ExecuteAll(actions);
         }
     }
@@ -150,7 +150,7 @@ class StartState : ITurnState
 
     public void Exit()
     {
-        Debug.Log("Exiting Start Phase");
+        Logger.Log("Exiting Start Phase");
     }
 }
 
@@ -163,14 +163,14 @@ class DrawState : ITurnState
 
     public void Enter()
     {
-        Debug.Log("Entering Draw Phase");
+        Logger.Log("Entering Draw Phase");
     }
 
     public void Update() { }
 
     public void Exit()
     {
-        Debug.Log("Exiting Draw Phase");
+        Logger.Log("Exiting Draw Phase");
     }
 }
 
@@ -183,14 +183,14 @@ class PlayerPlayState : ITurnState
 
     public void Enter()
     {
-        Debug.Log("Entering Player Play Phase");
+        Logger.Log("Entering Player Play Phase");
     }
 
     public void Update() { }
 
     public void Exit()
     {
-        Debug.Log("Exiting Player Play Phase");
+        Logger.Log("Exiting Player Play Phase");
     }
 }
 
@@ -203,14 +203,14 @@ class PlayerActionState : ITurnState
 
     public void Enter()
     {
-        Debug.Log("Entering Player Action Phase");
+        Logger.Log("Entering Player Action Phase");
     }
 
     public void Update() { }
 
     public void Exit()
     {
-        Debug.Log("Exiting Player Action Phase");
+        Logger.Log("Exiting Player Action Phase");
     }
 }
 
@@ -223,14 +223,14 @@ class EnemyState : ITurnState
 
     public void Enter()
     {
-        Debug.Log("Entering Enemy Phase");
+        Logger.Log("Entering Enemy Phase");
     }
 
     public void Update() { }
 
     public void Exit()
     {
-        Debug.Log("Exiting Enemy Phase");
+        Logger.Log("Exiting Enemy Phase");
     }
 }
 
@@ -244,13 +244,13 @@ class EndState : ITurnState
 
     public void Enter()
     {
-        Debug.Log("Entering End Phase");
+        Logger.Log("Entering End Phase");
     }
 
     public void Update() { }
 
     public void Exit()
     {
-        Debug.Log("Exiting End Phase");
+        Logger.Log("Exiting End Phase");
     }
 }

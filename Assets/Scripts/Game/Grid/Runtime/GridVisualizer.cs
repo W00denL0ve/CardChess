@@ -31,12 +31,12 @@ public class GridVisualizer : MonoBehaviour
     void Awake()
     {
         GameEventChannel.Register<CellUpdatedEvent>(OnCellUpdated);
-        Debug.Log("GridVisualizer：已订阅格子更新事件");
-        hightlightMat = GridManager.Instance.terrainConfig.hightlightMat;
-        selectedMat = GridManager.Instance.terrainConfig.selectedMat;
+        Logger.Log("GridVisualizer：已订阅格子更新事件");
     }
     void Start()
     {
+        hightlightMat = GridManager.Instance.terrainConfig.hightlightMat;
+        selectedMat = GridManager.Instance.terrainConfig.selectedMat;
         if (targetCamera == null)
             targetCamera = Camera.main;
     }
@@ -119,10 +119,10 @@ public class GridVisualizer : MonoBehaviour
                 cube.GetComponent<Renderer>().material = mat;
                 return;
             }
-            Debug.LogWarning("GridVisualizer: 未找到材质");
+            Logger.LogWarning("GridVisualizer: 未找到材质");
             return;
         }
-        Debug.LogWarning("GridVisualizer: 试图为空物体应用材质");
+        Logger.LogWarning("GridVisualizer: 试图为空物体应用材质");
     }
 
     /// <summary>
@@ -140,7 +140,7 @@ public class GridVisualizer : MonoBehaviour
             }
             return;
         }
-        Debug.LogWarning("GridVisualizer: 未定义高亮材质");
+        Logger.LogWarning("GridVisualizer: 未定义高亮材质");
     }
 
     /// <summary>
@@ -158,7 +158,7 @@ public class GridVisualizer : MonoBehaviour
             }
             return;
         }
-        Debug.LogWarning("GridVisualizer: 未定义高亮材质");
+        Logger.LogWarning("GridVisualizer: 未定义高亮材质");
     }
 
     /// <summary>
@@ -166,7 +166,7 @@ public class GridVisualizer : MonoBehaviour
     /// </summary>
     void OnCellUpdated(CellUpdatedEvent evt)
     {
-        Debug.Log("收到格子更新事件");
+        Logger.Log("收到格子更新事件");
         GameObject cube = FindVisualCube(evt.col, evt.row);
         if (cube != null)
             ApplyTerrainMaterial(cube, evt.col, evt.row);

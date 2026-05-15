@@ -104,7 +104,7 @@ public class UIManager : MonoBehaviour
     {
         if (!panels.ContainsKey(panelName))
         {
-            Debug.LogWarning($"UIManager: 面板 '{panelName}' 未注册。");
+            Logger.LogWarning($"UIManager: 面板 '{panelName}' 未注册。");
             return;
         }
 
@@ -194,12 +194,12 @@ public class UIManager : MonoBehaviour
             // 显示遮罩
             maskRadiusAnimator.gameObject.SetActive(true);
             // 调用MaskRadiusAnimator的PlayAnimation方法，播放前半段转场动画
-            // Debug.Log("UIManager: 开始播放转场动画，等待动画结束后切换面板...");
+            // Logger.Log("UIManager: 开始播放转场动画，等待动画结束后切换面板...");
             maskRadiusAnimator.PlayAnimation();
             // duration秒后执行切换面板的逻辑，采用协程实现（便于传递参数）
             StartCoroutine(DelayedPanelSwitch(previousPanelNames, nextPanelNames, duration));
         }
-        else Debug.LogError("UIManager: MaskRadiusAnimator 组件未找到，无法执行遮罩转场动画。");
+        else Logger.LogError("UIManager: MaskRadiusAnimator 组件未找到，无法执行遮罩转场动画。");
     }
 
     private System.Collections.IEnumerator DelayedPanelSwitch(string[] previousPanelNames, string[] nextPanelNames, float delay)

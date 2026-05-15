@@ -7,6 +7,10 @@ public class TestUnitInitializer : MonoBehaviour
     public UnitConfig mageConfig;
     public GameObject unitPrefab; // 带有 Unit 和 UnitVisual 的预制体
 
+    [SerializeField]
+    public TestAttackUpBuff testAttackUpBuff;
+    public TestPoisonBuff testPoisonBuff;
+
     private Unit warrior;
     private Unit mage;
     private List<Unit> spawnedUnits = new();
@@ -29,7 +33,7 @@ public class TestUnitInitializer : MonoBehaviour
         GameEventChannel.Register<UnitDeathEvent>(OnUnitDeath);
         GameEventChannel.Register<UnitMovedEvent>(OnUnitMoved);
 
-        Debug.Log("Test units ready. Press keys: 1-伤害, 2-治疗, 3-移动, 4-加Buff, 5-毒Buff, 6-击杀, 7-阵营查询");
+        Logger.Log("Test units ready. Press keys: 1-伤害, 2-治疗, 3-移动, 4-加Buff, 5-毒Buff, 6-击杀, 7-阵营查询");
     }
 
     void SetupGrid()
@@ -58,6 +62,8 @@ public class TestUnitInitializer : MonoBehaviour
 
     void Update()
     {
+        // if (Input.anyKeyDown)
+        //     Logger.Log("Key pressed: " + Input.inputString);
         // 测试控制
         if (Input.GetKeyDown(KeyCode.Alpha1)) TestDamage();
         if (Input.GetKeyDown(KeyCode.Alpha2)) TestHeal();
@@ -70,9 +76,10 @@ public class TestUnitInitializer : MonoBehaviour
 
     void TestDamage()
     {
+        // Logger.Log("战士对法师造成物理伤害");
         // 战士对法师造成物理伤害
         EffectContext ctx = new EffectContext { caster = warrior.gameObject };
-        int raw = warrior.Attack + warrior.DamageBonus; // 模拟基础伤害
+        int raw = warrior.attack + warrior.damageBonus; // 模拟基础伤害
         int final = Mathf.Max(0, raw - mage.GetDefenseFor(DamageType.Physical));
         mage.TakeDamage(final, ctx);
     }
@@ -88,17 +95,29 @@ public class TestUnitInitializer : MonoBehaviour
         warrior.RequestMove(new Vector2Int(2, 2));
     }
 
+    // 修改对应测试方法
     void TestBuff()
     {
-        // 应用攻击力提升 Buff
-        var buff = ScriptableObject.CreateInstance<TestAttackUpBuff>(); // 实际应引用资产
-        warrior.BuffContainer.ApplyBuff(buff);
+        if (testAttackUpBuff == null)
+        {
+            Logger.LogError("testAttackUpBuff 未赋值！请在 Inspector 中拖入资产。");
+            return;
+        }
+        int attackBefore = warrior.attack;
+        warrior.buffContainer.ApplyBuff(testAttackUpBuff);
+        int attackAfter = warrior.attack;
+        Logger.Log($"[TestBuff] 应用攻击力 Buff: {warrior.UnitId} Attack {attackBefore} -> {attackAfter}");
     }
 
     void TestPoison()
     {
-        var poison = ScriptableObject.CreateInstance<TestPoisonBuff>();
-        mage.BuffContainer.ApplyBuff(poison);
+        if (testPoisonBuff == null)
+        {
+            Logger.LogError("testPoisonBuff 未赋值！请在 Inspector 中拖入资产。");
+            return;
+        }
+        mage.buffContainer.ApplyBuff(testPoisonBuff);
+        Logger.Log($"[TestPoison] {mage.UnitId} 中毒 Buff 已应用 (每回合 {testPoisonBuff.poisonDamage} 伤害)");
     }
 
     void TestKill()
@@ -110,24 +129,24 @@ public class TestUnitInitializer : MonoBehaviour
     void TestQuery()
     {
         var enemies = LevelManager.Instance.GetEnemiesOf(warrior);
-        Debug.Log($"Warrior enemies: {enemies.Count}");
+        Logger.Log($"Warrior enemies: {enemies.Count}");
         var allies = LevelManager.Instance.GetAlliesOf(warrior);
-        Debug.Log($"Warrior allies: {allies.Count}");
+        Logger.Log($"Warrior allies: {allies.Count}");
     }
 
     // 事件回调
     void OnHealthChanged(UnitHealthChangedEvent evt)
     {
-        Debug.Log($"[Event] {evt.Unit.UnitId} HP: {evt.OldHealth} -> {evt.NewHealth}");
+        Logger.Log($"[Event] {evt.Unit.UnitId} HP: {evt.OldHealth} -> {evt.NewHealth}");
     }
 
     void OnUnitDeath(UnitDeathEvent evt)
     {
-        Debug.Log($"[Event] {evt.Unit.UnitId} died at {evt.DeathPosition}");
+        Logger.Log($"[Event] {evt.Unit.UnitId} died at {evt.DeathPosition}");
     }
 
     void OnUnitMoved(UnitMovedEvent evt)
     {
-        Debug.Log($"[Event] {evt.Unit.UnitId} moved {evt.From} -> {evt.To}");
+        Logger.Log($"[Event] {evt.Unit.UnitId} moved {evt.From} -> {evt.To}");
     }
 }

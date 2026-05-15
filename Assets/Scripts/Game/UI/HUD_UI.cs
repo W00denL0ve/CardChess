@@ -49,7 +49,7 @@ public class HUDUI : MonoBehaviour
 
     public void OnMapEntered(MapEnteredEvent e)
     {
-        Debug.Log("收到地图进入消息");
+        Logger.Log("收到地图进入消息");
         mapButton.interactable = false;
     }
 

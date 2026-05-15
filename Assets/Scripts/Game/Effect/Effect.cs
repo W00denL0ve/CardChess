@@ -26,7 +26,7 @@ public abstract class Effect : ScriptableObject
 
         if (targetsA.Count == 0 || targetsB.Count == 0)
         {
-            Debug.LogWarning($"[Effect] {effectName} 选择器返回空目标列表 (A:{targetsA.Count}, B:{targetsB.Count})");
+            Logger.LogWarning($"[Effect] {effectName} 选择器返回空目标列表 (A:{targetsA.Count}, B:{targetsB.Count})");
             return;
         }
 

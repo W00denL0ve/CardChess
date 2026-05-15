@@ -5,7 +5,10 @@ public abstract class Buff : ScriptableObject
     public string buffId;
     public string buffName;
     public Sprite icon;
-    public int maxDuration; // -1 永久
+    /// <summary>
+    /// <0 永久
+    /// </summary>
+    public int maxDuration;     
     public bool isDebuff;
     public int maxStack = 1;
 
@@ -19,12 +22,12 @@ public abstract class Buff : ScriptableObject
 
     protected void AddModifier(BuffInstance instance, AttributeType type, Modifier modifier)
     {
-        instance.Host.AttributeManager.AddModifier(type, modifier);
+        instance.Host.attributeManager.AddModifier(type, modifier);
         instance.RegisterModifier(type, modifier);
     }
     protected void RemoveModifier(BuffInstance instance, AttributeType type, Modifier modifier)
     {
-        instance.Host.AttributeManager.RemoveModifier(type, modifier);
+        instance.Host.attributeManager.RemoveModifier(type, modifier);
         instance.UnregisterModifier(type, modifier);
     }
 }

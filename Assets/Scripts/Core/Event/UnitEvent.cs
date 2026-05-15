@@ -16,7 +16,7 @@ public class UnitDeathEvent : GameEvent
     public Unit Unit { get; }
     public Vector2Int DeathPosition { get; }
     public EffectContext KillContext { get; }
-    public UnitDeathEvent(Unit unit, EffectContext killContext = default) { Unit = unit; DeathPosition = unit.GridPosition; KillContext = killContext; }
+    public UnitDeathEvent(Unit unit, EffectContext killContext = default) { Unit = unit; DeathPosition = unit.gridPosition; KillContext = killContext; }
 }
 
 // 移动请求事件

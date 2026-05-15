@@ -173,7 +173,7 @@ public class GridManager : MonoBehaviour
         Cell cell = GetCell(gridPos.x, gridPos.y);
         if (cell == null || !cell.isWalkable || cell.OccupyingUnit != null) return;
         cell.OccupyingUnit = unit;
-        unit.GridPosition = gridPos;
+        unit.gridPosition = gridPos;
         GameEventChannel.Dispatch(new CellUpdatedEvent(cell));
     }
 
@@ -298,7 +298,7 @@ public class GridManager : MonoBehaviour
 
         // 放置到目标格子
         targetCell.OccupyingUnit = evt.Unit;
-        evt.Unit.GridPosition = evt.To;
+        evt.Unit.gridPosition = evt.To;
 
         GameEventChannel.Dispatch(new CellUpdatedEvent(targetCell));
         if (fromCell != null)

@@ -38,7 +38,7 @@ public static class TurnActionExecutor
                 break;
 
             default:
-                Debug.LogWarning($"[TurnActionExecutor] 未处理的行动类型: {action.GetType().Name}");
+                Logger.LogWarning($"[TurnActionExecutor] 未处理的行动类型: {action.GetType().Name}");
                 break;
         }
     }
@@ -53,20 +53,20 @@ public static class TurnActionExecutor
     private static void ExecuteEnemySpawn(EnemySpawnAction action)
     {
         Vector2Int coord = action.coord;
-        Debug.Log($"[TurnAction] 在 ({coord.x},{coord.y}) 生成 {action.spawnCount} 个敌人 (ID: {action.enemyId})");
+        Logger.Log($"[TurnAction] 在 ({coord.x},{coord.y}) 生成 {action.spawnCount} 个敌人 (ID: {action.enemyId})");
 
         // 获取目标格子
         Cell cell = GridManager.Instance?.GetCell(coord.x, coord.y);
         if (cell == null)
         {
-            Debug.LogWarning($"[TurnAction] 格子 ({coord.x},{coord.y}) 不存在，跳过敌人生成");
+            Logger.LogWarning($"[TurnAction] 格子 ({coord.x},{coord.y}) 不存在，跳过敌人生成");
             return;
         }
 
         // 格子已被占用则不生成
         if (cell.OccupyingUnit != null)
         {
-            Debug.LogWarning($"[TurnAction] 格子 ({coord.x},{coord.y}) 已被占用，跳过敌人生成");
+            Logger.LogWarning($"[TurnAction] 格子 ({coord.x},{coord.y}) 已被占用，跳过敌人生成");
             return;
         }
 
@@ -101,7 +101,7 @@ public static class TurnActionExecutor
     private static void ExecuteCellChange(CellChangeAction action)
     {
         Vector2Int coord = action.coord;
-        Debug.Log($"[TurnAction] 修改格子 ({coord.x},{coord.y})");
+        Logger.Log($"[TurnAction] 修改格子 ({coord.x},{coord.y})");
 
         GridManager grid = GridManager.Instance;
         if (grid == null) return;
@@ -119,7 +119,7 @@ public static class TurnActionExecutor
                 cell.isWalkable = action.setWalkable.Value;
         });
 
-        Debug.Log($"[TurnAction] 格子 ({coord.x},{coord.y}) 已更新");
+        Logger.Log($"[TurnAction] 格子 ({coord.x},{coord.y}) 已更新");
     }
 
     // ====================================================================
@@ -133,12 +133,12 @@ public static class TurnActionExecutor
     {
         if (action.effectToApply == null)
         {
-            Debug.LogWarning("[TurnAction] EffectApplyAction 的 effectToApply 为 null");
+            Logger.LogWarning("[TurnAction] EffectApplyAction 的 effectToApply 为 null");
             return;
         }
 
         Vector2Int coord = action.coord;
-        Debug.Log($"[TurnAction] 在 ({coord.x},{coord.y}) 应用效果: {action.effectToApply.effectName}");
+        Logger.Log($"[TurnAction] 在 ({coord.x},{coord.y}) 应用效果: {action.effectToApply.effectName}");
 
         // 构建效果上下文，将格子作为 anchor2 传入
         EffectContext context = new EffectContext

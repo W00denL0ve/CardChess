@@ -22,7 +22,7 @@ public class TestTextListener : MonoBehaviour
     public void OnGameStartText(GameStartEvent evt)
     {
         testTMP.text = "游戏开始";
-        Debug.Log("游戏开始");
+        Logger.Log("游戏开始");
     }
 
     public void OnTurnPhaseChangedText(PhaseChangedEvent evt)
@@ -31,7 +31,7 @@ public class TestTextListener : MonoBehaviour
         TurnPhase oldPhase = evt.oldPhase;
         TurnPhase newPhase = evt.newPhase;
         testTMP.text = $"第{turnNumber}轮 阶段从{oldPhase}切换到{newPhase}";
-        Debug.Log($"第{turnNumber}轮，阶段从{oldPhase}切换到{newPhase}");
+        Logger.Log($"第{turnNumber}轮，阶段从{oldPhase}切换到{newPhase}");
     }
 
     void OnDestroy()

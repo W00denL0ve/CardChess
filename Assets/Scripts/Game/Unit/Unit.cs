@@ -11,89 +11,89 @@ public class Unit : MonoBehaviour
     // 运行时身份
     public string UnitId => unitId;
     public Occupation Occupation => occupation;
-    public Faction Faction { get; private set; }
-    public bool IsAlive { get; private set; }
+    public Faction faction { get; private set; }
+    public bool isAlive { get; private set; }
 
     // 属性系统
-    public AttributeManager AttributeManager { get; private set; }
+    public AttributeManager attributeManager { get; private set; }
 
     // Buff 容器
-    public BuffContainer BuffContainer { get; private set; }
+    public BuffContainer buffContainer { get; private set; }
 
     // 网格位置（由 GridManager 设置）
-    public Vector2Int GridPosition { get; internal set; }
+    public Vector2Int gridPosition { get; internal set; }
 
     // 便捷属性（查询 AttributeManager 的最终值）
-    public int CurrentHealth        => (int)AttributeManager.GetFinalValue(AttributeType.Health);
-    public int MaxHealth            => (int)AttributeManager.GetFinalValue(AttributeType.MaxHealth);
-    public int Attack               => (int)AttributeManager.GetFinalValue(AttributeType.Attack);
-    public int Intelligence         => (int)AttributeManager.GetFinalValue(AttributeType.Intelligence);
-    public int PhysicalDefense      => (int)AttributeManager.GetFinalValue(AttributeType.PhysicalDefense);
-    public int MagicDefense         => (int)AttributeManager.GetFinalValue(AttributeType.MagicDefense);
-    public int ActionPointLimit     => (int)AttributeManager.GetFinalValue(AttributeType.ActionPointLimit);
-    public int ActionPoints         => (int)AttributeManager.GetFinalValue(AttributeType.ActionPoints);
-    public int DamageBonus          => (int)AttributeManager.GetFinalValue(AttributeType.DamageBonus);
+    public int currentHealth        => (int)attributeManager.GetFinalValue(AttributeType.Health);
+    public int maxHealth            => (int)attributeManager.GetFinalValue(AttributeType.MaxHealth);
+    public int attack               => (int)attributeManager.GetFinalValue(AttributeType.Attack);
+    public int intelligence         => (int)attributeManager.GetFinalValue(AttributeType.Intelligence);
+    public int physicalDefense      => (int)attributeManager.GetFinalValue(AttributeType.PhysicalDefense);
+    public int magicDefense         => (int)attributeManager.GetFinalValue(AttributeType.MagicDefense);
+    public int actionPointLimit     => (int)attributeManager.GetFinalValue(AttributeType.ActionPointLimit);
+    public int actionPoints         => (int)attributeManager.GetFinalValue(AttributeType.ActionPoints);
+    public int damageBonus          => (int)attributeManager.GetFinalValue(AttributeType.DamageBonus);
 
     // 防御查询
-    public int GetDefenseFor(DamageType type) => type == DamageType.Physical ? PhysicalDefense : MagicDefense;
+    public int GetDefenseFor(DamageType type) => type == DamageType.Physical ? physicalDefense : magicDefense;
 
     // 初始化
     public void Initialize(UnitConfig config, Faction faction, Vector2Int gridPos)
     {
         unitId = config.unitId;
         occupation = config.occupation;
-        Faction = faction;
-        GridPosition = gridPos;
-        IsAlive = true;
+        this.faction = faction;
+        gridPosition = gridPos;
+        isAlive = true;
 
-        AttributeManager = new AttributeManager();
+        attributeManager = new AttributeManager();
         foreach (var attr in config.initialAttributes)
-            AttributeManager.AddAttribute(attr.type, attr.value);
+            attributeManager.AddAttribute(attr.type, attr.value);
 
-        BuffContainer = new BuffContainer(this);
+        buffContainer = new BuffContainer(this);
         foreach (var buff in config.innateBuffs)
-            BuffContainer.ApplyBuff(buff, new EffectContext { caster = gameObject });
+            buffContainer.ApplyBuff(buff, new EffectContext { caster = gameObject });
     }
 
     // 伤害（由效果系统调用，finalDamage 已扣除类型防御）
     public void TakeDamage(int finalDamage, EffectContext context = default)
     {
-        if (!IsAlive || finalDamage <= 0) return;
+        if (!isAlive || finalDamage <= 0) return;
 
         // 使用 BuffContainer 封装的前置回调，允许 Buff 修改伤害值
-        BuffContainer.OnBeforeDamageTaken(ref finalDamage, context);
+        buffContainer.OnBeforeDamageTaken(ref finalDamage, context);
 
-        int oldHealth = CurrentHealth;
-        int newHealth = Mathf.Clamp(oldHealth - finalDamage, 0, MaxHealth);
-        AttributeManager.SetBaseValue(AttributeType.Health, newHealth);
-        GameEventChannel.Dispatch(new UnitHealthChangedEvent(this, oldHealth, newHealth, MaxHealth));
+        int oldHealth = currentHealth;
+        int newHealth = Mathf.Clamp(oldHealth - finalDamage, 0, maxHealth);
+        attributeManager.SetBaseValue(AttributeType.Health, newHealth);
+        GameEventChannel.Dispatch(new UnitHealthChangedEvent(this, oldHealth, newHealth, maxHealth));
 
         if (newHealth <= 0)
         {
-            IsAlive = false;
+            isAlive = false;
             GameEventChannel.Dispatch(new UnitDeathEvent(this, context));
         }
         else
         {
             // 使用 BuffContainer 封装的后置回调
-            BuffContainer.OnAfterDamageTaken(finalDamage, context);
+            buffContainer.OnAfterDamageTaken(finalDamage, context);
         }
     }
 
     // 治疗
     public void Heal(int amount, EffectContext context = default)
     {
-        if (!IsAlive || amount <= 0) return;
-        int oldHealth = CurrentHealth;
-        int newHealth = Mathf.Clamp(oldHealth + amount, 0, MaxHealth);
-        AttributeManager.SetBaseValue(AttributeType.Health, newHealth);
-        GameEventChannel.Dispatch(new UnitHealthChangedEvent(this, oldHealth, newHealth, MaxHealth));
+        if (!isAlive || amount <= 0) return;
+        int oldHealth = currentHealth;
+        int newHealth = Mathf.Clamp(oldHealth + amount, 0, maxHealth);
+        attributeManager.SetBaseValue(AttributeType.Health, newHealth);
+        GameEventChannel.Dispatch(new UnitHealthChangedEvent(this, oldHealth, newHealth, maxHealth));
     }
 
     // 移动请求（由效果系统调用）
     public void RequestMove(Vector2Int targetPos, EffectContext context = default)
     {
-        if (!IsAlive) return;
-        GameEventChannel.Dispatch(new UnitMoveRequestEvent(this, GridPosition, targetPos, context));
+        if (!isAlive) return;
+        GameEventChannel.Dispatch(new UnitMoveRequestEvent(this, gridPosition, targetPos, context));
     }
 }

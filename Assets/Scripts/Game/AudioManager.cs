@@ -21,19 +21,19 @@ public class AudioManager : MonoBehaviour
     public void SetMasterVolume(float volume)
     {
         // todo: 实现设置主音量的逻辑
-        Debug.Log($"设置主音量为 {volume}");
+        Logger.Log($"设置主音量为 {volume}");
     }
     
     public void SetMusicVolume(float volume)
     {
         // todo: 实现设置音乐音量的逻辑
-        Debug.Log($"设置音乐音量为 {volume}");
+        Logger.Log($"设置音乐音量为 {volume}");
     }
 
     public void SetSFXVolume(float volume)
     {
         // todo: 实现设置音效音量的逻辑
-        Debug.Log($"设置音效音量为 {volume}");
+        Logger.Log($"设置音效音量为 {volume}");
     }
 
 }

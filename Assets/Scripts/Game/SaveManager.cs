@@ -169,7 +169,7 @@ public class SaveManager : MonoBehaviour
         string json = JsonUtility.ToJson(data, prettyPrint: true);
         string fullPath = GetJsonSavePath(fileName);
         File.WriteAllText(fullPath, json);
-        Debug.Log($"[SaveManager] 存档已保存至：{fullPath}");
+        Logger.Log($"[SaveManager] 存档已保存至：{fullPath}");
     }
 
     /// <summary>从 JSON 文件读取游戏数据</summary>
@@ -180,10 +180,10 @@ public class SaveManager : MonoBehaviour
         {
             string json = File.ReadAllText(fullPath);
             GameSaveData data = JsonUtility.FromJson<GameSaveData>(json);
-            Debug.Log($"[SaveManager] 存档读取成功：{fullPath}");
+            Logger.Log($"[SaveManager] 存档读取成功：{fullPath}");
             return data;
         }
-        Debug.LogWarning($"[SaveManager] 未找到存档文件：{fullPath}");
+        Logger.LogWarning($"[SaveManager] 未找到存档文件：{fullPath}");
         return null;
     }
 
@@ -194,7 +194,7 @@ public class SaveManager : MonoBehaviour
         if (File.Exists(fullPath))
         {
             File.Delete(fullPath);
-            Debug.Log($"[SaveManager] 已删除存档：{fullPath}");
+            Logger.Log($"[SaveManager] 已删除存档：{fullPath}");
         }
     }
 

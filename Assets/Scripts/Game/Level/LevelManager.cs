@@ -45,17 +45,17 @@ public class LevelManager : MonoBehaviour
 
     public List<Unit> GetEnemiesOf(Unit unit)
     {
-        return allUnits.Where(u => u.Faction != unit.Faction && u.IsAlive).ToList();
+        return allUnits.Where(u => u.faction != unit.faction && u.isAlive).ToList();
     }
 
     public List<Unit> GetAlliesOf(Unit unit)
     {
-        return allUnits.Where(u => u.Faction == unit.Faction && u != unit && u.IsAlive).ToList();
+        return allUnits.Where(u => u.faction == unit.faction && u != unit && u.isAlive).ToList();
     }
 
     public List<Unit> GetUnitsOf(Faction faction)
     {
-        return allUnits.Where(u => u.Faction == faction && u.IsAlive).ToList();
+        return allUnits.Where(u => u.faction == faction && u.isAlive).ToList();
     }
 
     private void HandleUnitDeath(UnitDeathEvent evt)
@@ -72,10 +72,10 @@ public class LevelManager : MonoBehaviour
         gridManager = FindObjectOfType<GridManager>();
 
         gridManager.LoadGridData(levelData.gridData);
-        Debug.Log("棋盘加载完成");
+        Logger.Log("棋盘加载完成");
 
         turnManager.LoadTurnData(levelData.turnData);
-        Debug.Log("回合信息加载完成");
+        Logger.Log("回合信息加载完成");
     }
 
     /// <summary>

@@ -135,12 +135,12 @@ public class LevelDataMenuExtractor : EditorWindow
             }
             else
             {
-                Debug.LogWarning("Addressable Settings 未找到，请先初始化 Addressables 系统。");
+                Logger.LogWarning("Addressable Settings 未找到，请先初始化 Addressables 系统。");
             }
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning($"自动添加 Addressable 失败: {e.Message}");
+            Logger.LogWarning($"自动添加 Addressable 失败: {e.Message}");
         }
 #endif
         AssetDatabase.SaveAssets();
@@ -196,7 +196,7 @@ public class LevelDataMenuExtractor : EditorWindow
                 // 检查坐标是否在基础网格范围内
                 if (col < 0 || col >= baseBounds.size.x || row < 0 || row >= baseBounds.size.y)
                 {
-                    Debug.LogWarning($"回合 Tilemap '{tm.name}' 的格子 ({pos.x},{pos.y}) 超出基础网格范围，已跳过");
+                    Logger.LogWarning($"回合 Tilemap '{tm.name}' 的格子 ({pos.x},{pos.y}) 超出基础网格范围，已跳过");
                     continue;
                 }
 
@@ -263,7 +263,7 @@ public class LevelDataMenuExtractor : EditorWindow
 
         // 未来可在此添加更多 Tile 类型的分支
 
-        Debug.LogWarning($"未处理的 Tile 类型：{tile.GetType().Name}，位置 ({col},{row})");
+        Logger.LogWarning($"未处理的 Tile 类型：{tile.GetType().Name}，位置 ({col},{row})");
         return null;
     }
 

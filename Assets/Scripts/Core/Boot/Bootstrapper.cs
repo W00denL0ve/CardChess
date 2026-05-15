@@ -13,7 +13,7 @@ public class Bootstrapper : MonoBehaviour
 
     private void Awake()
     {
-        Debug.Log("Bootstrapper Awake：引导器已创建，创建管理器...");
+        Logger.Log("Bootstrapper Awake：引导器已创建，创建管理器...");
         // 从Resource/Prefabs获取管理器物体并将管理器实例化，各个管理器挂在Manager的子物体上
         manager = Instantiate(Resources.Load<GameObject>("Prefabs/Manager"));
         // 不进行自动销毁
@@ -45,17 +45,17 @@ public class Bootstrapper : MonoBehaviour
         {
             // 加载标题面板UI
             UIManager.Instance.ChangePanelsWithMask(new string[] {"loading"},new string[] {"title"}, 1f);
-            Debug.Log("主菜单场景加载完成");
+            Logger.Log("主菜单场景加载完成");
         });
     }
 
     public void OnSceneChanged(SceneChangedEvent e)
     {
-        Debug.Log($"Bootstrapper 收到场景切换事件：{e.PreviousScene} -> {e.CurrentScene}");
+        Logger.Log($"Bootstrapper 收到场景切换事件：{e.PreviousScene} -> {e.CurrentScene}");
     }
     public void OnPanelChanged(PanelSwitchedEvent e)
     {
-        Debug.Log($"Bootstrapper 收到面板切换事件，主菜单面板已加载，销毁引导器。");
+        Logger.Log($"Bootstrapper 收到面板切换事件，主菜单面板已加载，销毁引导器。");
         Destroy(gameObject); // 销毁引导器
     }
     private void OnDestroy()
@@ -63,7 +63,7 @@ public class Bootstrapper : MonoBehaviour
         // 取消订阅事件，清理资源
         GameEventChannel.Unregister<SceneChangedEvent>(OnSceneChanged);
         GameEventChannel.Unregister<PanelSwitchedEvent>(OnPanelChanged);
-        Debug.Log("Bootstrapper 已销毁。");
+        Logger.Log("Bootstrapper 已销毁。");
     }
 
     private void ApplyUserSettings()

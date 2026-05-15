@@ -50,7 +50,7 @@ public class SolidColorSpriteGeneratorWindow : EditorWindow
             {
                 // 创建上级目录（省略详细递归，这里假设上级存在）
                 // 实际可靠做法：逐级创建
-                Debug.LogError("上级目录不存在，请先创建 Assets/Art/Tiles 文件夹");
+                Logger.LogError("上级目录不存在，请先创建 Assets/Art/Tiles 文件夹");
                 return;
             }
             AssetDatabase.CreateFolder(parent, folderName);
@@ -108,6 +108,6 @@ public class SolidColorSpriteGeneratorWindow : EditorWindow
         if (sprite != null)
             Selection.activeObject = sprite;
 
-        Debug.Log($"纯色精灵已生成：{path}");
+        Logger.Log($"纯色精灵已生成：{path}");
     }
 }

@@ -18,7 +18,7 @@ public class CasterCellsAroundSelector : TargetSelector
         Unit casterUnit = context.caster?.GetComponent<Unit>();
         if (casterUnit == null) return new List<ITarget>();
 
-        Vector2Int center = casterUnit.GridPosition;
+        Vector2Int center = casterUnit.gridPosition;
 
         List<ITarget> cells = new List<ITarget>();
         for (int dx = -radius; dx <= radius; dx++)

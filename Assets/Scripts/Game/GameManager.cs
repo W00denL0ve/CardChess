@@ -37,7 +37,7 @@ public class GameManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        Debug.Log("GameManager 已销毁，其余管理器应该也已销毁");
+        Logger.Log("GameManager 已销毁，其余管理器应该也已销毁");
     }
 
     public void OnCardPlayed(CardData card, ITarget anchor1 = null, ITarget anchor2 = null)
@@ -64,15 +64,15 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void StartNewGame()
     {
-        Debug.Log("GameManager：开始新游戏，触发游戏开始事件...");
+        Logger.Log("GameManager：开始新游戏，触发游戏开始事件...");
         UIManager.Instance.SetLoadingTip("正在加载游戏地图...");
         UIManager.Instance.ChangePanelsWithMask(new string[] { "all" }, new string[] { "loading" });
         // 异步切换到地图场景，加载完成后生成地图并触发游戏开始事件
         SceneManager.Instance.LoadSceneAsync("Map", () =>
         {
-            Debug.Log("地图场景加载完成，生成地图...");
+            Logger.Log("地图场景加载完成，生成地图...");
             MapGenerator.Instance.GenerateMap(seed: UnityEngine.Random.Range(0, int.MaxValue));
-            Debug.Log("地图生成完成，触发游戏开始事件...");
+            Logger.Log("地图生成完成，触发游戏开始事件...");
             UIManager.Instance.ChangePanelsWithMask(new string[] { "loading" }, new string[] { "map", "HUD" });
             GameEventChannel.Dispatch(new MapEnteredEvent());
         }); // todo:地图生成器采用异步逻辑，UI更新放在第二个回调中
@@ -116,7 +116,7 @@ public class GameManager : MonoBehaviour
         // 异步切换场景
         SceneManager.Instance.LoadSceneAsync("MainMenu", () =>
         {
-            Debug.Log("主菜单场景加载完成");
+            Logger.Log("主菜单场景加载完成");
             // 切换到标题面板
             UIManager.Instance.ChangePanelsWithMask(new string[] { "loading" }, new string[] { "title" });
         });
@@ -146,19 +146,19 @@ public class GameManager : MonoBehaviour
     /// <param name="sceneName">关卡场景名</param>
     public void LoadLevelAsync(string sceneName, string levelDataAddress)
     {
-        // Debug.Log("正在加载场景...");
+        // Logger.Log("正在加载场景...");
         UIManager.Instance.SetLoadingTip("正在加载场景...");
         UIManager.Instance.ChangePanelsWithMask(new string[] {"all"}, new string[] {"loading"});
         // 1. 异步加载关卡场景
         SceneManager.Instance.LoadSceneAsync(sceneName, () => 
         {
-            // Debug.Log("场景加载完成，正在加载关卡数据...");
+            // Logger.Log("场景加载完成，正在加载关卡数据...");
             UIManager.Instance.SetLoadingTip("正在加载关卡数据...");
             // 实例化关内管理器
             Instantiate(Resources.Load("Prefabs/ManagersInLevel"));
             StartCoroutine(LoadLevelCoroutine(levelDataAddress, () =>
             {
-                Debug.Log("关卡数据加载完成");
+                Logger.Log("关卡数据加载完成");
                 GameEventChannel.Dispatch(new LevelEnteredEvent(sceneName));
                 UIManager.Instance.ChangePanelsWithMask(new string[] { "loading" }, new string[] {"HUD"});
             }));
@@ -183,7 +183,7 @@ public class GameManager : MonoBehaviour
             if (levelManager != null)
                 levelManager.Initialize(levelData);
             else
-                Debug.LogError("场景中未找到 LevelManager！");
+                Logger.LogError("场景中未找到 LevelManager！");
 
             // 注意：不要在这里释放 LevelData 的 Handle，它由 LevelManager 控制生命周期
 
@@ -191,7 +191,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError($"加载 LevelData 失败: {loadHandle.OperationException}");
+            Logger.LogError($"加载 LevelData 失败: {loadHandle.OperationException}");
         }
     }
 
