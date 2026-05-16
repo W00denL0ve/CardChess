@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 /// <summary>
 /// 棋盘视觉管理器，从棋盘管理器剥离出的，单独负责棋盘视觉显示
@@ -11,6 +10,12 @@ public class GridVisualizer : MonoBehaviour
     public GameObject cellVisualPrefab;
     public float visualScaleFactor = 0.9f;
     public float visualHeight = 0.1f;
+
+    [Header("Highlight Materials")]
+    [SerializeField] private Material highlightMaterial3D;
+    [SerializeField] private Material selectedMaterial3D;
+    [SerializeField] private Material highlightMaterial2D;
+    [SerializeField] private Material defaultMaterial2D;
 
     [Header("Dynamic Visibility (Optional, requires USE_DYNAMIC_VISIBILITY)")]
     public Camera targetCamera;
@@ -24,6 +29,9 @@ public class GridVisualizer : MonoBehaviour
 #else
     private List<GameObject> allCubes = new List<GameObject>();
 #endif
+
+    // 缓存每个格子视觉对象的原始材质
+    private Dictionary<string, Material> originalMaterials = new Dictionary<string, Material>();
 
     private Material hightlightMat;
     private Material selectedMat;
@@ -106,47 +114,104 @@ public class GridVisualizer : MonoBehaviour
     }
 
     /// <summary>
-    /// 工具方法，为格子立方体应用指定材质
+    /// 获取格子视觉对象的渲染器组件（支持 MeshRenderer 和 SpriteRenderer）
     /// </summary>
-    /// <param name="cube"></param>
-    /// <param name="mat"></param>
-    void ApplyMaterial(GameObject cube, Material mat)
+    Renderer GetCellRenderer(GameObject visual)
     {
-        if (cube != null)
-        {
-            if (mat != null)
-            {
-                cube.GetComponent<Renderer>().material = mat;
-                return;
-            }
-            Logger.LogWarning("GridVisualizer: 未找到材质");
-            return;
-        }
-        Logger.LogWarning("GridVisualizer: 试图为空物体应用材质");
+        if (visual == null) return null;
+        Renderer renderer = visual.GetComponent<MeshRenderer>();
+        if (renderer != null) return renderer;
+        return visual.GetComponent<SpriteRenderer>();
     }
 
     /// <summary>
-    /// 根据给定坐标列表高亮格子
+    /// 根据渲染器类型应用对应材质
     /// </summary>
-    /// <param name="positions">坐标列表</param>
-    public void HightlightCells(List<Vector2Int> positions)
+    void ApplyMaterial(GameObject visual, Material mat)
     {
-        if (hightlightMat != null)
+        if (visual == null)
         {
-            foreach (Vector2Int position in positions)
-            {
-                GameObject cube = FindVisualCube(position.x, position.y);
-                ApplyMaterial(cube, hightlightMat);
-            }
+            Logger.LogWarning("GridVisualizer: 试图为空物体应用材质");
             return;
         }
-        Logger.LogWarning("GridVisualizer: 未定义高亮材质");
+        if (mat == null)
+        {
+            Logger.LogWarning("GridVisualizer: 未找到材质");
+            return;
+        }
+
+        Renderer renderer = GetCellRenderer(visual);
+        if (renderer != null)
+        {
+            renderer.material = mat;
+        }
+        else
+        {
+            Logger.LogWarning($"GridVisualizer: {visual.name} 没有 MeshRenderer 或 SpriteRenderer");
+        }
+    }
+
+    /// <summary>
+    /// 根据渲染器类型获取当前材质
+    /// </summary>
+    Material GetCurrentMaterial(GameObject visual)
+    {
+        Renderer renderer = GetCellRenderer(visual);
+        return renderer != null ? renderer.sharedMaterial : null;
+    }
+
+    /// <summary>
+    /// 高亮指定格子列表（跳过被占据的格子），并保存原始材质
+    /// </summary>
+    public void HighlightCells(List<Vector2Int> positions)
+    {
+        foreach (var pos in positions)
+        {
+            Cell cell = GridManager.Instance.GetCell(pos.x, pos.y);
+            if (cell == null) continue;
+            // 只高亮未被占据的格子
+            if (cell.OccupyingUnit != null) continue;
+
+            GameObject visual = FindVisualCube(pos.x, pos.y);
+            if (visual == null) continue;
+
+            string key = $"Cell_{pos.x}_{pos.y}";
+            // 保存原始材质（仅首次）
+            if (!originalMaterials.ContainsKey(key))
+            {
+                Material original = GetCurrentMaterial(visual);
+                if (original != null)
+                    originalMaterials[key] = original;
+            }
+
+            // 根据渲染器类型应用对应高亮材质
+            Renderer renderer = GetCellRenderer(visual);
+            if (renderer is SpriteRenderer)
+                ApplyMaterial(visual, highlightMaterial2D);
+            else
+                ApplyMaterial(visual, highlightMaterial3D ?? hightlightMat);
+        }
+        Logger.Log($"GridVisualizer: 高亮 {positions.Count} 个格子");
+    }
+
+    /// <summary>
+    /// 清除所有高亮，恢复原始材质
+    /// </summary>
+    public void ClearHighlights()
+    {
+        foreach (var kvp in originalMaterials)
+        {
+            GameObject visual = FindVisualCubeByName(kvp.Key);
+            if (visual != null)
+                ApplyMaterial(visual, kvp.Value);
+        }
+        originalMaterials.Clear();
+        Logger.Log("GridVisualizer: 已清除所有高亮");
     }
 
     /// <summary>
     /// 根据给定的坐标列表设置格子为选中状态
     /// </summary>
-    /// <param name="positions"></param>
     public void SetSelectedCells(List<Vector2Int> positions)
     {
         if (selectedMat != null)
@@ -159,6 +224,23 @@ public class GridVisualizer : MonoBehaviour
             return;
         }
         Logger.LogWarning("GridVisualizer: 未定义高亮材质");
+    }
+
+    /// <summary>
+    /// 根据完整的物体名查找视觉对象
+    /// </summary>
+    GameObject FindVisualCubeByName(string targetName)
+    {
+#if USE_DYNAMIC_VISIBILITY
+        return null; // 动态模式下暂不支持
+#else
+        foreach (var cube in allCubes)
+        {
+            if (cube.name == targetName)
+                return cube;
+        }
+        return null;
+#endif
     }
 
     /// <summary>

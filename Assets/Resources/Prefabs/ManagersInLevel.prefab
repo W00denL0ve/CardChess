@@ -90,6 +90,50 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 76299eee520f8a44cb285f07a33dc5f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &6374237709223590285
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6986608171972821253}
+  - component: {fileID: 5080379611092733014}
+  m_Layer: 0
+  m_Name: PreviewManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6986608171972821253
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6374237709223590285}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7309402844781760257}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5080379611092733014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6374237709223590285}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae82526f42dcacb49b8edd9fe3319673, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &6596832822845159777
 GameObject:
   m_ObjectHideFlags: 0
@@ -123,6 +167,7 @@ Transform:
   - {fileID: 7250133940291692466}
   - {fileID: 9196501597143136481}
   - {fileID: 6221464866212677297}
+  - {fileID: 6986608171972821253}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6981345928906795515
@@ -136,6 +181,7 @@ GameObject:
   - component: {fileID: 9196501597143136481}
   - component: {fileID: 6377780985239714557}
   - component: {fileID: 2575461709682992496}
+  - component: {fileID: 8957680604798433879}
   m_Layer: 0
   m_Name: GridManager
   m_TagString: Untagged
@@ -186,10 +232,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cellVisualPrefab: {fileID: 1347739052282629211, guid: 99e61797325b90342abc7397425ee320, type: 3}
   visualScaleFactor: 0.9
-  visualHeight: 0.1
+  visualHeight: 0.05
+  highlightMaterial3D: {fileID: 2100000, guid: 31b7db2a43f471e42ae7ac9f5a4940c3, type: 2}
+  selectedMaterial3D: {fileID: 2100000, guid: fe65e48965c5e1942bbea7c33acdc24c, type: 2}
+  highlightMaterial2D: {fileID: 2100000, guid: cbc5fce233db2174a8be68bb35809dbf, type: 2}
+  defaultMaterial2D: {fileID: 2100000, guid: 05bbc54ba37d2df49a862b18c8a70a35, type: 2}
   targetCamera: {fileID: 0}
   poolInitialSize: 200
   visibilityMargin: 1.5
+--- !u!114 &8957680604798433879
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6981345928906795515}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4dee000f5aa0f6d47928d5bb31d93e92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  linePrefab: {fileID: 0}
+  arrowPrefab: {fileID: 0}
+  poolSize: 20
 --- !u!1 &7987962047067861000
 GameObject:
   m_ObjectHideFlags: 0

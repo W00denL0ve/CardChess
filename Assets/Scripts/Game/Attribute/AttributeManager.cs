@@ -41,6 +41,7 @@ public class AttributeManager
         {
             attr.baseValue = value;
         }
+        Logger.LogWarning($"AttributeManager: 设置属性基础值时找不到属性类型：{type}");
     }
 
     /// <summary>
@@ -77,7 +78,7 @@ public class AttributeManager
             attr.AddModifier(modifier);
             return;
         }
-        Logger.Log($"找不到属性：{type}");
+        Logger.LogWarning($"AttributeManager: 添加修饰器时找不到属性类型：{type}");
     }
 
     /// <summary>
@@ -90,7 +91,7 @@ public class AttributeManager
             attr.modifiers.Remove(modifier);
             return;
         }
-        Logger.Log($"找不到属性：{type}");
+        Logger.LogWarning($"AttributeManager: 移除修饰器时找不到属性类型：{type}");
     }
 
     /// <summary>

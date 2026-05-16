@@ -177,28 +177,36 @@ public class GridManager : MonoBehaviour
         GameEventChannel.Dispatch(new CellUpdatedEvent(cell));
     }
 
+    private static readonly int[] dx = { 0, 1, 0, -1 };
+    private static readonly int[] dy = { 1, 0, -1, 0 };
+
     /// <summary>
     /// 寻路（BFS，曼哈顿距离）
     /// </summary>
-    public List<Vector2Int> FindPath(Vector2Int start, Vector2Int end)
+    /// <param name="ignoreOccupied">忽略路径中间格子的占据单位</param>
+    /// <param name="canPassUnwalkable">允许穿过不可行走格子，但终点必须可行走</param>
+    public List<Vector2Int> FindPath(Vector2Int start, Vector2Int end, 
+        bool ignoreOccupied = false, bool canPassUnwalkable = false)
     {
-        if (grid == null) return null;
+        if (grid == null) return new List<Vector2Int>();
         if (start == end) return new List<Vector2Int> { start };
-
-        var visited = new bool[grid.GetLength(0), grid.GetLength(1)];
+    
+        // 终点不可行走时直接返回空（即使 canPassUnwalkable 为 true）
+        Cell endCell = GetCell(end.x, end.y);
+        if (endCell == null || !endCell.isWalkable) return new List<Vector2Int>();
+    
+        int w = grid.GetLength(0), h = grid.GetLength(1);
+        var visited = new bool[w, h];
         var parent = new Dictionary<Vector2Int, Vector2Int>();
         var queue = new Queue<Vector2Int>();
-
+    
         queue.Enqueue(start);
         visited[start.x, start.y] = true;
 
-        int[] dx = { 0, 1, 0, -1 };
-        int[] dy = { 1, 0, -1, 0 };
-
         while (queue.Count > 0)
         {
-            var current = queue.Dequeue();
-            if (current == end)
+            var cur = queue.Dequeue();
+            if (cur == end)
             {
                 var path = new List<Vector2Int>();
                 var node = end;
@@ -214,69 +222,72 @@ public class GridManager : MonoBehaviour
 
             for (int i = 0; i < 4; i++)
             {
-                int nx = current.x + dx[i];
-                int ny = current.y + dy[i];
+                int nx = cur.x + dx[i], ny = cur.y + dy[i];
                 var next = new Vector2Int(nx, ny);
-
-                if (nx < 0 || nx >= grid.GetLength(0) || ny < 0 || ny >= grid.GetLength(1)) continue;
+                if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
                 if (visited[nx, ny]) continue;
 
                 Cell cell = GetCell(nx, ny);
-                if (cell == null || !cell.isWalkable) continue;
-                // 终点允许被占据
-                if (next != end && cell.OccupyingUnit != null) continue;
+                if (cell == null) continue;
+
+                // 可行走性检查：中间格子根据 canPassUnwalkable 决定
+                if (!canPassUnwalkable && !cell.isWalkable) continue;
+                // 占据检查：终点允许被占据，中间格子根据 ignoreOccupied 决定
+                if (!ignoreOccupied && next != end && cell.OccupyingUnit != null) continue;
 
                 visited[nx, ny] = true;
-                parent[next] = current;
+                parent[next] = cur;
                 queue.Enqueue(next);
             }
         }
-
-        return null; // 无路径
+        return new List<Vector2Int>();
     }
 
     /// <summary>
-    /// 可达区域（BFS，maxSteps 步内）
+    /// 可达区域（BFS，maxSteps 步内），返回不含起点的可行走格子列表
     /// </summary>
-    public List<Vector2Int> GetReachableCells(Vector2Int start, int maxSteps)
+    /// <param name="ignoreOccupied">忽略格子的占据单位</param>
+    /// <param name="canPassUnwalkable">允许穿过不可行走格子，但结果中只包含可行走的格子</param>
+    public List<Vector2Int> GetReachableCells(Vector2Int start, int maxSteps,
+        bool ignoreOccupied = false, bool canPassUnwalkable = false)
     {
-        if (grid == null) return new List<Vector2Int>();
+        if (grid == null || maxSteps <= 0) return new List<Vector2Int>();
 
+        int w = grid.GetLength(0), h = grid.GetLength(1);
         var reachable = new List<Vector2Int>();
-        var visited = new bool[grid.GetLength(0), grid.GetLength(1)];
+        var visited = new bool[w, h];
         var queue = new Queue<(Vector2Int pos, int steps)>();
 
         queue.Enqueue((start, 0));
         visited[start.x, start.y] = true;
 
-        int[] dx = { 0, 1, 0, -1 };
-        int[] dy = { 1, 0, -1, 0 };
-
         while (queue.Count > 0)
         {
-            var (current, steps) = queue.Dequeue();
-            if (steps > 0)
-                reachable.Add(current);
+            var (cur, steps) = queue.Dequeue();
+            if (steps > 0 && GetCell(cur.x, cur.y)?.isWalkable == true)
+                reachable.Add(cur);
 
             if (steps >= maxSteps) continue;
 
             for (int i = 0; i < 4; i++)
             {
-                int nx = current.x + dx[i];
-                int ny = current.y + dy[i];
+                int nx = cur.x + dx[i], ny = cur.y + dy[i];
                 var next = new Vector2Int(nx, ny);
-
-                if (nx < 0 || nx >= grid.GetLength(0) || ny < 0 || ny >= grid.GetLength(1)) continue;
+                if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
                 if (visited[nx, ny]) continue;
 
                 Cell cell = GetCell(nx, ny);
-                if (cell == null || !cell.isWalkable || cell.OccupyingUnit != null) continue;
+                if (cell == null) continue;
+
+                // 穿过规则
+                if (!canPassUnwalkable && !cell.isWalkable) continue;
+                // 占据规则
+                if (!ignoreOccupied && cell.OccupyingUnit != null) continue;
 
                 visited[nx, ny] = true;
                 queue.Enqueue((next, steps + 1));
             }
         }
-
         return reachable;
     }
 
