@@ -33,12 +33,12 @@ public class Card : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IP
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        PreviewManager.Instance.PreviewCard(cardData);
+        // PreviewManager.Instance.PreviewCard(cardData);
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        PreviewManager.Instance.ClearPreview();
+        // PreviewManager.Instance.ClearPreview();
     }
 
     public void OnPointerClick(PointerEventData eventData)
