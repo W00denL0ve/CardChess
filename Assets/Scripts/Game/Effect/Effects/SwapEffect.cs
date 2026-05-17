@@ -1,22 +1,22 @@
 using UnityEngine;
 
 /// <summary>
-/// 交换效果 - 将源单位与目标单位交换位置
+/// 交换效果 - 将 context.executor 与 context.executed 交换位置
 /// </summary>
 [CreateAssetMenu(fileName = "SwapEffect", menuName = "Game/Effect/Swap")]
 public class SwapEffect : Effect
 {
-    protected override void ApplyToPair(ITarget source, ITarget target, EffectContext context)
+    public override void OnExecute(EffectContext context)
     {
-        UnitTarget unitA = source as UnitTarget;
-        UnitTarget unitB = target as UnitTarget;
-        if (unitA?.unit == null || unitB?.unit == null) return;
-        if (!unitA.unit.isAlive || !unitB.unit.isAlive) return;
+        Unit execUnit = context.GetExecutorUnit();
+        Unit execdUnit = context.GetExecutedUnit();
+        if (execUnit == null || execdUnit == null) return;
+        if (!execUnit.IsAlive || !execdUnit.IsAlive) return;
 
-        Vector2Int posA = unitA.unit.gridPosition;
-        Vector2Int posB = unitB.unit.gridPosition;
+        Vector2Int posA = execUnit.GridPosition;
+        Vector2Int posB = execdUnit.GridPosition;
 
-        unitA.unit.RequestMove(posB, context);
-        unitB.unit.RequestMove(posA, context);
+        execUnit.RequestMove(posB, context);
+        execdUnit.RequestMove(posA, context);
     }
 }

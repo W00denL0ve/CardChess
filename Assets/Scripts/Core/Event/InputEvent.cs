@@ -28,6 +28,24 @@ public class CellRightClickedEvent : GameEvent
 }
 
 /// <summary>
+/// 左键单击单位事件
+/// </summary>
+public class UnitLeftClickedEvent : GameEvent
+{
+    public Unit Unit { get; }
+    public UnitLeftClickedEvent(Unit unit) => Unit = unit;
+}
+
+/// <summary>
+/// 左键双击单位事件
+/// </summary>
+public class UnitDoubleClickedEvent : GameEvent
+{
+    public Unit Unit { get; }
+    public UnitDoubleClickedEvent(Unit unit) => Unit = unit;
+}
+
+/// <summary>
 /// ESC 键按下事件
 /// </summary>
 public class EscapePressedEvent : GameEvent

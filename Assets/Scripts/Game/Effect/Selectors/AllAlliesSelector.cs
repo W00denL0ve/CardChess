@@ -11,15 +11,32 @@ public class AllAlliesSelector : TargetSelector
 {
     public override List<ITarget> GetTargets(EffectContext context)
     {
-        var casterUnit = context.caster?.GetComponent<Unit>();
-        if (casterUnit == null) return new List<ITarget>();
+        Unit execUnit = context.GetExecutorUnit();
+        if (execUnit == null) return new List<ITarget>();
 
         if (LevelManager.Instance != null)
         {
-            var allies = LevelManager.Instance.GetAlliesOf(casterUnit);
+            var allies = LevelManager.Instance.GetAlliesOf(execUnit);
             return allies.Select(a => new UnitTarget(a)).Cast<ITarget>().ToList();
         }
 
         return new List<ITarget>();
+    }
+
+    public override void PreviewHighlight(EffectContext context, bool show)
+    {
+        var vis = Object.FindObjectOfType<UnitVisualizer>();
+        if (vis == null) return;
+
+        if (show)
+        {
+            var targets = GetTargets(context);
+            var units = targets.Select(t => (t as UnitTarget)?.unit).Where(u => u != null).ToList();
+            if (units.Count > 0) vis.HighlightUnits(units);
+        }
+        else
+        {
+            vis.ClearHighlights();
+        }
     }
 }

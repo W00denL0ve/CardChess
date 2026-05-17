@@ -90,6 +90,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 76299eee520f8a44cb285f07a33dc5f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &6027770210047808078
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4227653736947464501}
+  - component: {fileID: 6688260367190906408}
+  m_Layer: 0
+  m_Name: UnitManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4227653736947464501
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6027770210047808078}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7309402844781760257}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6688260367190906408
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6027770210047808078}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: daca301cad1584b40b0861d035d4af76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  highlightMaterial3D: {fileID: 2100000, guid: 31b7db2a43f471e42ae7ac9f5a4940c3, type: 2}
+  highlightMaterial2D: {fileID: 2100000, guid: cbc5fce233db2174a8be68bb35809dbf, type: 2}
+  hoverMaterial3D: {fileID: 2100000, guid: 31b7db2a43f471e42ae7ac9f5a4940c3, type: 2}
+  hoverMaterial2D: {fileID: 2100000, guid: cbc5fce233db2174a8be68bb35809dbf, type: 2}
 --- !u!1 &6374237709223590285
 GameObject:
   m_ObjectHideFlags: 0
@@ -134,6 +182,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae82526f42dcacb49b8edd9fe3319673, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gridVisualizer: {fileID: 2575461709682992496}
+  unitVisualizer: {fileID: 6688260367190906408}
+  pathRenderer: {fileID: 8957680604798433879}
+  markerPrefab: {fileID: 3677808646879846021, guid: af11af59e97841e4eb2379e6f6afef8c, type: 3}
+  boxPrefab: {fileID: 3677808646879846021, guid: af11af59e97841e4eb2379e6f6afef8c, type: 3}
+  heightOffset: 0.3
+  markerZOffset: 0.4
+  boxHeightOffset: 0.1
 --- !u!1 &6596832822845159777
 GameObject:
   m_ObjectHideFlags: 0
@@ -164,9 +220,10 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5813338758555093277}
+  - {fileID: 6221464866212677297}
   - {fileID: 7250133940291692466}
   - {fileID: 9196501597143136481}
-  - {fileID: 6221464866212677297}
+  - {fileID: 4227653736947464501}
   - {fileID: 6986608171972821253}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -237,6 +294,8 @@ MonoBehaviour:
   selectedMaterial3D: {fileID: 2100000, guid: fe65e48965c5e1942bbea7c33acdc24c, type: 2}
   highlightMaterial2D: {fileID: 2100000, guid: cbc5fce233db2174a8be68bb35809dbf, type: 2}
   defaultMaterial2D: {fileID: 2100000, guid: 05bbc54ba37d2df49a862b18c8a70a35, type: 2}
+  hoverMaterial3D: {fileID: 2100000, guid: fe65e48965c5e1942bbea7c33acdc24c, type: 2}
+  hoverMaterial2D: {fileID: 0}
   targetCamera: {fileID: 0}
   poolInitialSize: 200
   visibilityMargin: 1.5
@@ -252,8 +311,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4dee000f5aa0f6d47928d5bb31d93e92, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  linePrefab: {fileID: 0}
-  arrowPrefab: {fileID: 0}
+  linePrefab: {fileID: 3548650332997928668, guid: 0666911cece9e3d4790ac4f723d07ea3, type: 3}
+  arrowPrefab: {fileID: 1946895567427258415, guid: 73ce58e879b2f0543b1325aff5f2106f, type: 3}
   poolSize: 20
 --- !u!1 &7987962047067861000
 GameObject:

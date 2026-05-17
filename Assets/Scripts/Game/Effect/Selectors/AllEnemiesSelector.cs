@@ -11,16 +11,32 @@ public class AllEnemiesSelector : TargetSelector
 {
     public override List<ITarget> GetTargets(EffectContext context)
     {
-        var casterUnit = context.caster?.GetComponent<Unit>();
-        if (casterUnit == null) return new List<ITarget>();
+        Unit execUnit = context.GetExecutorUnit();
+        if (execUnit == null) return new List<ITarget>();
 
-        // 尝试从 LevelManager 获取敌人（如果存在）
         if (LevelManager.Instance != null)
         {
-            var enemies = LevelManager.Instance.GetEnemiesOf(casterUnit);
+            var enemies = LevelManager.Instance.GetEnemiesOf(execUnit);
             return enemies.Select(e => new UnitTarget(e)).Cast<ITarget>().ToList();
         }
 
         return new List<ITarget>();
+    }
+
+    public override void PreviewHighlight(EffectContext context, bool show)
+    {
+        var vis = Object.FindObjectOfType<UnitVisualizer>();
+        if (vis == null) return;
+
+        if (show)
+        {
+            var targets = GetTargets(context);
+            var units = targets.Select(t => (t as UnitTarget)?.unit).Where(u => u != null).ToList();
+            if (units.Count > 0) vis.HighlightUnits(units);
+        }
+        else
+        {
+            vis.ClearHighlights();
+        }
     }
 }

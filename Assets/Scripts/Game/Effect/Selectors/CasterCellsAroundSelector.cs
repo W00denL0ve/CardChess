@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 /// <summary>
@@ -15,10 +16,10 @@ public class CasterCellsAroundSelector : TargetSelector
 
     public override List<ITarget> GetTargets(EffectContext context)
     {
-        Unit casterUnit = context.caster?.GetComponent<Unit>();
-        if (casterUnit == null) return new List<ITarget>();
+        Unit execUnit = context.GetExecutorUnit();
+        if (execUnit == null) return new List<ITarget>();
 
-        Vector2Int center = casterUnit.gridPosition;
+        Vector2Int center = execUnit.GridPosition;
 
         List<ITarget> cells = new List<ITarget>();
         for (int dx = -radius; dx <= radius; dx++)
@@ -37,5 +38,22 @@ public class CasterCellsAroundSelector : TargetSelector
             }
         }
         return cells;
+    }
+
+    public override void PreviewHighlight(EffectContext context, bool show)
+    {
+        var vis = Object.FindObjectOfType<GridVisualizer>();
+        if (vis == null) return;
+
+        if (show)
+        {
+            var targets = GetTargets(context);
+            var positions = targets.Select(t => t.GetCellPosition()).Where(p => p.HasValue).Select(p => p.Value).ToList();
+            if (positions.Count > 0) vis.HighlightCells(positions);
+        }
+        else
+        {
+            vis.ClearHighlights();
+        }
     }
 }

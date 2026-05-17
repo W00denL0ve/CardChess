@@ -64,6 +64,7 @@ public class @GameInput : IInputActionCollection, IDisposable
     {
         private InputActionMap map;
         private InputAction clickAction;
+        private InputAction doubleClickAction;
         private InputAction contextMenuAction;
         private InputAction escapeAction;
 
@@ -71,11 +72,13 @@ public class @GameInput : IInputActionCollection, IDisposable
         {
             map = actionMap;
             clickAction = map.FindAction("Click", true);
+            doubleClickAction = map.FindAction("DoubleClick", true);
             contextMenuAction = map.FindAction("ContextMenu", true);
             escapeAction = map.FindAction("Escape", true);
         }
 
         public InputAction Click => clickAction;
+        public InputAction DoubleClick => doubleClickAction;
         public InputAction ContextMenu => contextMenuAction;
         public InputAction Escape => escapeAction;
 
@@ -99,13 +102,22 @@ public class @GameInput : IInputActionCollection, IDisposable
                     ""id"": ""b2c3d4e5-f6a7-8901-bcde-f12345678901"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": ""MultiTap(tapTime=0.3,tapDelay=0.5,tapCount=2)"",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""DoubleClick"",
+                    ""type"": ""Button"",
+                    ""id"": ""c3d4e5f6-a7b8-9012-cdef-123456789090"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": ""MultiTap(tapTime=0.2,tapDelay=0.4,tapCount=2)"",
                     ""initialStateCheck"": false
                 },
                 {
                     ""name"": ""ContextMenu"",
                     ""type"": ""Button"",
-                    ""id"": ""c3d4e5f6-a7b8-9012-cdef-123456789012"",
+                    ""id"": ""d4e5f6a7-b8c9-0123-defa-234567890012"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
@@ -114,7 +126,7 @@ public class @GameInput : IInputActionCollection, IDisposable
                 {
                     ""name"": ""Escape"",
                     ""type"": ""Button"",
-                    ""id"": ""d4e5f6a7-b8c9-0123-defa-234567890123"",
+                    ""id"": ""e5f6a7b8-c9d0-1234-efab-345678901023"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
@@ -136,6 +148,17 @@ public class @GameInput : IInputActionCollection, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""f6a7b8c9-d0e1-2345-fabc-456789012345"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""DoubleClick"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b7c8d9e0-f1a2-3456-bcde-678901234567"",
                     ""path"": ""<Mouse>/rightButton"",
                     ""interactions"": """",
                     ""processors"": """",

@@ -140,15 +140,14 @@ public static class TurnActionExecutor
         Vector2Int coord = action.coord;
         Logger.Log($"[TurnAction] 在 ({coord.x},{coord.y}) 应用效果: {action.effectToApply.effectName}");
 
-        // 构建效果上下文，将格子作为 anchor2 传入
+        // 构建效果上下文，目标格作为被执行者
         EffectContext context = new EffectContext
         {
-            caster = null,
-            anchor1 = null,
-            anchor2 = new CellTarget(coord),
-            customParams = null
+            executor = new CellTarget(coord),
+            executed = new CellTarget(coord)
         };
 
-        action.effectToApply.Apply(context);
+        action.effectToApply.OnExecute(context);
+        action.effectToApply.OnComplete(context);
     }
 }

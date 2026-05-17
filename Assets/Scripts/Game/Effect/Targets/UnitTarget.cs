@@ -11,7 +11,7 @@ public class UnitTarget : ITarget
 
     public Vector3? GetWorldPosition() => unit?.transform.position;
 
-    public Vector2Int? GetCellPosition() => unit != null ? unit.gridPosition : null;
+    public Vector2Int? GetCellPosition() => unit != null ? unit.GridPosition : null;
 
     public GameObject gameObject => unit?.gameObject;
 }

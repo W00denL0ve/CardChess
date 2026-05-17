@@ -14,7 +14,7 @@ public class TestUnitVisual : MonoBehaviour
         if (unit != null)
         {
             UpdateName(unit.UnitId);
-            UpdateHealth(unit.currentHealth, unit.maxHealth);
+            UpdateHealth(unit.CurrentHealth, unit.MaxHealth);
         }
         // 监听事件
         GameEventChannel.Register<UnitHealthChangedEvent>(OnHealthChanged);

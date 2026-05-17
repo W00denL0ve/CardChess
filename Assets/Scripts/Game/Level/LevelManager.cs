@@ -45,17 +45,17 @@ public class LevelManager : MonoBehaviour
 
     public List<Unit> GetEnemiesOf(Unit unit)
     {
-        return allUnits.Where(u => u.faction != unit.faction && u.isAlive).ToList();
+        return allUnits.Where(u => u.Faction != unit.Faction && u.IsAlive).ToList();
     }
 
     public List<Unit> GetAlliesOf(Unit unit)
     {
-        return allUnits.Where(u => u.faction == unit.faction && u != unit && u.isAlive).ToList();
+        return allUnits.Where(u => u.Faction == unit.Faction && u != unit && u.IsAlive).ToList();
     }
 
     public List<Unit> GetUnitsOf(Faction faction)
     {
-        return allUnits.Where(u => u.faction == faction && u.isAlive).ToList();
+        return allUnits.Where(u => u.Faction == faction && u.IsAlive).ToList();
     }
 
     private void HandleUnitDeath(UnitDeathEvent evt)

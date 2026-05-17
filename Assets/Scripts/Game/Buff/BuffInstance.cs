@@ -85,7 +85,7 @@ public class BuffInstance
     {
         foreach (var (type, modifier) in appliedModifiers)
         {
-            Host.attributeManager.RemoveModifier(type, modifier);
+            Host.AttributeManager.RemoveModifier(type, modifier);
         }
         appliedModifiers.Clear();
     }

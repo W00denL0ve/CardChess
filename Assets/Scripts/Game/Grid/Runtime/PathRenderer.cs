@@ -97,45 +97,54 @@ public class PathRenderer : MonoBehaviour
     public void ShowPath(List<Vector2Int> path)
     {
         HidePath();
-        if (path == null || path.Count < 2)
+        if (path == null)
         {
-            Logger.LogWarning("PathRenderer: 路径为空或长度不足");
+            Logger.LogWarning("PathRenderer: 路径为空");
+            return;
+        }
+        if (path.Count < 2)
+        {
+            // 仅起点（原地不动），无需绘制
             return;
         }
 
         GridManager grid = GridManager.Instance;
         if (grid == null) return;
 
-        // 绘制线段：每两个连续格子之间
+        // 绘制线段：除最后一段外，每两个连续格子之间放一条线段
+        // 最后一段用箭头取代
         for (int i = 0; i < path.Count - 1; i++)
         {
             Vector3 from = grid.GridToWorld(path[i]);
             Vector3 to = grid.GridToWorld(path[i + 1]);
             Vector3 mid = (from + to) * 0.5f;
+            Vector3 dir = (to - from).normalized;
 
-            GameObject line = GetLine();
-            if (line == null) continue;
-
-            line.transform.position = mid;
-            // 旋转指向下一格（绕 Y 轴）
-            Vector3 dir = to - from;
-            float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
-            line.transform.rotation = Quaternion.Euler(0, angle, 0);
-        }
-
-        // 最后一个格子放置箭头
-        if (path.Count >= 2)
-        {
-            Vector3 lastPos = grid.GridToWorld(path[path.Count - 1]);
-            Vector3 prevPos = grid.GridToWorld(path[path.Count - 2]);
-            Vector3 dir = lastPos - prevPos;
-            float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
-
-            GameObject arrow = GetArrow();
-            if (arrow != null)
+            // 最后一段用箭头取代线段
+            if (i == path.Count - 2)
             {
-                arrow.transform.position = lastPos;
-                arrow.transform.rotation = Quaternion.Euler(0, angle, 0);
+                GameObject arrow = GetArrow();
+                if (arrow != null)
+                {
+                    arrow.transform.position = mid;
+                    // 预制体位于 XY 平面指向 +X，需平躺到 XZ 平面
+                    // 用 LookRotation 构造：+Z 朝上（平躺）、+X 指向 dir
+                    Vector3 up = Vector3.up;
+                    Vector3 dirXZ = dir;
+                    Vector3 spriteUp = Vector3.Cross(up, dirXZ);
+                    arrow.transform.rotation = Quaternion.LookRotation(up, spriteUp);
+                }
+            }
+            else
+            {
+                GameObject line = GetLine();
+                if (line == null) continue;
+
+                line.transform.position = mid;
+                Vector3 up = Vector3.up;
+                Vector3 dirXZ = dir;
+                Vector3 spriteUp = Vector3.Cross(up, dirXZ);
+                line.transform.rotation = Quaternion.LookRotation(up, spriteUp);
             }
         }
 
@@ -147,6 +156,7 @@ public class PathRenderer : MonoBehaviour
     /// </summary>
     public void HidePath()
     {
+        Debug.Log($"[Path] HidePath (lines:{activeLines.Count}, arrows:{activeArrows.Count})");
         foreach (var go in activeLines.ToArray())
             Recycle(go, linePool, activeLines);
         foreach (var go in activeArrows.ToArray())

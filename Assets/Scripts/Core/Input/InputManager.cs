@@ -4,6 +4,16 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Interactions;
 
+/// <summary>
+/// 悬停目标信息
+/// </summary>
+public struct HoverInfo
+{
+    public Vector2Int? cellPosition;
+    public Unit unit;
+    public bool isValid => cellPosition.HasValue || unit != null;
+}
+
 public class InputManager : MonoBehaviour
 {
     public static InputManager Instance { get; private set; }
@@ -13,7 +23,8 @@ public class InputManager : MonoBehaviour
     private List<Cell> allowedCells;
 
     [Header("Input Settings")]
-    [SerializeField] private LayerMask groundLayer = 1 << 0;
+    [SerializeField] private LayerMask cellLayerMask = 1 << 0;
+    [SerializeField] private LayerMask unitLayerMask = 1 << 0;
 
     // New Input System
     private GameInput gameInput;
@@ -45,8 +56,8 @@ public class InputManager : MonoBehaviour
 
         if (gameInput != null)
         {
-            // Click 同时承载单击和双击（通过 MultiTap Interaction 区分）
             gameInput.Gameplay.Click.performed += OnClickPerformed;
+            gameInput.Gameplay.DoubleClick.performed += OnDoubleClickPerformed;
             gameInput.Gameplay.ContextMenu.performed += OnContextMenuPerformed;
             gameInput.Gameplay.Escape.performed += OnEscapePerformed;
         }
@@ -57,6 +68,7 @@ public class InputManager : MonoBehaviour
         if (gameInput != null)
         {
             gameInput.Gameplay.Click.performed -= OnClickPerformed;
+            gameInput.Gameplay.DoubleClick.performed -= OnDoubleClickPerformed;
             gameInput.Gameplay.ContextMenu.performed -= OnContextMenuPerformed;
             gameInput.Gameplay.Escape.performed -= OnEscapePerformed;
             gameInput.Disable();
@@ -73,33 +85,48 @@ public class InputManager : MonoBehaviour
     // ====================================================================
 
     /// <summary>
-    /// Click 动作的 performed 回调 — 通过 interaction 类型区分单击/双击
+    /// Click 动作的 performed 回调 — 每次左键单击触发
     /// </summary>
     private void OnClickPerformed(InputAction.CallbackContext context)
     {
+        // 先检测单位
+        Unit unit = GetUnitUnderMouse();
+        if (unit != null)
+        {
+            GameEventChannel.Dispatch(new UnitLeftClickedEvent(unit));
+            return;
+        }
+
+        // 再检测格子
         Vector2Int? gridPos = GetGridUnderMouse();
         if (!gridPos.HasValue) return;
 
-        bool isDoubleClick = false;
-
-        if (context.interaction is MultiTapInteraction multiTap)
-        {
-            isDoubleClick = multiTap.tapCount >= 2;
-        }
-
-        if (isDoubleClick)
-        {
-            GameEventChannel.Dispatch(new CellDoubleClickedEvent(gridPos.Value));
-        }
-        else
-        {
-            GameEventChannel.Dispatch(new CellLeftClickedEvent(gridPos.Value));
-        }
+        GameEventChannel.Dispatch(new CellLeftClickedEvent(gridPos.Value));
 
         // 旧版回调兼容
         Cell cell = GridManager.Instance?.GetCell(gridPos.Value.x, gridPos.Value.y);
         if (cell != null)
             OnCellClicked(cell);
+    }
+
+    /// <summary>
+    /// DoubleClick 动作的 performed 回调 — 双击时触发（MultiTap tapCount=2）
+    /// </summary>
+    private void OnDoubleClickPerformed(InputAction.CallbackContext context)
+    {
+        // 先检测单位
+        Unit unit = GetUnitUnderMouse();
+        if (unit != null)
+        {
+            GameEventChannel.Dispatch(new UnitDoubleClickedEvent(unit));
+            return;
+        }
+
+        // 再检测格子
+        Vector2Int? gridPos = GetGridUnderMouse();
+        if (!gridPos.HasValue) return;
+
+        GameEventChannel.Dispatch(new CellDoubleClickedEvent(gridPos.Value));
     }
 
     private void OnContextMenuPerformed(InputAction.CallbackContext context)
@@ -126,7 +153,7 @@ public class InputManager : MonoBehaviour
         if (mainCamera == null) return null;
 
         Ray ray = mainCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f, groundLayer))
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f, cellLayerMask))
         {
             if (GridManager.Instance != null)
             {
@@ -136,6 +163,70 @@ public class InputManager : MonoBehaviour
             }
         }
         return null;
+    }
+
+    /// <summary>
+    /// 获取鼠标下的单位（使用 unitLayerMask 层过滤）
+    /// </summary>
+    Unit GetUnitUnderMouse()
+    {
+        if (mainCamera == null || unitLayerMask.value == 0) return null;
+
+        Ray ray = mainCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f, unitLayerMask))
+        {
+            Unit unit = hit.collider.GetComponentInParent<Unit>();
+            if (unit != null && unit.IsAlive)
+                return unit;
+        }
+        return null;
+    }
+
+    // ====================================================================
+    //  悬停检测
+    // ====================================================================
+
+    /// <summary>
+    /// 获取鼠标下的悬停目标（格子和单位）
+    /// 先按 unitLayerMask 检测单位，再按 cellLayerMask 检测格子
+    /// </summary>
+    public HoverInfo GetHoverTarget()
+    {
+        if (mainCamera == null) return default;
+
+        Ray ray = mainCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
+        HoverInfo info = default;
+
+        // 按层检测单位
+        if (unitLayerMask.value != 0)
+        {
+            if (Physics.Raycast(ray, out RaycastHit unitHit, 100f, unitLayerMask))
+            {
+                Unit unit = unitHit.collider.GetComponentInParent<Unit>();
+                if (unit != null && unit.IsAlive)
+                {
+                    info.unit = unit;
+                    info.cellPosition = unit.GridPosition;
+                    return info;
+                }
+            }
+        }
+
+        // 按层检测格子
+        if (cellLayerMask.value != 0)
+        {
+            if (Physics.Raycast(ray, out RaycastHit cellHit, 100f, cellLayerMask))
+            {
+                if (GridManager.Instance != null)
+                {
+                    GridManager.Instance.WorldToGrid(cellHit.point, out int col, out int row);
+                    if (GridManager.Instance.GetCell(col, row) != null)
+                        info.cellPosition = new Vector2Int(col, row);
+                }
+            }
+        }
+
+        return info;
     }
 
     // ====================================================================

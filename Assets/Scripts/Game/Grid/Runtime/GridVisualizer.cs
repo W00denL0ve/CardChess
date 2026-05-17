@@ -17,6 +17,10 @@ public class GridVisualizer : MonoBehaviour
     [SerializeField] private Material highlightMaterial2D;
     [SerializeField] private Material defaultMaterial2D;
 
+    [Header("Hover Materials")]
+    [SerializeField] private Material hoverMaterial3D;
+    [SerializeField] private Material hoverMaterial2D;
+
     [Header("Dynamic Visibility (Optional, requires USE_DYNAMIC_VISIBILITY)")]
     public Camera targetCamera;
     public int poolInitialSize = 200;
@@ -32,6 +36,14 @@ public class GridVisualizer : MonoBehaviour
 
     // 缓存每个格子视觉对象的原始材质
     private Dictionary<string, Material> originalMaterials = new Dictionary<string, Material>();
+
+    // 悬停状态
+    private Vector2Int? hoveredCell;
+    private string hoveredCellKey;
+    private Material hoveredCellOriginalMaterial;
+
+    // 判断一个格子是否当前处于高亮状态
+    private HashSet<string> highlightedCells = new HashSet<string>();
 
     private Material hightlightMat;
     private Material selectedMat;
@@ -161,16 +173,18 @@ public class GridVisualizer : MonoBehaviour
     }
 
     /// <summary>
-    /// 高亮指定格子列表（跳过被占据的格子），并保存原始材质
+    /// 高亮指定格子列表，并保存原始材质
     /// </summary>
-    public void HighlightCells(List<Vector2Int> positions)
+    /// <param name="positions">要高亮的格子坐标列表</param>
+    /// <param name="ignoreUnit">若提供，该单位占据的格子不会被跳过</param>
+    public void HighlightCells(List<Vector2Int> positions, Unit ignoreUnit = null)
     {
         foreach (var pos in positions)
         {
             Cell cell = GridManager.Instance.GetCell(pos.x, pos.y);
             if (cell == null) continue;
-            // 只高亮未被占据的格子
-            if (cell.OccupyingUnit != null) continue;
+            // 跳过被其他单位占据的格子（除非是指定的单位）
+            if (cell.OccupyingUnit != null && cell.OccupyingUnit != ignoreUnit) continue;
 
             GameObject visual = FindVisualCube(pos.x, pos.y);
             if (visual == null) continue;
@@ -183,6 +197,8 @@ public class GridVisualizer : MonoBehaviour
                 if (original != null)
                     originalMaterials[key] = original;
             }
+
+            highlightedCells.Add(key);
 
             // 根据渲染器类型应用对应高亮材质
             Renderer renderer = GetCellRenderer(visual);
@@ -199,6 +215,10 @@ public class GridVisualizer : MonoBehaviour
     /// </summary>
     public void ClearHighlights()
     {
+        Debug.Log("[GridVis] ClearHighlights");
+        // 先清除悬停
+        ClearHoverCell();
+
         foreach (var kvp in originalMaterials)
         {
             GameObject visual = FindVisualCubeByName(kvp.Key);
@@ -206,7 +226,64 @@ public class GridVisualizer : MonoBehaviour
                 ApplyMaterial(visual, kvp.Value);
         }
         originalMaterials.Clear();
+        highlightedCells.Clear();
         Logger.Log("GridVisualizer: 已清除所有高亮");
+    }
+
+    /// <summary>
+    /// 设置悬停格子（仅在高亮格子中生效）
+    /// </summary>
+    public void SetHoverCell(Vector2Int cellPos)
+    {
+        ClearHoverCell();
+
+        string key = $"Cell_{cellPos.x}_{cellPos.y}";
+        // 仅当该格子处于高亮状态时才生效
+        if (!highlightedCells.Contains(key)) return;
+
+        GameObject visual = FindVisualCube(cellPos.x, cellPos.y);
+        if (visual == null) return;
+
+        hoveredCell = cellPos;
+        hoveredCellKey = key;
+
+        // 保存当前材质（可能是高亮材质）以备还原
+        hoveredCellOriginalMaterial = GetCurrentMaterial(visual);
+
+        // 应用悬停材质
+        Renderer renderer = GetCellRenderer(visual);
+        if (renderer is SpriteRenderer)
+            ApplyMaterial(visual, hoverMaterial2D);
+        else
+            ApplyMaterial(visual, hoverMaterial3D);
+    }
+
+    /// <summary>
+    /// 清除悬停格子，还原为高亮材质
+    /// </summary>
+    public void ClearHoverCell()
+    {
+        if (!hoveredCell.HasValue) return;
+        Logger.Log($"[GridVis] ClearHoverCell ({hoveredCell.Value.x},{hoveredCell.Value.y})");
+
+        GameObject visual = FindVisualCube(hoveredCell.Value.x, hoveredCell.Value.y);
+        if (visual != null && hoveredCellOriginalMaterial != null)
+        {
+            ApplyMaterial(visual, hoveredCellOriginalMaterial);
+        }
+
+        hoveredCell = null;
+        hoveredCellKey = null;
+        hoveredCellOriginalMaterial = null;
+    }
+
+    /// <summary>
+    /// 检查格子是否在当前高亮列表中
+    /// </summary>
+    public bool IsCellHighlighted(Vector2Int pos)
+    {
+        string key = $"Cell_{pos.x}_{pos.y}";
+        return highlightedCells.Contains(key);
     }
 
     /// <summary>
@@ -244,14 +321,42 @@ public class GridVisualizer : MonoBehaviour
     }
 
     /// <summary>
-    /// 单个格子更新回调
+    /// 单个格子更新回调 — 更新后恢复高亮/悬停状态
     /// </summary>
     void OnCellUpdated(CellUpdatedEvent evt)
     {
         Logger.Log("收到格子更新事件");
         GameObject cube = FindVisualCube(evt.col, evt.row);
         if (cube != null)
+        {
+            // 先恢复地形材质
             ApplyTerrainMaterial(cube, evt.col, evt.row);
+
+            // 如果格子处于高亮状态，重新应用高亮材质
+            string key = $"Cell_{evt.col}_{evt.row}";
+            if (highlightedCells.Contains(key))
+            {
+                if (originalMaterials.TryGetValue(key, out var _))
+                {
+                    Renderer renderer = GetCellRenderer(cube);
+                    if (renderer is SpriteRenderer)
+                        ApplyMaterial(cube, highlightMaterial2D);
+                    else
+                        ApplyMaterial(cube, highlightMaterial3D ?? hightlightMat);
+                }
+            }
+
+            // 如果格子是当前悬停格子，重新应用悬停材质
+            if (hoveredCell.HasValue && hoveredCell.Value.x == evt.col && hoveredCell.Value.y == evt.row)
+            {
+                hoveredCellOriginalMaterial = GetCurrentMaterial(cube);
+                Renderer renderer = GetCellRenderer(cube);
+                if (renderer is SpriteRenderer)
+                    ApplyMaterial(cube, hoverMaterial2D);
+                else
+                    ApplyMaterial(cube, hoverMaterial3D);
+            }
+        }
     }
 
     GameObject FindVisualCube(int col, int row)
@@ -268,6 +373,15 @@ public class GridVisualizer : MonoBehaviour
         }
 #endif
         return null;
+    }
+
+    /// <summary>
+    /// 检查格子是否被占据
+    /// </summary>
+    public bool IsCellOccupied(Vector2Int pos)
+    {
+        Cell cell = GridManager.Instance?.GetCell(pos.x, pos.y);
+        return cell != null && cell.OccupyingUnit != null;
     }
 
     void ClearAllVisuals()

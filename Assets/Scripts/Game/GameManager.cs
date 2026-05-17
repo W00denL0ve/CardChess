@@ -40,23 +40,21 @@ public class GameManager : MonoBehaviour
         Logger.Log("GameManager 已销毁，其余管理器应该也已销毁");
     }
 
-    public void OnCardPlayed(CardData card, ITarget anchor1 = null, ITarget anchor2 = null)
+    public void OnCardPlayed(CardData card)
     {
         if (!DeckManager.Instance.IsCardInHand(card)) return;
 
         DeckManager.Instance.PlayCard(card);
 
-        // 构建效果上下文
-        EffectContext context = new EffectContext
+        // 初始 context: executor = executed = 玩家
+        ITarget playerTarget = player != null ? new UnitTarget(player.GetComponent<Unit>()) : null;
+        if (playerTarget == null)
         {
-            caster = player?.gameObject,
-            anchor1 = anchor1,
-            anchor2 = anchor2,
-            sourceCard = null, // card 是 CardData(ScriptableObject)，不是 Card(MonoBehaviour)
-            customParams = null
-        };
+            Logger.LogError("GameManager: 无法获取玩家 Unit");
+            return;
+        }
 
-        EffectManager.Instance.ExecuteCardEffects(card, context);
+        AsyncEffectExecutor.Instance.ExecuteCardChainsAsync(card, playerTarget);
     }
 
     /// <summary>
