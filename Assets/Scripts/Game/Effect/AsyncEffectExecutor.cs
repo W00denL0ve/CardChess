@@ -96,19 +96,24 @@ public class AsyncEffectExecutor : MonoBehaviour
     {
         if (steps == null) { onComplete?.Invoke(); yield break; }
 
+        bool prevWasSelector = false;
         foreach (var step in steps)
         {
             if (step == null) continue;
-            yield return ResolveAndExecute(step, context);
+            yield return ResolveAndExecute(step, context, prevWasSelector);
             if (context.chainBroken) break;
+            prevWasSelector = step is SelectorStep;
         }
 
+        // 链结束时清除所有预览视觉
+        PreviewManager.Instance?.ClearAll();
         onComplete?.Invoke();
     }
 
     IEnumerator ExecuteSingleStepRoutine(ChainStep step, EffectContext context, Action onComplete)
     {
         yield return ResolveAndExecute(step, context);
+        PreviewManager.Instance?.ClearAll();
         onComplete?.Invoke();
     }
 
@@ -121,13 +126,13 @@ public class AsyncEffectExecutor : MonoBehaviour
     /// EffectContext 为引用类型，所有步骤共享同一实例。
     /// 条件不满足时中断整条链。返回 false 表示链应中断。
     /// </summary>
-    IEnumerator ResolveAndExecute(ChainStep step, EffectContext context)
+    IEnumerator ResolveAndExecute(ChainStep step, EffectContext context, bool prevWasSelector = false)
     {
         context.ClearStepCache();
 
         if (step is SelectorStep ss)
         {
-            yield return ResolveSelectorStep(ss, context);
+            yield return ResolveSelectorStep(ss, context, prevWasSelector);
         }
         else if (step is ConditionStep cs)
         {
@@ -142,9 +147,11 @@ public class AsyncEffectExecutor : MonoBehaviour
         }
     }
 
-    IEnumerator ResolveSelectorStep(SelectorStep step, EffectContext context)
+    IEnumerator ResolveSelectorStep(SelectorStep step, EffectContext context, bool prevWasSelector = false)
     {
         if (step.selector == null) yield break;
+        // 上一步是选择器 → 玩家可回退
+        context.canRevert = prevWasSelector;
         ITarget selectedTarget = null;
         yield return ResolveSelector(step.selector, context, (t) => selectedTarget = t);
         if (selectedTarget != null)
@@ -171,8 +178,6 @@ public class AsyncEffectExecutor : MonoBehaviour
     IEnumerator ResolveEffectStep(EffectStep step, EffectContext context)
     {
         if (step.effect == null) yield break;
-        // 效果执行前清除所有预览视觉
-        PreviewManager.Instance?.ClearAll();
         step.effect.OnExecute(context);
         if (step.effect is IAnimatedEffect anim)
             yield return anim.PlayAnimation(context);
@@ -195,69 +200,67 @@ public class AsyncEffectExecutor : MonoBehaviour
             yield break;
         }
 
-        ITarget selected;
+        ITarget selected = null;
+        bool completed = false;
+        bool autoConfirm = candidates.Count == 1;
 
-        if (candidates.Count == 1)
+        var first = candidates[0];
+        if (first is CellTarget)
         {
-            // 只有一个候选者 → 自动选择
-            selected = candidates[0];
-            selector.PreviewHighlight(context, true);
-            Logger.Log($"[AsyncEffect] {selector.name} 自动选择 (仅1个候选)");
+            Unit execUnit = context.GetExecutedUnit();
+            var cellCandidates = candidates
+                .Select(t => t.GetCellPosition())
+                .Where(p => p.HasValue).Select(p => p.Value).ToList();
+
+            PreviewManager.Instance.StartCellPreview(execUnit, cellCandidates,
+                (pos) =>
+                {
+                    var path = GridManager.Instance?.FindPath(execUnit.GridPosition, pos);
+                    if (path != null && path.Count > 0)
+                        context.cachedPath = path;
+                    selected = new CellTarget(pos);
+                    completed = true;
+                },
+                context.canRevert
+            );
+
+            if (autoConfirm)
+            {
+                Logger.Log($"[AsyncEffect] {selector.name} 自动确认 (唯一格子候选)");
+                PreviewManager.Instance.AutoConfirmSelection();
+            }
+        }
+        else if (first is UnitTarget)
+        {
+            var unitCandidates = candidates
+                .Select(t => (t as UnitTarget)?.unit)
+                .Where(u => u != null).ToList();
+
+            PreviewManager.Instance.StartUnitPreview(unitCandidates,
+                (unit) =>
+                {
+                    selected = new UnitTarget(unit);
+                    completed = true;
+                },
+                context.canRevert
+            );
+
+            if (autoConfirm)
+            {
+                Logger.Log($"[AsyncEffect] {selector.name} 自动确认 (唯一单位候选)");
+                PreviewManager.Instance.AutoConfirmSelection();
+            }
         }
         else
         {
-            // 多个候选者 → 进入预览
-            selected = null;
-            bool completed = false;
-
-            var first = candidates[0];
-            if (first is CellTarget)
-            {
-                Unit execUnit = context.GetExecutorUnit();
-                var cellCandidates = candidates
-                    .Select(t => t.GetCellPosition())
-                    .Where(p => p.HasValue).Select(p => p.Value).ToList();
-
-                PreviewManager.Instance.StartCellPreview(execUnit, cellCandidates,
-                    (pos) =>
-                    {
-                        var path = GridManager.Instance?.FindPath(execUnit.GridPosition, pos);
-                        if (path != null && path.Count > 0)
-                            context.cachedPath = path;
-                        selected = new CellTarget(pos);
-                        completed = true;
-                    }
-                );
-            }
-            else if (first is UnitTarget)
-            {
-                var unitCandidates = candidates
-                    .Select(t => (t as UnitTarget)?.unit)
-                    .Where(u => u != null).ToList();
-
-                PreviewManager.Instance.StartUnitPreview(unitCandidates,
-                    (unit) =>
-                    {
-                        selected = new UnitTarget(unit);
-                        completed = true;
-                    }
-                );
-            }
-            else
-            {
-                Logger.LogWarning($"[AsyncEffect] {selector.name} 无法识别的候选类型");
-                onSelected(null);
-                yield break;
-            }
-
-            yield return new WaitUntil(() => completed);
+            Logger.LogWarning($"[AsyncEffect] {selector.name} 无法识别的候选类型");
+            onSelected(null);
+            yield break;
         }
 
-        if (selected != null)
-        {
-            Logger.Log($"[AsyncEffect] {selector.name} 选定目标");
-            selector.PreviewHighlight(context, false);
-        }
+        yield return new WaitUntil(() => completed);
+
+        Logger.Log($"[AsyncEffect] {selector.name} 选定目标");
         onSelected(selected);
     }
 }

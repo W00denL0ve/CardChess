@@ -13,33 +13,42 @@ public class PreviewManager : MonoBehaviour
 {
     public static PreviewManager Instance { get; private set; }
 
-    [Header("Pin 池")]
-    [SerializeField] private GameObject pinPrefab;
-    [SerializeField] private int poolSize = 10;
-    [SerializeField] private Sprite cellPinSprite;
-    [SerializeField] private Sprite unitPinSprite;
+    [Header("Cell Pin")]
+    [SerializeField] private GameObject cellPinPrefab;
+    [SerializeField] private float cellPinYOffset = 0.5f;
+    [SerializeField] private float cellPinZOffset = 0f;
 
-    [Header("偏移（调试用）")]
-    [SerializeField] private float heightOffset = 0.5f;
-    [SerializeField] private float zOffset = 0.3f;
+    [Header("Unit Pin")]
+    [SerializeField] private GameObject unitPinPrefab;
+    [SerializeField] private float unitPinYOffset = 0.5f;
+    [SerializeField] private float unitPinZOffset = 0.3f;
+
+    [Header("池大小")]
+    [SerializeField] private int poolSize = 3;
 
     [Header("遮罩")]
-    [SerializeField] private GameObject overlayMask;
+    private GameObject overlayMask;
 
-    // ── Pin 池 ──
-    private Queue<GameObject> pinPool = new();
+    // ── Pin 池（分类型）──
+    private Queue<GameObject> cellPinPool = new();
+    private Queue<GameObject> unitPinPool = new();
     private List<GameObject> fixedPins = new();
-    private GameObject activePin;
-    private Animator activePinAnim;
 
     // ── 状态 ──
     private bool isSelecting;
     private bool isCellType;
     private List<Vector2Int> cellCandidates;
+    private List<Unit> unitCandidates;
     private Unit currentUnit;
     private Action<Vector2Int> onCellConfirm;
     private Action<Unit> onUnitConfirm;
 
+    // ── 预选 ──
+    private bool hasPreselect;
+    private Vector2Int preselectedCell;
+    private Unit preselectedUnit;
+    // ── 回退 ──
+    private bool canRevert;
     // ── 悬停 ──
     private Vector2Int? lastHoveredCell;
     private Unit lastHoveredUnit;
@@ -52,20 +61,23 @@ public class PreviewManager : MonoBehaviour
 
     void Start()
     {
-        if (overlayMask == null)
+        var cam = Camera.main;
+        if (cam != null)
         {
-            var cam = Camera.main;
-            if (cam != null)
-            {
-                var t = cam.transform.Find("PreviewMask");
-                if (t != null) overlayMask = t.gameObject;
-            }
+            var t = cam.transform.Find("PreviewMask");
+            if (t != null) overlayMask = t.gameObject;
         }
+        if (overlayMask != null) overlayMask.SetActive(false);
+
         for (int i = 0; i < poolSize; i++)
         {
-            var p = Instantiate(pinPrefab, transform);
-            p.SetActive(false);
-            pinPool.Enqueue(p);
+            var cp = Instantiate(cellPinPrefab, transform);
+            cp.SetActive(false);
+            cellPinPool.Enqueue(cp);
+
+            var up = Instantiate(unitPinPrefab, transform);
+            up.SetActive(false);
+            unitPinPool.Enqueue(up);
         }
         SubscribeInput();
     }
@@ -83,12 +95,13 @@ public class PreviewManager : MonoBehaviour
     //  公开 API
     // ====================================================================
 
-    public void StartCellPreview(Unit unit, List<Vector2Int> cells, Action<Vector2Int> onConfirm)
+    public void StartCellPreview(Unit unit, List<Vector2Int> cells, Action<Vector2Int> onConfirm, bool canRevert = false)
     {
         if (cells == null || cells.Count == 0) return;
+        this.canRevert = canRevert;
         GridVisualizer.Instance?.ClearHighlights();
-        PushPin();
         GridVisualizer.Instance?.HighlightCells(cells, unit);
+        hasPreselect = false;
         isSelecting = true;
         isCellType = true;
         cellCandidates = cells;
@@ -99,12 +112,14 @@ public class PreviewManager : MonoBehaviour
         Logger.Log($"[Preview] StartCellPreview: {cells.Count} items");
     }
 
-    public void StartUnitPreview(List<Unit> candidates, Action<Unit> onConfirm)
+    public void StartUnitPreview(List<Unit> candidates, Action<Unit> onConfirm, bool canRevert = false)
     {
         if (candidates == null || candidates.Count == 0) return;
+        this.canRevert = canRevert;
         UnitVisualizer.Instance?.ClearHighlights();
-        PushPin();
         UnitVisualizer.Instance?.HighlightUnits(candidates);
+        unitCandidates = new List<Unit>(candidates);
+        hasPreselect = false;
         isSelecting = true;
         isCellType = false;
         onUnitConfirm = onConfirm;
@@ -120,33 +135,80 @@ public class PreviewManager : MonoBehaviour
         GridVisualizer.Instance?.ClearAll();
         UnitVisualizer.Instance?.ClearAll();
         PathRenderer.Instance?.HidePath();
-        if (activePin != null) { activePin.SetActive(false); pinPool.Enqueue(activePin); activePin = null; }
-        foreach (var p in fixedPins) { p.SetActive(false); pinPool.Enqueue(p); }
-        fixedPins.Clear();
+        ClearAllPins();
         if (overlayMask != null) overlayMask.SetActive(false);
         isSelecting = false;
+        hasPreselect = false;
         Logger.Log("[Preview] ClearAll");
+    }
+
+    /// <summary>自动确认当前预览（仅1个候选时调用）</summary>
+    public void AutoConfirmSelection()
+    {
+        if (!isSelecting) return;
+
+        if (isCellType && cellCandidates != null && cellCandidates.Count == 1)
+        {
+            var pos = cellCandidates[0];
+            var w = GridManager.Instance.GridToWorld(pos);
+            AddPin(w, true);
+            hasPreselect = false;
+            isSelecting = false;
+            onCellConfirm?.Invoke(pos);
+        }
+        else if (!isCellType && unitCandidates != null && unitCandidates.Count == 1)
+        {
+            var unit = unitCandidates[0];
+            AddPin(unit.transform.position, false);
+            hasPreselect = false;
+            isSelecting = false;
+            onUnitConfirm?.Invoke(unit);
+        }
     }
 
     // ====================================================================
     //  Pin 管理
     // ====================================================================
 
-    void PushPin()
+    void AddPin(Vector3 worldPos, bool isCell)
     {
-        if (activePin != null) { fixedPins.Add(activePin); }
-        activePin = pinPool.Count > 0 ? pinPool.Dequeue() : Instantiate(pinPrefab, transform);
-        activePinAnim = activePin.GetComponent<Animator>();
+        var pool = isCell ? cellPinPool : unitPinPool;
+        var prefab = isCell ? cellPinPrefab : unitPinPrefab;
+        float yOff = isCell ? cellPinYOffset : unitPinYOffset;
+        float zOff = isCell ? cellPinZOffset : unitPinZOffset;
+        var pin = pool.Count > 0 ? pool.Dequeue() : Instantiate(prefab, transform);
+        pin.transform.position = new Vector3(worldPos.x, worldPos.y + yOff, worldPos.z + zOff);
+        pin.SetActive(true);
+        var anim = pin.GetComponent<Animator>();
+        if (anim != null) { anim.ResetTrigger("Hide"); anim.SetTrigger("Show"); }
+        fixedPins.Add(pin);
     }
 
-    void ShowActivePin(Vector3 worldPos, Sprite sprite)
+    void ClearAllPins()
     {
-        if (activePin == null) return;
-        activePin.transform.position = new Vector3(worldPos.x, worldPos.y + heightOffset, worldPos.z + zOffset);
-        var sr = activePin.GetComponent<SpriteRenderer>();
-        if (sr != null && sprite != null) sr.sprite = sprite;
-        activePin.SetActive(true);
-        if (activePinAnim != null) { activePinAnim.ResetTrigger("Hide"); activePinAnim.SetTrigger("Show"); }
+        var pool = cellPinPool;
+        foreach (var p in fixedPins)
+        {
+            p.SetActive(false);
+            // 判断 pin 属于哪个池
+            if (p.name.Contains("Cell") || p.name == cellPinPrefab.name + "(Clone)")
+                cellPinPool.Enqueue(p);
+            else
+                unitPinPool.Enqueue(p);
+        }
+        fixedPins.Clear();
+    }
+
+    void RecycleLastPin()
+    {
+        if (fixedPins.Count == 0) return;
+        var pin = fixedPins[fixedPins.Count - 1];
+        pin.SetActive(false);
+        if (pin.name.Contains("Cell") || pin.name == cellPinPrefab.name + "(Clone)")
+            cellPinPool.Enqueue(pin);
+        else
+            unitPinPool.Enqueue(pin);
+        fixedPins.RemoveAt(fixedPins.Count - 1);
     }
 
     // ====================================================================
@@ -160,15 +222,14 @@ public class PreviewManager : MonoBehaviour
         ClearHover();
         GridVisualizer.Instance?.ClearHighlights();
         UnitVisualizer.Instance?.ClearHighlights();
-        if (activePin != null) { activePin.SetActive(false); pinPool.Enqueue(activePin); }
+        hasPreselect = false;
 
         var last = fixedPins[fixedPins.Count - 1];
-        last.SetActive(false); pinPool.Enqueue(last);
+        last.SetActive(false);
+        // 回收到对应池（简单通过名称判断）
+        if (last.name.Contains("Cell")) cellPinPool.Enqueue(last);
+        else unitPinPool.Enqueue(last);
         fixedPins.RemoveAt(fixedPins.Count - 1);
-
-        activePin = fixedPins.Count > 0 ? fixedPins[fixedPins.Count - 1] : null;
-        activePinAnim = activePin?.GetComponent<Animator>();
-        if (activePin != null) fixedPins.RemoveAt(fixedPins.Count - 1);
     }
 
     // ====================================================================
@@ -238,39 +299,89 @@ public class PreviewManager : MonoBehaviour
         if (!isSelecting || !isCellType) return;
         var pos = evt.GridPosition;
 
-        var w = GridManager.Instance.GridToWorld(pos);
-        ShowActivePin(w, cellPinSprite);
+        // 检查是否在候选范围内
+        if (cellCandidates == null || !cellCandidates.Contains(pos)) return;
 
-        if (currentUnit != null)
+        if (!hasPreselect)
         {
-            var path = GridManager.Instance?.FindPath(currentUnit.GridPosition, pos);
-            if (path != null && path.Count > 0) PathRenderer.Instance?.ShowPath(path);
+            // 首次点击 → 预选：加 pin，显示路径
+            var w = GridManager.Instance.GridToWorld(pos);
+            AddPin(w, true);
+            if (currentUnit != null)
+            {
+                var path = GridManager.Instance?.FindPath(currentUnit.GridPosition, pos);
+                if (path != null && path.Count > 0) PathRenderer.Instance?.ShowPath(path);
+            }
+            preselectedCell = pos;
+            hasPreselect = true;
+            Logger.Log($"[Preview] 预选格子 ({pos.x},{pos.y})");
         }
-
-        GridVisualizer.Instance?.ClearHighlights();
-        isSelecting = false;
-        onCellConfirm?.Invoke(pos);
+        else if (pos != preselectedCell)
+        {
+            // 点击不同格子 → 移除旧 pin，加新 pin，更新路径
+            RecycleLastPin();
+            preselectedCell = pos;
+            var w = GridManager.Instance.GridToWorld(pos);
+            AddPin(w, true);
+            if (currentUnit != null)
+            {
+                PathRenderer.Instance?.HidePath();
+                var path = GridManager.Instance?.FindPath(currentUnit.GridPosition, pos);
+                if (path != null && path.Count > 0) PathRenderer.Instance?.ShowPath(path);
+            }
+            Logger.Log($"[Preview] 更新预选格子 ({pos.x},{pos.y})");
+        }
+        else
+        {
+            // 再次点击同一格子 → 确认
+            PathRenderer.Instance?.HidePath();
+            hasPreselect = false;
+            isSelecting = false;
+            onCellConfirm?.Invoke(pos);
+            Logger.Log($"[Preview] 确认格子 ({pos.x},{pos.y})");
+        }
     }
 
     void OnUnitClicked(UnitLeftClickedEvent evt)
     {
         if (!isSelecting || isCellType) return;
         var unit = evt.Unit;
-        ShowActivePin(unit.transform.position, unitPinSprite);
-        UnitVisualizer.Instance?.ClearHighlights();
-        isSelecting = false;
-        onUnitConfirm?.Invoke(unit);
+
+        // 检查是否在候选范围内
+        if (unitCandidates == null || !unitCandidates.Contains(unit)) return;
+
+        if (!hasPreselect)
+        {
+            AddPin(unit.transform.position, false);
+            preselectedUnit = unit;
+            hasPreselect = true;
+            Logger.Log($"[Preview] 预选单位 {unit.UnitId}");
+        }
+        else if (unit != preselectedUnit)
+        {
+            RecycleLastPin();
+            AddPin(unit.transform.position, false);
+            preselectedUnit = unit;
+            Logger.Log($"[Preview] 更新预选单位 {unit.UnitId}");
+        }
+        else
+        {
+            hasPreselect = false;
+            isSelecting = false;
+            onUnitConfirm?.Invoke(unit);
+            Logger.Log($"[Preview] 确认单位 {unit.UnitId}");
+        }
     }
 
     void OnRightClicked(CellRightClickedEvent evt)
     {
-        if (!isSelecting) return;
-        if (fixedPins.Count >= 1) RevertStep();
+        if (!isSelecting || !canRevert) return;
+        RevertStep();
     }
 
     void OnEscPressed(EscapePressedEvent evt)
     {
-        if (!isSelecting) return;
-        if (fixedPins.Count >= 1) RevertStep();
+        if (!isSelecting || !canRevert) return;
+        RevertStep();
     }
 }

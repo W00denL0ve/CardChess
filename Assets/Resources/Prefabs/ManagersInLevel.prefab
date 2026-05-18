@@ -182,14 +182,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae82526f42dcacb49b8edd9fe3319673, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridVisualizer: {fileID: 2575461709682992496}
-  unitVisualizer: {fileID: 6688260367190906408}
-  pathRenderer: {fileID: 8957680604798433879}
-  markerPrefab: {fileID: 3677808646879846021, guid: af11af59e97841e4eb2379e6f6afef8c, type: 3}
-  boxPrefab: {fileID: 3677808646879846021, guid: af11af59e97841e4eb2379e6f6afef8c, type: 3}
-  heightOffset: 0.3
-  markerZOffset: 0.4
-  boxHeightOffset: 0.1
+  cellPinPrefab: {fileID: 3677808646879846021, guid: af11af59e97841e4eb2379e6f6afef8c, type: 3}
+  cellPinYOffset: 0.3
+  cellPinZOffset: 0.6
+  unitPinPrefab: {fileID: 3677808646879846021, guid: a6741db47bb7fc241bcdcd2c09cf05d1, type: 3}
+  unitPinYOffset: -0.1
+  unitPinZOffset: 0
+  poolSize: 3
 --- !u!1 &6596832822845159777
 GameObject:
   m_ObjectHideFlags: 0

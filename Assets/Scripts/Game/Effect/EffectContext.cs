@@ -26,6 +26,9 @@ public class EffectContext
     /// <summary>选择器到效果之间传递的缓存路径（如 BFS 寻路结果）</summary>
     public List<Vector2Int> cachedPath;
 
+    /// <summary>当前步骤是否可以回退到上一个选择器（由 Executor 维护）</summary>
+    public bool canRevert;
+
     /// <summary>内部标志：链是否应中断（由 ConditionStep 设置，Executor 检查）</summary>
     internal bool chainBroken;
 

@@ -38,11 +38,11 @@ public class Unit : MonoBehaviour
     public int GetDefenseFor(DamageType type) => type == DamageType.Physical ? PhysicalDefense : MagicDefense;
 
     // 初始化
-    public void Initialize(UnitConfig config, Faction faction, Vector2Int gridPos)
+    public void Initialize(UnitConfig config, Vector2Int gridPos, Faction? overrideFaction = null)
     {
         unitId = config.unitId;
         occupation = config.occupation;
-        this.Faction = faction;
+        this.Faction = overrideFaction ?? config.defaultFaction;
         GridPosition = gridPos;
         IsAlive = true;
 

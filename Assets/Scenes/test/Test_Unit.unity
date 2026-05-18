@@ -245,6 +245,10 @@ PrefabInstance:
       propertyPath: boxPrefab
       value: 
       objectReference: {fileID: 3677808646879846021, guid: 717607d6fb3cc7c45b34475c14ad1302, type: 3}
+    - target: {fileID: 5080379611092733014, guid: 54265246d84f8af4eb678390c553a5ea, type: 3}
+      propertyPath: pinPrefab
+      value: 
+      objectReference: {fileID: 1804760655}
     - target: {fileID: 5813338758555093277, guid: 54265246d84f8af4eb678390c553a5ea, type: 3}
       propertyPath: m_LocalPosition.y
       value: 1.731
@@ -24315,6 +24319,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1804760655 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3677808646879846021, guid: af11af59e97841e4eb2379e6f6afef8c, type: 3}
+  m_PrefabInstance: {fileID: 270045427186901595}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1969323125
 GameObject:
   m_ObjectHideFlags: 0
@@ -24476,7 +24485,7 @@ MonoBehaviour:
   warriorConfig: {fileID: 11400000, guid: 7269658f7f69c0745a9cb8297b12cb57, type: 2}
   mageConfig: {fileID: 11400000, guid: e27148ed337c950498000280be705723, type: 2}
   unitPrefab: {fileID: 1720476947112078228, guid: 922ab379983fe24419218388a39dba15, type: 3}
-  importedCard: {fileID: 11400000, guid: 4ea342ce3f30014469a8084e7edc46c8, type: 2}
+  importedCard: {fileID: 11400000, guid: b4d86c500f35d784fb9fbe5d3701682b, type: 2}
 --- !u!1 &2128341929
 GameObject:
   m_ObjectHideFlags: 0
@@ -24682,6 +24691,10 @@ PrefabInstance:
     - target: {fileID: 96588808323640385, guid: 48f0308a690711940b0408e179451d6e, type: 3}
       propertyPath: m_Name
       value: PreviewMask
+      objectReference: {fileID: 0}
+    - target: {fileID: 96588808323640385, guid: 48f0308a690711940b0408e179451d6e, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8948667157749068667, guid: 48f0308a690711940b0408e179451d6e, type: 3}
       propertyPath: m_LocalPosition.x

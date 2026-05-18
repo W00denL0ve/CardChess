@@ -32,7 +32,7 @@ public class DeckManager : MonoBehaviour
     public void DrawCard()
     {
         if (deck.Count == 0) return;
-        CardData card = deck[Random.Range(0, deck.Count)];
+        CardData card = deck[UnityEngine.Random.Range(0, deck.Count)];
         deck.Remove(card);
         hand.Add(card);
         OnCardDrawn?.Invoke(card);
@@ -94,4 +94,4 @@ public class DeckManager : MonoBehaviour
         }
     }
 }
-}
+

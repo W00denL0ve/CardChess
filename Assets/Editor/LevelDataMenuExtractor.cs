@@ -66,10 +66,30 @@ public class LevelDataMenuExtractor : EditorWindow
         // ---------- 3. 解析回合行动 Tilemap ----------
         LevelTurnData turnAsset = ParseRoundTilemaps(baseTilemap);
 
+        // ---------- 3.5. 解析玩家出生点 Tilemap ----------
+        Tilemap spawnTm = GetTilemapByNames("PlayerSpawn", "PlayerStart");
+        List<Vector2Int> spawnPositions = new List<Vector2Int>();
+        if (spawnTm != null)
+        {
+            spawnTm.CompressBounds();
+            BoundsInt baseBounds = baseTilemap.cellBounds;
+            foreach (Vector3Int pos in spawnTm.cellBounds.allPositionsWithin)
+            {
+                if (spawnTm.GetTile(pos) is PlayerSpawnTile)
+                {
+                    int col = pos.x - baseBounds.xMin;
+                    int row = pos.y - baseBounds.yMin;
+                    if (col >= 0 && col < baseBounds.size.x && row >= 0 && row < baseBounds.size.y)
+                        spawnPositions.Add(new Vector2Int(col, row));
+                }
+            }
+        }
+
         // ---------- 4. 创建主 LevelData 资产 ----------
         LevelData mainAsset = ScriptableObject.CreateInstance<LevelData>();
         mainAsset.gridData = gridAsset;
         mainAsset.turnData = turnAsset;
+        mainAsset.playerSpawnPositions = spawnPositions;
 
         // ---------- 5. 保存所有资产 ----------
         string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Substring(2);
@@ -149,8 +169,9 @@ public class LevelDataMenuExtractor : EditorWindow
         EditorUtility.DisplayDialog("提取成功", 
             $"已生成以下资产：\n" +
             $"主关卡：{mainPath}\n" +
-            $"地形网格：{gridPath}\n" +
-            $"回合事件：{turnPath}", "确定");
+            $"地形网格：{gridPath} ({width}x{height})\n" +
+            $"回合事件：{turnPath} ({turnAsset.rounds?.Count ?? 0} 个回合)\n" +
+            $"玩家出生点：{spawnPositions.Count} 个", "确定");
     }
 
     // ====================================================================
@@ -236,13 +257,16 @@ public class LevelDataMenuExtractor : EditorWindow
     {
         Vector2Int coord = new Vector2Int(col, row);
 
-        if (tile is EnemySpawnTile spawnTile)
+        if (tile is UnitSpawnTile spawnTile)
         {
-            return new EnemySpawnAction
+            return new SpawnUnitAction
             {
                 coord = coord,
-                enemyId = spawnTile.enemyId,
-                spawnCount = spawnTile.count
+                spawnGroup = spawnTile.spawnGroup,
+                fallbackUnitConfig = spawnTile.fallbackUnitConfig,
+                useConfigFaction = true,
+                allowedTerrains = spawnTile.allowedTerrains,
+                searchRange = spawnTile.searchRange
             };
         }
 

@@ -224,4 +224,15 @@ public class SaveManager : MonoBehaviour
             TargetFrameRate = GetInt(nameof(SettingsData.TargetFrameRate), 60)
         };
     }
+
+    // ====================================================================
+    //  玩家阵容（存档占位，后续接入实际存档系统）
+    // ====================================================================
+
+    /// <summary>获取当前玩家阵容（从存档读取）</summary>
+    public List<UnitConfig> GetPlayerRoster()
+    {
+        // TODO: 从存档文件读取玩家持有的 UnitConfig 列表
+        return new List<UnitConfig>();
+    }
 }

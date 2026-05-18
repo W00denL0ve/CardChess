@@ -40,6 +40,19 @@ public class UnitSelector : TargetSelector
         return units.Select(u => (ITarget)new UnitTarget(u)).ToList();
     }
 
+    public override void PreviewHighlight(EffectContext context, bool show)
+    {
+        var vis = UnitVisualizer.Instance;
+        if (vis == null) return;
+        if (show)
+        {
+            var targets = GetTargets(context);
+            var units = targets.Select(t => (t as UnitTarget)?.unit).Where(u => u != null).ToList();
+            if (units.Count > 0) vis.HighlightUnits(units);
+        }
+        else { vis.ClearHighlights(); }
+    }
+
     static bool MatchWildcard(string input, string pattern)
     {
         if (pattern.Contains('*'))

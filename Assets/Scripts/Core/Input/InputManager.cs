@@ -86,27 +86,26 @@ public class InputManager : MonoBehaviour
 
     /// <summary>
     /// Click 动作的 performed 回调 — 每次左键单击触发
+    /// 同时检测单位和格子，分别派发事件
     /// </summary>
     private void OnClickPerformed(InputAction.CallbackContext context)
     {
-        // 先检测单位
+        // 检测单位
         Unit unit = GetUnitUnderMouse();
         if (unit != null)
-        {
             GameEventChannel.Dispatch(new UnitLeftClickedEvent(unit));
-            return;
-        }
 
-        // 再检测格子
+        // 检测格子（始终派发，由接收方根据状态过滤）
         Vector2Int? gridPos = GetGridUnderMouse();
-        if (!gridPos.HasValue) return;
+        if (gridPos.HasValue)
+        {
+            GameEventChannel.Dispatch(new CellLeftClickedEvent(gridPos.Value));
 
-        GameEventChannel.Dispatch(new CellLeftClickedEvent(gridPos.Value));
-
-        // 旧版回调兼容
-        Cell cell = GridManager.Instance?.GetCell(gridPos.Value.x, gridPos.Value.y);
-        if (cell != null)
-            OnCellClicked(cell);
+            // 旧版回调兼容
+            Cell cell = GridManager.Instance?.GetCell(gridPos.Value.x, gridPos.Value.y);
+            if (cell != null)
+                OnCellClicked(cell);
+        }
     }
 
     /// <summary>

@@ -91,12 +91,8 @@ public class TestAsyncEffect : MonoBehaviour
 
     Unit SpawnUnit(UnitConfig config, Faction faction, Vector2Int pos)
     {
-        GameObject go = Instantiate(unitPrefab, GridManager.Instance.GridToWorld(pos), Quaternion.identity);
-        Unit unit = go.GetComponent<Unit>();
-        unit.Initialize(config, faction, pos);
-        GridManager.Instance.PlaceUnit(unit, pos);
-        LevelManager.Instance.RegisterUnit(unit);
-        return unit;
+        UnitFactory.SetUnitPrefab(unitPrefab);
+        return UnitFactory.Spawn(config, pos, faction);
     }
 
     void CleanupUnits()

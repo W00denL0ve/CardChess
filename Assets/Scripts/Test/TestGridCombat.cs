@@ -89,11 +89,8 @@ public class TestGridCombat : MonoBehaviour
 
     Unit SpawnUnit(UnitConfig config, Faction faction, Vector2Int pos)
     {
-        GameObject go = Instantiate(unitPrefab, GridManager.Instance.GridToWorld(pos), Quaternion.identity);
-        Unit unit = go.GetComponent<Unit>();
-        unit.Initialize(config, faction, pos);
-        GridManager.Instance.PlaceUnit(unit, pos);
-        LevelManager.Instance.RegisterUnit(unit);
+        UnitFactory.SetUnitPrefab(unitPrefab);
+        Unit unit = UnitFactory.Spawn(config, pos, faction);
         spawnedUnits.Add(unit);
         Debug.Log($"[TestGridCombat] 生成 {config.unitId} 于 {pos}");
         return unit;

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -12,16 +13,26 @@ public abstract class TurnAction
 }
 
 /// <summary>
-/// 敌人生成行动 - 在指定格子生成敌人
+/// 单位生成行动 - 在指定格子生成单位
 /// </summary>
 [System.Serializable]
-public class EnemySpawnAction : TurnAction
+public class SpawnUnitAction : TurnAction
 {
-    /// <summary>敌人 ID（用于从配置表或 Addressables 加载）</summary>
-    public string enemyId;
+    /// <summary>随机生成池</summary>
+    public SpawnGroup spawnGroup;
 
-    /// <summary>生成数量</summary>
-    public int spawnCount = 1;
+    /// <summary>兜底单位配置</summary>
+    public UnitConfig fallbackUnitConfig;
+
+    public Faction factionOverride;
+    public bool useConfigFaction = true;
+    public int count = 1;
+
+    /// <summary>允许生成的地形类型（为空则不限制）</summary>
+    public List<TerrainType> allowedTerrains;
+
+    /// <summary>出生点被占用时的搜索半径（曼哈顿距离，0=不搜索）</summary>
+    public int searchRange = 0;
 }
 
 /// <summary>
@@ -42,6 +53,7 @@ public class CellChangeAction : TurnAction
 
 /// <summary>
 /// 效果应用行动 - 在指定格子应用一个 Effect
+/// todo 注意：应该采用效果链，不急于实现
 /// </summary>
 [System.Serializable]
 public class EffectApplyAction : TurnAction

@@ -1,5 +1,7 @@
 using UnityEngine;
+using System;
 
+[Obsolete]
 public class PlayArea : MonoBehaviour
 {
     public void AddPlayedCard(CardVisualizer card)
