@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class PlayArea : MonoBehaviour
 {
-    public void AddPlayedCard(Card card)
+    public void AddPlayedCard(CardVisualizer card)
     {
         card.transform.SetParent(transform);
         // Disable interactions

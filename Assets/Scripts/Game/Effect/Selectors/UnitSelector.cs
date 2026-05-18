@@ -3,95 +3,52 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// 单位选择器 — 按条件筛选单位
-/// 条件精确到只有 1 个匹配时自动选择，无需玩家干预
-/// 用于效果链的第一个步骤（与被执行者无关）
+/// 单位选择器 — 全图 AND 筛选
 /// </summary>
-[CreateAssetMenu(menuName = "Game/TargetSelector/UnitSelector")]
+[CreateAssetMenu(menuName = "Game/TargetSelector/Unit")]
 public class UnitSelector : TargetSelector
 {
-    public enum CountMode { Single, All, Count }
+    [System.Flags]
+    public enum FactionMask { Player = 1, Enemy = 2, Neutral = 4 }
+    [System.Flags]
+    public enum OccMask { Warrior = 1, Rogue = 2, Mage = 4 }
 
-    public enum FactionFilter { Any, Player, Enemy, Neutral }
-    public enum OccupationFilter { Any, Warrior, Rogue, Mage }
+    [Header("阵营（多选）")]
+    public FactionMask factions = (FactionMask)7; // 默认全选
 
-    [Header("选择数量")]
-    public CountMode countMode = CountMode.Single;
-    [Tooltip("当 countMode = Count 时使用")]
-    public int customCount = 3;
+    [Header("职业（多选）")]
+    public OccMask occupations = (OccMask)7;
 
-    [Header("过滤条件（留空/Any = 不限）")]
-    public FactionFilter factionFilter = FactionFilter.Any;
-    public OccupationFilter occupationFilter = OccupationFilter.Any;
-    public string nameFilter = "";
-
-    [Header("其他")]
-    [Tooltip("排除 context.executor 自身")]
-    public bool excludeExecutor = false;
+    [Header("名称（通配）")]
+    public string nameFilter;
 
     public override List<ITarget> GetTargets(EffectContext context)
     {
         var lm = LevelManager.Instance;
         if (lm == null) return new List<ITarget>();
 
-        var allUnits = lm.AllUnits.Where(u => u.IsAlive);
+        IEnumerable<Unit> units = lm.AllUnits.Where(u => u.IsAlive);
 
-        // 阵营过滤
-        if (factionFilter != FactionFilter.Any)
-        {
-            var targetFaction = (Faction)(int)factionFilter - 1; // Player=0→Player, Enemy=1→Enemy
-            allUnits = allUnits.Where(u => u.Faction == targetFaction);
-        }
+        units = units.Where(u => (factions & (FactionMask)(1 << (int)u.Faction)) != 0);
 
-        // 职业过滤
-        if (occupationFilter != OccupationFilter.Any)
-        {
-            var targetOcc = (Occupation)(int)occupationFilter - 1;
-            allUnits = allUnits.Where(u => u.Occupation == targetOcc);
-        }
+        if (occupations != (OccMask)7)
+            units = units.Where(u => (occupations & (OccMask)(1 << (int)u.Occupation)) != 0);
 
-        // 名称过滤
         if (!string.IsNullOrEmpty(nameFilter))
-            allUnits = allUnits.Where(u => u.UnitId == nameFilter || u.name == nameFilter);
+            units = units.Where(u => MatchWildcard(u.UnitId ?? u.name, nameFilter));
 
-        // 排除执行者
-        if (excludeExecutor)
-        {
-            Unit execUnit = context.GetExecutorUnit();
-            if (execUnit != null)
-                allUnits = allUnits.Where(u => u != execUnit);
-        }
-
-        var result = allUnits.ToList();
-
-        // 根据 countMode 截取
-        int takeCount;
-        switch (countMode)
-        {
-            case CountMode.Single: takeCount = 1; break;
-            case CountMode.All: takeCount = result.Count; break;
-            case CountMode.Count: takeCount = Mathf.Min(customCount, result.Count); break;
-            default: takeCount = 1; break;
-        }
-
-        result = result.Take(takeCount).ToList();
-        return result.Select(u => (ITarget)new UnitTarget(u)).ToList();
+        return units.Select(u => (ITarget)new UnitTarget(u)).ToList();
     }
 
-    public override void PreviewHighlight(EffectContext context, bool show)
+    static bool MatchWildcard(string input, string pattern)
     {
-        var vis = Object.FindObjectOfType<UnitVisualizer>();
-        if (vis == null) return;
-
-        if (show)
+        if (pattern.Contains('*'))
         {
-            var targets = GetTargets(context);
-            var units = targets.Select(t => (t as UnitTarget)?.unit).Where(u => u != null).ToList();
-            if (units.Count > 0) vis.HighlightUnits(units);
+            var parts = pattern.Split('*');
+            if (parts.Length == 2)
+                return input.StartsWith(parts[0]) && input.EndsWith(parts[1]);
+            return input.Contains(parts[0]);
         }
-        else
-        {
-            vis.ClearHighlights();
-        }
+        return input == pattern;
     }
 }

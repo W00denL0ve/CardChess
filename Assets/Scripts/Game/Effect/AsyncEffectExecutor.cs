@@ -27,19 +27,25 @@ public class AsyncEffectExecutor : MonoBehaviour
 
     /// <summary>
     /// 异步执行卡牌的所有效果链
-    /// 每条链独立从初始源开始执行上下文链
+    /// initialSource 自动包装为 CardTarget(card)
+    /// 完成后自动调用 DeckManager.CompleteCard
     /// </summary>
-    public void ExecuteCardChainsAsync(CardData card, ITarget initialSource, Action onComplete = null)
+    public void ExecuteCardChainsAsync(CardData card, Action onComplete = null)
     {
         if (card == null) { onComplete?.Invoke(); return; }
 
+        var source = new CardTarget(card);
         var ctx = new EffectContext
         {
             sourceCard = card,
-            executor = initialSource,
-            executed = initialSource
+            executor = source,
+            executed = source
         };
-        StartCoroutine(ExecuteAllChainsRoutine(card.chains, ctx, onComplete));
+        StartCoroutine(ExecuteAllChainsRoutine(card.chains, ctx, () =>
+        {
+            DeckManager.Instance?.CompleteCard(card);
+            onComplete?.Invoke();
+        }));
     }
 
     /// <summary>
@@ -52,7 +58,15 @@ public class AsyncEffectExecutor : MonoBehaviour
         foreach (var chain in chains)
         {
             if (chain == null || chain.steps == null || chain.steps.Count == 0) continue;
-            yield return ExecuteStepsRoutine(chain.steps, baseContext, null);
+
+            // 每条链独立创建 context 副本，避免链间互扰
+            var ctx = new EffectContext
+            {
+                sourceCard = baseContext.sourceCard,
+                executor = baseContext.executor,
+                executed = baseContext.executed
+            };
+            yield return ExecuteStepsRoutine(chain.steps, ctx, null);
         }
 
         onComplete?.Invoke();
@@ -61,7 +75,7 @@ public class AsyncEffectExecutor : MonoBehaviour
     /// <summary>
     /// 从指定上下文开始执行 steps 序列
     /// </summary>
-    public void ExecuteStepsAsync(List<GameEffectStep> steps, EffectContext context, Action onComplete = null)
+    public void ExecuteStepsAsync(List<ChainStep> steps, EffectContext context, Action onComplete = null)
     {
         StartCoroutine(ExecuteStepsRoutine(steps, context, onComplete));
     }
@@ -69,7 +83,7 @@ public class AsyncEffectExecutor : MonoBehaviour
     /// <summary>
     /// 异步执行单个步骤
     /// </summary>
-    public void ExecuteStepAsync(GameEffectStep step, EffectContext context, Action onComplete = null)
+    public void ExecuteStepAsync(ChainStep step, EffectContext context, Action onComplete = null)
     {
         StartCoroutine(ExecuteSingleStepRoutine(step, context, onComplete));
     }
@@ -78,24 +92,23 @@ public class AsyncEffectExecutor : MonoBehaviour
     //  协程
     // ====================================================================
 
-    IEnumerator ExecuteStepsRoutine(List<GameEffectStep> steps, EffectContext context, Action onComplete)
+    IEnumerator ExecuteStepsRoutine(List<ChainStep> steps, EffectContext context, Action onComplete)
     {
         if (steps == null) { onComplete?.Invoke(); yield break; }
 
-        EffectContext currentCtx = context;
         foreach (var step in steps)
         {
             if (step == null) continue;
-            yield return ResolveAndExecute(step, currentCtx, (nextCtx) => currentCtx = nextCtx);
+            yield return ResolveAndExecute(step, context);
+            if (context.chainBroken) break;
         }
 
         onComplete?.Invoke();
     }
 
-    IEnumerator ExecuteSingleStepRoutine(GameEffectStep step, EffectContext context, Action onComplete)
+    IEnumerator ExecuteSingleStepRoutine(ChainStep step, EffectContext context, Action onComplete)
     {
-        EffectContext resultCtx = context;
-        yield return ResolveAndExecute(step, context, (nextCtx) => resultCtx = nextCtx);
+        yield return ResolveAndExecute(step, context);
         onComplete?.Invoke();
     }
 
@@ -105,165 +118,146 @@ public class AsyncEffectExecutor : MonoBehaviour
 
     /// <summary>
     /// 解析并执行一个步骤。
-    /// onContextUpdated 回调返回更新后的上下文（选择器可能改变了 executor/executed）
+    /// EffectContext 为引用类型，所有步骤共享同一实例。
+    /// 条件不满足时中断整条链。返回 false 表示链应中断。
     /// </summary>
-    IEnumerator ResolveAndExecute(GameEffectStep step, EffectContext context, Action<EffectContext> onContextUpdated)
+    IEnumerator ResolveAndExecute(ChainStep step, EffectContext context)
     {
-        EffectContext newCtx = context;
+        context.ClearStepCache();
 
-        // ── 选择器阶段 ──
-        if (step.selector != null)
+        if (step is SelectorStep ss)
         {
-            yield return ResolveSelector(step.selector, context,
-                (selectedTarget) =>
-                {
-                    if (selectedTarget != null)
-                    {
-                        newCtx = new EffectContext
-                        {
-                            sourceCard = context.sourceCard,
-                            executor = step.selector.ChangesContext ? context.executed : context.executor,
-                            executed = selectedTarget,
-                            customParams = context.customParams
-                        };
-                    }
-                });
+            yield return ResolveSelectorStep(ss, context);
         }
-
-        // ── 效果阶段 ──
-        if (step.effect != null)
+        else if (step is ConditionStep cs)
         {
-            step.effect.OnExecute(newCtx);
-            step.effect.OnComplete(newCtx);
+            if (!ResolveConditionStep(cs, context))
+            {
+                yield break; // 中断，由外层检查
+            }
         }
+        else if (step is EffectStep es)
+        {
+            yield return ResolveEffectStep(es, context);
+        }
+    }
 
-        onContextUpdated?.Invoke(newCtx);
+    IEnumerator ResolveSelectorStep(SelectorStep step, EffectContext context)
+    {
+        if (step.selector == null) yield break;
+        ITarget selectedTarget = null;
+        yield return ResolveSelector(step.selector, context, (t) => selectedTarget = t);
+        if (selectedTarget != null)
+        {
+            context.executor = step.selector.changesExecutor ? context.executed : context.executor;
+            context.executed = selectedTarget;
+        }
+        else
+        {
+            // 未选中任何目标 → 中断整条链
+            context.chainBroken = true;
+        }
+    }
+
+    bool ResolveConditionStep(ConditionStep step, EffectContext context)
+    {
+        if (step.condition == null) return true;
+        if (step.condition.IsMet(context)) return true;
+        Logger.Log($"[AsyncEffect] 条件 '{step.condition.name}' 未满足，链中断");
+        context.chainBroken = true;
+        return false;
+    }
+
+    IEnumerator ResolveEffectStep(EffectStep step, EffectContext context)
+    {
+        if (step.effect == null) yield break;
+        // 效果执行前清除所有预览视觉
+        PreviewManager.Instance?.ClearAll();
+        step.effect.OnExecute(context);
+        if (step.effect is IAnimatedEffect anim)
+            yield return anim.PlayAnimation(context);
+        step.effect.OnComplete(context);
     }
 
     // ====================================================================
-    //  选择器解析
+    //  选择器解析 — 统一流程
+    //  候选=1 → 自动选择；候选>1 → 根据类型进入预览
     // ====================================================================
 
-    /// <summary>
-    /// 解析一个选择器：自动选择器直接返回，手动选择器进入 PreviewManager 等待玩家
-    /// </summary>
     IEnumerator ResolveSelector(TargetSelector selector, EffectContext context,
         Action<ITarget> onSelected)
     {
-        if (selector is ManualCellSelector cellSel)
+        var candidates = selector.GetTargets(context);
+        if (candidates == null || candidates.Count == 0)
         {
-            yield return ResolveManualCell(cellSel, context, onSelected);
+            Logger.LogWarning($"[AsyncEffect] {selector.name} 返回空目标列表");
+            onSelected(null);
+            yield break;
         }
-        else if (selector is ManualUnitSelector unitSel)
+
+        ITarget selected;
+
+        if (candidates.Count == 1)
         {
-            yield return ResolveManualUnit(unitSel, context, onSelected);
+            // 只有一个候选者 → 自动选择
+            selected = candidates[0];
+            selector.PreviewHighlight(context, true);
+            Logger.Log($"[AsyncEffect] {selector.name} 自动选择 (仅1个候选)");
         }
         else
         {
-            // 自动选择器：直接取第一个目标
-            var targets = selector.GetTargets(context);
-            if (targets != null && targets.Count > 0)
+            // 多个候选者 → 进入预览
+            selected = null;
+            bool completed = false;
+
+            var first = candidates[0];
+            if (first is CellTarget)
             {
-                // 自动高亮（短暂显示后被效果覆盖）
-                selector.PreviewHighlight(context, true);
-                onSelected(targets[0]);
+                Unit execUnit = context.GetExecutorUnit();
+                var cellCandidates = candidates
+                    .Select(t => t.GetCellPosition())
+                    .Where(p => p.HasValue).Select(p => p.Value).ToList();
+
+                PreviewManager.Instance.StartCellPreview(execUnit, cellCandidates,
+                    (pos) =>
+                    {
+                        var path = GridManager.Instance?.FindPath(execUnit.GridPosition, pos);
+                        if (path != null && path.Count > 0)
+                            context.cachedPath = path;
+                        selected = new CellTarget(pos);
+                        completed = true;
+                    }
+                );
+            }
+            else if (first is UnitTarget)
+            {
+                var unitCandidates = candidates
+                    .Select(t => (t as UnitTarget)?.unit)
+                    .Where(u => u != null).ToList();
+
+                PreviewManager.Instance.StartUnitPreview(unitCandidates,
+                    (unit) =>
+                    {
+                        selected = new UnitTarget(unit);
+                        completed = true;
+                    }
+                );
             }
             else
             {
-                Logger.LogWarning($"[AsyncEffect] {selector.name} 返回空目标");
+                Logger.LogWarning($"[AsyncEffect] {selector.name} 无法识别的候选类型");
                 onSelected(null);
+                yield break;
             }
+
+            yield return new WaitUntil(() => completed);
         }
-    }
 
-    // ====================================================================
-    //  手动选择器
-    // ====================================================================
-
-    IEnumerator ResolveManualCell(ManualCellSelector selector, EffectContext context,
-        Action<ITarget> onSelected)
-    {
-        Unit execUnit = context.GetExecutorUnit();
-        if (execUnit == null) { onSelected(null); yield break; }
-
-        int range = selector.range >= 0 ? selector.range : execUnit.ActionPointLimit;
-        if (selector.clampToActionPointLimit)
-            range = Mathf.Min(range, execUnit.ActionPointLimit);
-
-        var candidates = GridManager.Instance?.GetReachableCells(
-            execUnit.GridPosition, range,
-            selector.ignoreOccupied, selector.canPassUnwalkable
-        );
-        if (candidates == null || candidates.Count == 0)
+        if (selected != null)
         {
-            Logger.LogWarning($"[AsyncEffect] ManualCell: 无可用候选格子");
-            onSelected(null);
-            yield break;
+            Logger.Log($"[AsyncEffect] {selector.name} 选定目标");
+            selector.PreviewHighlight(context, false);
         }
-
-        if (!selector.includeOrigin)
-            candidates.Remove(execUnit.GridPosition);
-
-        bool completed = false;
-        Vector2Int selectedPos = execUnit.GridPosition;
-
-        PreviewManager.Instance.EnterGridPreview(execUnit, candidates,
-            (pos) => { selectedPos = pos; completed = true; },
-            () => { completed = true; }
-        );
-
-        yield return new WaitUntil(() => completed);
-        Logger.Log($"[AsyncEffect] ManualCell: 选定 ({selectedPos.x},{selectedPos.y})");
-        onSelected(new CellTarget(selectedPos));
-    }
-
-    IEnumerator ResolveManualUnit(ManualUnitSelector selector, EffectContext context,
-        Action<ITarget> onSelected)
-    {
-        Unit execUnit = context.GetExecutorUnit();
-        if (execUnit == null) { onSelected(null); yield break; }
-
-        var candidates = GetUnitCandidates(execUnit, selector);
-        if (candidates == null || candidates.Count == 0)
-        {
-            Logger.LogWarning($"[AsyncEffect] ManualUnit: 无可用候选单位");
-            onSelected(null);
-            yield break;
-        }
-
-        bool completed = false;
-        Unit selectedUnit = null;
-
-        PreviewManager.Instance.EnterUnitPreview(candidates,
-            (unit) => { selectedUnit = unit; completed = true; },
-            () => { completed = true; }
-        );
-
-        yield return new WaitUntil(() => completed);
-
-        if (selectedUnit != null)
-        {
-            Logger.Log($"[AsyncEffect] ManualUnit: 选定 {selectedUnit.UnitId}");
-            onSelected(new UnitTarget(selectedUnit));
-        }
-        else
-        {
-            onSelected(null);
-        }
-    }
-
-    List<Unit> GetUnitCandidates(Unit executor, ManualUnitSelector selector)
-    {
-        var lm = LevelManager.Instance;
-        if (lm == null) return null;
-
-        switch (selector.candidateType)
-        {
-            case ManualUnitSelector.CandidateType.Enemies: return lm.GetEnemiesOf(executor);
-            case ManualUnitSelector.CandidateType.Allies: return lm.GetAlliesOf(executor);
-            case ManualUnitSelector.CandidateType.All: return lm.AllUnits.Where(u => u.IsAlive).ToList();
-            case ManualUnitSelector.CandidateType.SameFaction: return lm.GetUnitsOf(selector.targetFaction);
-            default: return lm.GetEnemiesOf(executor);
-        }
+        onSelected(selected);
     }
 }

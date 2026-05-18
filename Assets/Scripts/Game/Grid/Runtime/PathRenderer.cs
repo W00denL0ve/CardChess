@@ -6,6 +6,10 @@ using UnityEngine;
 /// </summary>
 public class PathRenderer : MonoBehaviour
 {
+    public static PathRenderer Instance { get; private set; }
+
+    void Awake() { Instance = this; }
+
     [Header("Prefabs")]
     [SerializeField] private GameObject linePrefab;
     [SerializeField] private GameObject arrowPrefab;

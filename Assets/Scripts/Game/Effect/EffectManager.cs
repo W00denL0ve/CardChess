@@ -26,32 +26,44 @@ public class EffectManager : MonoBehaviour
         {
             if (chain == null || chain.steps == null || chain.steps.Count == 0) continue;
 
-            EffectContext currentCtx = context;
+            // 每条链从原始上下文开始（引用类型，需要浅拷贝）
+            var ctx = new EffectContext
+            {
+                sourceCard = context.sourceCard,
+                executor = context.executor,
+                executed = context.executed
+            };
+
             foreach (var step in chain.steps)
             {
                 if (step == null) continue;
 
-                // 选择器
-                if (step.selector != null)
+                ctx.ClearStepCache();
+
+                if (step is SelectorStep ss)
                 {
-                    var targets = step.selector.GetTargets(currentCtx);
+                    if (ss.selector == null) continue;
+                    var targets = ss.selector.GetTargets(ctx);
                     if (targets == null || targets.Count == 0) continue;
 
-                    var newExecuted = targets[0];
-                    currentCtx = new EffectContext
-                    {
-                        sourceCard = currentCtx.sourceCard,
-                        executor = step.selector.ChangesContext ? currentCtx.executed : currentCtx.executor,
-                        executed = newExecuted,
-                        customParams = currentCtx.customParams
-                    };
+                    ctx.executor = ss.selector.changesExecutor ? ctx.executed : ctx.executor;
+                    ctx.executed = targets[0];
                 }
-
-                // 效果
-                if (step.effect != null)
+                else if (step is ConditionStep cs)
                 {
-                    step.effect.OnExecute(currentCtx);
-                    step.effect.OnComplete(currentCtx);
+                    if (cs.condition != null && !cs.condition.IsMet(ctx))
+                    {
+                        Logger.Log($"[EffectManager] 条件 '{cs.condition.name}' 未满足，链中断");
+                        break;
+                    }
+                }
+                else if (step is EffectStep es)
+                {
+                    if (es.effect != null)
+                    {
+                        es.effect.OnExecute(ctx);
+                        es.effect.OnComplete(ctx);
+                    }
                 }
             }
         }

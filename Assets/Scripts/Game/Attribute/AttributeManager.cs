@@ -9,8 +9,8 @@ public enum AttributeType
     DamageBonus,           // 伤害加成（加算，通用）
     PhysicalDefense,       // 物理护甲
     MagicDefense,          // 魔法抗性（默认0）
-    ActionPointLimit,      // 每回合行动力上限
-    ActionPoints           // 每回合可用行动次数
+    MovePointLimit,      // 每回合行动力上限
+    MovePoints           // 当前行动力
 }
 
 public class AttributeManager
@@ -40,8 +40,9 @@ public class AttributeManager
         if (attributes.TryGetValue(type, out var attr))
         {
             attr.baseValue = value;
+            return;
         }
-        Logger.LogWarning($"AttributeManager: 设置属性基础值时找不到属性类型：{type}");
+            Logger.LogWarning($"AttributeManager: 设置属性基础值时找不到属性类型：{type}");
     }
 
     /// <summary>

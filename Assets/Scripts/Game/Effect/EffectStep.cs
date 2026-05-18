@@ -1,15 +1,34 @@
 using System;
 
 /// <summary>
-/// 卡牌效果链的一个步骤 — 选择器 或/和 效果的组合
-/// selector 和 effect 各自可选：见到选择器则更新上下文，见到效果则执行
+/// 效果链步骤基类 — 每步只能选择一种类型
 /// </summary>
 [Serializable]
-public class GameEffectStep
-{
-    /// <summary>目标选择器（可选，为 null 则跳过选择阶段）</summary>
-    public TargetSelector selector;
+public abstract class ChainStep { }
 
-    /// <summary>效果资产（可选，为 null 则跳过执行阶段）</summary>
+/// <summary>
+/// 选择器步骤
+/// </summary>
+[Serializable]
+public class SelectorStep : ChainStep
+{
+    public TargetSelector selector;
+}
+
+/// <summary>
+/// 条件步骤 — 不满足则中断整条链
+/// </summary>
+[Serializable]
+public class ConditionStep : ChainStep
+{
+    public Condition condition;
+}
+
+/// <summary>
+/// 效果步骤
+/// </summary>
+[Serializable]
+public class EffectStep : ChainStep
+{
     public Effect effect;
 }

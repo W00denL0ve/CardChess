@@ -10,7 +10,7 @@ public class BuffContainer
     public BuffContainer(Unit unit) => host = unit;
 
     /// <summary>应用一个 Buff</summary>
-    public void ApplyBuff(Buff buffData, EffectContext context = default)
+    public void ApplyBuff(Buff buffData, EffectContext context = null)
     {
         if (buffData == null) return;
         var existing = buffs.FirstOrDefault(b => b.BuffData == buffData);

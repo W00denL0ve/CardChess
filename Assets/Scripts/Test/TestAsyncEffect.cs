@@ -54,6 +54,7 @@ public class TestAsyncEffect : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.Alpha1)) TestDamageStep();
         else if (Input.GetKeyDown(KeyCode.Alpha2)) TestMoveStep();
         else if (Input.GetKeyDown(KeyCode.Alpha3)) TestFullCard();
+        else if (Input.GetKeyDown(KeyCode.Alpha4)) TestAsyncDelay();
         else if (Input.GetKeyDown(KeyCode.F5)) Debug.Break();
     }
 
@@ -124,7 +125,7 @@ public class TestAsyncEffect : MonoBehaviour
 
     void PrintHelp()
     {
-        Debug.Log("[TestAsync] 按键: 0-拖入卡牌 1-选目标+伤害 2-选格子移动 3-完整双步骤卡牌");
+        Debug.Log("[TestAsync] 按键: 0-拖入卡牌 1-伤害 2-移动 3-双步骤 4-异步延迟测试");
     }
 
     // ====================================================================
@@ -140,28 +141,29 @@ public class TestAsyncEffect : MonoBehaviour
         {
             new EffectChain
             {
-                steps = new List<GameEffectStep>
+                steps = new List<ChainStep>
                 {
-                    new GameEffectStep { selector = CreateUnitSelector(), effect = CreateDamageEffect() },
-                    new GameEffectStep { selector = CreateCellSelector(), effect = CreateMoveEffect() }
+                    new SelectorStep { selector = CreateUnitSelector() },
+                    new EffectStep { effect = CreateDamageEffect() },
+                    new SelectorStep { selector = CreateCellSelector() },
+                    new EffectStep { effect = CreateMoveEffect() }
                 }
             }
         };
         Debug.Log("[TestAsync] 程序化卡牌已构建 (2个步骤)");
     }
 
-    ManualUnitSelector CreateUnitSelector()
+    UnitSelector CreateUnitSelector()
     {
-        var sel = ScriptableObject.CreateInstance<ManualUnitSelector>();
-        sel.candidateType = ManualUnitSelector.CandidateType.Enemies;
+        var sel = ScriptableObject.CreateInstance<UnitSelector>();
+        sel.factions = (UnitSelector.FactionMask)(1 << (int)Faction.Enemy);
         return sel;
     }
 
-    ManualCellSelector CreateCellSelector()
+    CellPathSelector CreateCellSelector()
     {
-        var sel = ScriptableObject.CreateInstance<ManualCellSelector>();
-        sel.range = warrior.ActionPointLimit;
-        sel.clampToActionPointLimit = true;
+        var sel = ScriptableObject.CreateInstance<CellPathSelector>();
+        sel.range = warrior.MovePoints;
         sel.includeOrigin = true;
         return sel;
     }
@@ -189,21 +191,17 @@ public class TestAsyncEffect : MonoBehaviour
 
     void ExecuteCard(CardData card)
     {
-        ITarget source = new UnitTarget(warrior);
-        Debug.Log($"[执行] 开始执行卡牌: {card.name} ({card.chains?.Count ?? 0} 条效果链)");
-        executor.ExecuteCardChainsAsync(card, source, () =>
+        Logger.Log($"[执行] 开始执行卡牌: {card.name} ({card.chains?.Count ?? 0} 条效果链)");
+        executor.ExecuteCardChainsAsync(card, () =>
         {
-            Debug.Log($"[执行] 卡牌效果全部完成！");
+            Logger.Log($"[执行] 卡牌效果全部完成！");
         });
     }
 
     void TestDamageStep()
     {
-        var step = new GameEffectStep
-        {
-            selector = CreateUnitSelector(),
-            effect = CreateDamageEffect()
-        };
+        var step = new SelectorStep { selector = CreateUnitSelector() };
+        var step2 = new EffectStep { effect = CreateDamageEffect() };
         var ctx = new EffectContext
         {
             sourceCard = programmaticCard,
@@ -211,7 +209,8 @@ public class TestAsyncEffect : MonoBehaviour
             executed = new UnitTarget(warrior)
         };
         Debug.Log("[测试1] 请选择敌方单位");
-        executor.ExecuteStepAsync(step, ctx, () =>
+        executor.ExecuteStepAsync(step, ctx, null);
+        executor.ExecuteStepAsync(step2, ctx, () =>
         {
             Debug.Log($"[测试1] 完成！法师 HP: {mage.CurrentHealth}/{mage.MaxHealth}");
         });
@@ -219,11 +218,8 @@ public class TestAsyncEffect : MonoBehaviour
 
     void TestMoveStep()
     {
-        var step = new GameEffectStep
-        {
-            selector = CreateCellSelector(),
-            effect = CreateMoveEffect()
-        };
+        var step = new SelectorStep { selector = CreateCellSelector() };
+        var step2 = new EffectStep { effect = CreateMoveEffect() };
         var ctx = new EffectContext
         {
             sourceCard = programmaticCard,
@@ -231,20 +227,40 @@ public class TestAsyncEffect : MonoBehaviour
             executed = new UnitTarget(warrior)
         };
         Debug.Log("[测试2] 请选择移动目标格");
-        executor.ExecuteStepAsync(step, ctx, () =>
+        executor.ExecuteStepAsync(step, ctx, null);
+        executor.ExecuteStepAsync(step2, ctx, () =>
         {
             Debug.Log($"[测试2] 完成！战士位置: ({warrior.GridPosition.x},{warrior.GridPosition.y})");
         });
     }
 
+    void TestAsyncDelay()
+    {
+        var animEffect = ScriptableObject.CreateInstance<TestAnimatedDelayEffect>();
+        animEffect.delay = 1.0f;
+
+        var step = new EffectStep { effect = animEffect };
+        var ctx = new EffectContext
+        {
+            sourceCard = programmaticCard,
+            executor = new UnitTarget(warrior),
+            executed = new UnitTarget(warrior)
+        };
+
+        Debug.Log("[测试4] 异步延迟效果: OnExecute → 等待 1s → OnComplete");
+        executor.ExecuteStepAsync(step, ctx, () =>
+        {
+            Debug.Log("[测试4] ✅ 步骤完成！1秒延迟确认");
+        });
+    }
+
     void TestFullCard()
     {
-        ITarget source = new UnitTarget(warrior);
-        Debug.Log("[测试3] 完整双步骤卡牌: 选目标伤害 → 选格子移动");
-        executor.ExecuteCardChainsAsync(programmaticCard, source, () =>
+        Logger.Log("[测试3] 完整双步骤卡牌: 选目标伤害 → 选格子移动");
+        executor.ExecuteCardChainsAsync(programmaticCard, () =>
         {
-            Debug.Log($"[测试3] 完成！法师 HP: {mage.CurrentHealth}/{mage.MaxHealth}");
-            Debug.Log($"[测试3] 战士位置: ({warrior.GridPosition.x},{warrior.GridPosition.y})");
+            Logger.Log($"[测试3] 完成！法师 HP: {mage.CurrentHealth}/{mage.MaxHealth}");
+            Logger.Log($"[测试3] 战士位置: ({warrior.GridPosition.x},{warrior.GridPosition.y})");
         });
     }
 

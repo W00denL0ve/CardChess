@@ -6,6 +6,10 @@ using UnityEngine;
 /// </summary>
 public class UnitVisualizer : MonoBehaviour
 {
+    public static UnitVisualizer Instance { get; private set; }
+
+    void Awake() { Instance = this; }
+
     [Header("Highlight Materials")]
     [SerializeField] private Material highlightMaterial3D;
     [SerializeField] private Material highlightMaterial2D;
@@ -178,5 +182,14 @@ public class UnitVisualizer : MonoBehaviour
                 return true;
         }
         return false;
+    }
+
+    /// <summary>
+    /// 清除所有预览视觉（高亮 + 悬停）
+    /// </summary>
+    public void ClearAll()
+    {
+        ClearHighlights();
+        ClearHoverUnit();
     }
 }

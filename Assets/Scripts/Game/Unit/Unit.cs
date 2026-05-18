@@ -30,8 +30,8 @@ public class Unit : MonoBehaviour
     public int Intelligence         => (int)AttributeManager.GetFinalValue(AttributeType.Intelligence);
     public int PhysicalDefense      => (int)AttributeManager.GetFinalValue(AttributeType.PhysicalDefense);
     public int MagicDefense         => (int)AttributeManager.GetFinalValue(AttributeType.MagicDefense);
-    public int ActionPointLimit     => (int)AttributeManager.GetFinalValue(AttributeType.ActionPointLimit);
-    public int ActionPoints         => (int)AttributeManager.GetFinalValue(AttributeType.ActionPoints);
+    public int MovePointLimit     => (int)AttributeManager.GetFinalValue(AttributeType.MovePointLimit);
+    public int MovePoints         => (int)AttributeManager.GetFinalValue(AttributeType.MovePoints);
     public int DamageBonus          => (int)AttributeManager.GetFinalValue(AttributeType.DamageBonus);
 
     // 防御查询
@@ -56,7 +56,7 @@ public class Unit : MonoBehaviour
     }
 
     // 伤害（由效果系统调用，finalDamage 已扣除类型防御）
-    public void TakeDamage(int finalDamage, EffectContext context = default)
+    public void TakeDamage(int finalDamage, EffectContext context = null)
     {
         if (!IsAlive || finalDamage <= 0) return;
 
@@ -80,8 +80,12 @@ public class Unit : MonoBehaviour
         }
     }
 
-    // 治疗
-    public void Heal(int amount, EffectContext context = default)
+    /// <summary>
+    /// 治疗
+    /// </summary>
+    /// <param name="amount"></param>
+    /// <param name="context"></param>
+    public void Heal(int amount, EffectContext context = null)
     {
         if (!IsAlive || amount <= 0) return;
         int oldHealth = CurrentHealth;
@@ -90,10 +94,44 @@ public class Unit : MonoBehaviour
         GameEventChannel.Dispatch(new UnitHealthChangedEvent(this, oldHealth, newHealth, MaxHealth));
     }
 
-    // 移动请求（由效果系统调用）
-    public void RequestMove(Vector2Int targetPos, EffectContext context = default)
+
+    /// <summary>
+    /// 移动请求（效果系统调用）
+    /// </summary>
+    /// <param name="targetPos"></param>
+    /// <param name="context"></param>
+    public void RequestMove(Vector2Int targetPos, EffectContext context = null, bool clearPoints = true)
     {
         if (!IsAlive) return;
         GameEventChannel.Dispatch(new UnitMoveRequestEvent(this, GridPosition, targetPos, context));
+        if (clearPoints) // 移动后行动力默认清零不保留
+        {
+            AttributeManager.SetBaseValue(AttributeType.MovePoints, 0); 
+        }
+    }
+
+    /// <summary>
+    /// 获得行动力
+    /// </summary>
+    /// <param name="amount"></param>
+    /// <param name="ignoreLimit"></param> 
+    /// <param name="context"></param>
+    public void AcquireMovePoint(int amount, bool ignoreLimit = false, EffectContext context = null)
+    {
+        if (!IsAlive) return;
+        Logger.Log($"Unit: {UnitId}试图获得{amount}点行动力，" + (ignoreLimit ? "忽略" : "约束于") + "行动力上限");
+        int limit = (int)AttributeManager.GetBaseValue(AttributeType.MovePointLimit);
+        int points = (int)AttributeManager.GetBaseValue(AttributeType.MovePoints) + amount;
+        if (points > limit)
+        {
+            points = limit;
+        }
+        if (points < 0)
+        {
+            points = 0;
+        }
+        AttributeManager.SetBaseValue(AttributeType.MovePoints, points);
+        Logger.Log($"Unit: {UnitId}获得{points}点行动力");
+        GameEventChannel.Dispatch(new UnitAcquireMovePointEvent(this, points));
     }
 }

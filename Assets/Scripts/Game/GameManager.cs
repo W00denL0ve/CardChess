@@ -40,22 +40,7 @@ public class GameManager : MonoBehaviour
         Logger.Log("GameManager 已销毁，其余管理器应该也已销毁");
     }
 
-    public void OnCardPlayed(CardData card)
-    {
-        if (!DeckManager.Instance.IsCardInHand(card)) return;
 
-        DeckManager.Instance.PlayCard(card);
-
-        // 初始 context: executor = executed = 玩家
-        ITarget playerTarget = player != null ? new UnitTarget(player.GetComponent<Unit>()) : null;
-        if (playerTarget == null)
-        {
-            Logger.LogError("GameManager: 无法获取玩家 Unit");
-            return;
-        }
-
-        AsyncEffectExecutor.Instance.ExecuteCardChainsAsync(card, playerTarget);
-    }
 
     /// <summary>
     /// 玩家在主菜单点击开始游戏后调用，触发游戏开始事件

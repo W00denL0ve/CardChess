@@ -11,7 +11,7 @@ public class BuffInstance
 
     private List<(AttributeType type, Modifier modifier)> appliedModifiers = new();
 
-    public BuffInstance(Buff data, Unit host, EffectContext source = default)
+    public BuffInstance(Buff data, Unit host, EffectContext source = null)
     {
         BuffData = data;
         Host = host;

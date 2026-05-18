@@ -24454,12 +24454,6 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 5864839832119315766, guid: 8f9b41e8f06158d4d8ab5e5f6739b3ac, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 2044537681}
-    - targetCorrespondingSourceObject: {fileID: 5864839832119315766, guid: 8f9b41e8f06158d4d8ab5e5f6739b3ac, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2044537682}
-    - targetCorrespondingSourceObject: {fileID: 5864839832119315766, guid: 8f9b41e8f06158d4d8ab5e5f6739b3ac, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 2044537683}
   m_SourcePrefab: {fileID: 100100000, guid: 8f9b41e8f06158d4d8ab5e5f6739b3ac, type: 3}
 --- !u!1 &2044537674 stripped
@@ -24467,35 +24461,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 5864839832119315766, guid: 8f9b41e8f06158d4d8ab5e5f6739b3ac, type: 3}
   m_PrefabInstance: {fileID: 2044537673}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &2044537681
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2044537674}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 450aa09fb0fa0274f8a25b947df4c6b5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerConfig: {fileID: 11400000, guid: 7269658f7f69c0745a9cb8297b12cb57, type: 2}
-  unitPrefab: {fileID: 1720476947112078228, guid: 922ab379983fe24419218388a39dba15, type: 3}
---- !u!114 &2044537682
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2044537674}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 79aebd805ee187442b53b2a7ac443131, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerConfig: {fileID: 11400000, guid: 7269658f7f69c0745a9cb8297b12cb57, type: 2}
-  enemyConfig: {fileID: 11400000, guid: e27148ed337c950498000280be705723, type: 2}
-  unitPrefab: {fileID: 1720476947112078228, guid: 922ab379983fe24419218388a39dba15, type: 3}
 --- !u!114 &2044537683
 MonoBehaviour:
   m_ObjectHideFlags: 0

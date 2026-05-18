@@ -78,11 +78,5 @@ public class LevelManager : MonoBehaviour
         Logger.Log("回合信息加载完成");
     }
 
-    /// <summary>
-    /// 处理玩家打出手牌的事件
-    /// </summary>
-    public void OnPlayerUseCard(Card card, Vector3 targetPos)
-    {
-        gridManager.WorldToGrid(targetPos, out int col, out int row);
-    }
+
 }

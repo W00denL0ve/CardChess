@@ -6,6 +6,8 @@ using UnityEngine;
 /// </summary>
 public class GridVisualizer : MonoBehaviour
 {
+    public static GridVisualizer Instance { get; private set; }
+
     [Header("Visual Settings")]
     public GameObject cellVisualPrefab;
     public float visualScaleFactor = 0.9f;
@@ -50,6 +52,7 @@ public class GridVisualizer : MonoBehaviour
 
     void Awake()
     {
+        Instance = this;
         GameEventChannel.Register<CellUpdatedEvent>(OnCellUpdated);
         Logger.Log("GridVisualizer：已订阅格子更新事件");
     }
@@ -382,6 +385,16 @@ public class GridVisualizer : MonoBehaviour
     {
         Cell cell = GridManager.Instance?.GetCell(pos.x, pos.y);
         return cell != null && cell.OccupyingUnit != null;
+    }
+
+    /// <summary>
+    /// 清除所有预览视觉（高亮 + 悬停 + 选中效果）
+    /// </summary>
+    public void ClearAll()
+    {
+        ClearHighlights();
+        // 清除旧 SetSelectedCells 遗留的选中材质（恢复到原始）
+        ClearHighlights(); // ClearHighlights 通过 originalMaterials 恢复所有
     }
 
     void ClearAllVisuals()
