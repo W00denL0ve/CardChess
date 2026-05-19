@@ -6,10 +6,6 @@ public class DeckManager : MonoBehaviour
 {
     public static DeckManager Instance { get; private set; }
 
-    // 事件
-    public event Action<CardData> OnCardDrawn;
-    public event Action<CardData> OnCardPlayed;
-
     // 牌库
     public List<CardData> deck = new();
     public List<CardData> hand = new();
@@ -35,17 +31,17 @@ public class DeckManager : MonoBehaviour
         CardData card = deck[UnityEngine.Random.Range(0, deck.Count)];
         deck.Remove(card);
         hand.Add(card);
-        OnCardDrawn?.Invoke(card);
+        GameEventChannel.Dispatch(new CardDrawnEvent(card));
     }
 
     // ═══ 打出 ═══
-    /// <summary>标记卡牌为已打出（手牌→pending），立即触发 OnCardPlayed</summary>
+    /// <summary>标记卡牌为已打出（手牌→pending），触发 CardPlayedEvent</summary>
     public void MarkCardPlayed(CardData card)
     {
         if (!hand.Contains(card)) return;
         hand.Remove(card);
         pendingPlay.Add(card);
-        OnCardPlayed?.Invoke(card);
+        GameEventChannel.Dispatch(new CardPlayedEvent(card));
     }
 
     /// <summary>效果链全部完成，根据 destination 决定去向</summary>

@@ -10,6 +10,7 @@ public class UnitConfig : ScriptableObject
     public Faction defaultFaction = Faction.Enemy;
     public Sprite icon;
     public GameObject unitPrefab;
+    public AIDeck aiDeck;
 
     [Header("坐标偏移（编辑器调整用）")]
     public float yOffset;

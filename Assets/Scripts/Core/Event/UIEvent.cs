@@ -27,3 +27,11 @@ public class PanelSwitchedEvent : GameEvent
         this.currentPanelNames = currentPanelNames;
     }
 }
+
+/// <summary>
+/// 玩家主动结束出牌阶段事件
+/// </summary>
+public class EndPlayerTurnEvent : GameEvent
+{
+    
+}

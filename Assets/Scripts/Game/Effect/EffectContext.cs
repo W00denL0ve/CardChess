@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -28,6 +29,9 @@ public class EffectContext
 
     /// <summary>当前步骤是否可以回退到上一个选择器（由 Executor 维护）</summary>
     public bool canRevert;
+
+    /// <summary>AI 模式下的目标选择委托（null=玩家模式, 有值=AI模式）</summary>
+    public Func<List<ITarget>, ITarget> aiSelector;
 
     /// <summary>内部标志：链是否应中断（由 ConditionStep 设置，Executor 检查）</summary>
     internal bool chainBroken;

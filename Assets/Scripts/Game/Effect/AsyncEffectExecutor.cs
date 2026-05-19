@@ -92,6 +92,14 @@ public class AsyncEffectExecutor : MonoBehaviour
     //  协程
     // ====================================================================
 
+    /// <summary>
+    /// AI 专用 — 返回协程 IEnumerator，调用方可 yield 等待执行完成
+    /// </summary>
+    public IEnumerator ExecuteChainAI(List<ChainStep> steps, EffectContext context)
+    {
+        yield return ExecuteStepsRoutine(steps, context, null);
+    }
+
     IEnumerator ExecuteStepsRoutine(List<ChainStep> steps, EffectContext context, Action onComplete)
     {
         if (steps == null) { onComplete?.Invoke(); yield break; }
@@ -217,6 +225,16 @@ public class AsyncEffectExecutor : MonoBehaviour
         ITarget selected = null;
         bool completed = false;
         bool autoConfirm = candidates.Count == 1;
+
+        // AI 模式：跳过预览，直接选目标
+        if (context.aiSelector != null)
+        {
+            selected = context.aiSelector(candidates);
+            if (selected == null) selected = candidates[0];
+            Logger.Log($"[AI] {selector.name} 选定目标");
+            onSelected(selected);
+            yield break;
+        }
 
         var first = candidates[0];
         if (first is CellTarget)

@@ -100,6 +100,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4227653736947464501}
   - component: {fileID: 6688260367190906408}
+  - component: {fileID: 5388662035020508208}
   m_Layer: 0
   m_Name: UnitManager
   m_TagString: Untagged
@@ -139,6 +140,20 @@ MonoBehaviour:
   hoverMaterial3D: {fileID: 2100000, guid: 31b7db2a43f471e42ae7ac9f5a4940c3, type: 2}
   hoverColor: {r: 0.4506348, g: 0.90249825, b: 0.9245283, a: 1}
   hoverLerp: 0.5
+--- !u!114 &5388662035020508208
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6027770210047808078}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ebdb7640d6f2ca4284352d7dc169fef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  delayBetweenUnits: 0.5
+  delayAfterAIAction: 0.3
 --- !u!1 &6374237709223590285
 GameObject:
   m_ObjectHideFlags: 0

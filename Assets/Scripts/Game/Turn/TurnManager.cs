@@ -1,4 +1,4 @@
-using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -103,7 +103,7 @@ public class TurnManager : MonoBehaviour
 /// 更改阶段通用方法，负责调用当前阶段的退出逻辑和新阶段的进入逻辑，并派发阶段变化事件
 /// </summary>
 /// <param name="newPhase"></param>
-    private void ChangePhase(TurnPhase newPhase)
+    public void ChangePhase(TurnPhase newPhase)
     {
         if (currentState != null)
         {
@@ -144,6 +144,9 @@ class StartState : ITurnState
             Logger.Log($"第 {turn} 回合有 {actions.Count} 个预设行动待执行");
             TurnActionExecutor.ExecuteAll(actions);
         }
+
+        // 转入抽牌阶段
+        TurnManager.Instance.ChangePhase(TurnPhase.Draw);
     }
 
     public void Update() { }
@@ -161,9 +164,12 @@ class DrawState : ITurnState
 {
     public TurnPhase phaseName => TurnPhase.Draw;
 
+    private int remainingDraws;
+
     public void Enter()
     {
         Logger.Log("Entering Draw Phase");
+        TurnManager.Instance.StartCoroutine(DrawCardsRoutine());
     }
 
     public void Update() { }
@@ -172,10 +178,28 @@ class DrawState : ITurnState
     {
         Logger.Log("Exiting Draw Phase");
     }
+
+    private IEnumerator DrawCardsRoutine()
+    {
+        // 本回合抽牌数（示例：固定 3 张，后续可从 RunConfig 读取）
+        int drawCount = 3;
+        remainingDraws = drawCount;
+
+        for (int i = 0; i < drawCount; i++)
+        {
+            DeckManager.Instance?.DrawCard();  // 数据层 + dispatch CardDrawnEvent
+
+            // 等待一张牌的视觉表现完成（HandUI 收到 CardDrawnEvent 后完成动画时通知）
+            // 使用 yield return new WaitForSeconds 作为简易替代，后续替换为真实动画等待
+            yield return new WaitForSeconds(0.2f);
+        }
+
+        TurnManager.Instance.ChangePhase(TurnPhase.PlayerPlay);
+    }
 }
 
 /// <summary>
-/// 玩家操作阶段状态类，负责处理玩家操作阶段的逻辑
+/// 玩家出牌阶段 — 注册 CardClickedEvent，玩家点击卡牌时打出
 /// </summary>
 class PlayerPlayState : ITurnState
 {
@@ -184,6 +208,8 @@ class PlayerPlayState : ITurnState
     public void Enter()
     {
         Logger.Log("Entering Player Play Phase");
+        GameEventChannel.Register<CardClickedEvent>(OnCardClicked);
+        GameEventChannel.Register<EndPlayerTurnEvent>(OnEndTurn);
     }
 
     public void Update() { }
@@ -191,11 +217,39 @@ class PlayerPlayState : ITurnState
     public void Exit()
     {
         Logger.Log("Exiting Player Play Phase");
+        GameEventChannel.Unregister<CardClickedEvent>(OnCardClicked);
+        GameEventChannel.Unregister<EndPlayerTurnEvent>(OnEndTurn);
+    }
+
+    private void OnCardClicked(CardClickedEvent evt)
+    {
+        CardData card = evt.Card;
+        if (card == null) return;
+
+        Logger.Log($"[PlayerPlay] 打出卡牌: {card.cardName}");
+
+        // 数据层：手牌 → pending
+        DeckManager.Instance?.MarkCardPlayed(card);
+
+        // 切到行动阶段（执行期间不可再次出牌）
+        TurnManager.Instance.ChangePhase(TurnPhase.PlayerAction);
+
+        // 执行效果链，完成后回到出牌阶段
+        AsyncEffectExecutor.Instance?.ExecuteCardChainsAsync(card, () =>
+        {
+            TurnManager.Instance.ChangePhase(TurnPhase.PlayerPlay);
+        });
+    }
+
+    private void OnEndTurn(EndPlayerTurnEvent evt)
+    {
+        Logger.Log("[PlayerPlay] 玩家结束出牌阶段");
+        TurnManager.Instance.ChangePhase(TurnPhase.Enemy);
     }
 }
 
 /// <summary>
-/// 角色行动阶段状态类，负责处理玩家操作阶段的逻辑
+/// 角色行动阶段 — 卡牌效果执行期间，等待执行完毕自动跳转
 /// </summary>
 class PlayerActionState : ITurnState
 {
@@ -224,6 +278,7 @@ class EnemyState : ITurnState
     public void Enter()
     {
         Logger.Log("Entering Enemy Phase");
+        TurnManager.Instance.StartCoroutine(ExecuteEnemyTurn());
     }
 
     public void Update() { }
@@ -231,6 +286,24 @@ class EnemyState : ITurnState
     public void Exit()
     {
         Logger.Log("Exiting Enemy Phase");
+    }
+
+    private IEnumerator ExecuteEnemyTurn()
+    {
+        var enemies = LevelManager.Instance?.GetUnitsOf(Faction.Enemy);
+        if (enemies != null)
+        {
+            foreach (var enemy in enemies)
+            {
+                if (enemy == null || !enemy.IsAlive) continue;
+                yield return AIController.Instance.ExecuteTurn(enemy);
+                yield return new WaitForSeconds(
+                    AIController.Instance != null ? AIController.Instance.delayBetweenUnits : 0.5f);
+            }
+        }
+
+        AIController.Instance.TickCooldowns();
+        TurnManager.Instance.ChangePhase(TurnPhase.End);
     }
 }
 
@@ -245,6 +318,9 @@ class EndState : ITurnState
     public void Enter()
     {
         Logger.Log("Entering End Phase");
+
+        // 结束阶段完成后自动开始下一回合
+        TurnManager.Instance.StartTurn();
     }
 
     public void Update() { }

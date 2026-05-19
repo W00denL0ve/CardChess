@@ -31,6 +31,6 @@ public class CardVisualizer : MonoBehaviour, IPointerClickHandler
     public void OnPointerClick(PointerEventData eventData)
     {
         if (cardData == null) return;
-        GameEventChannel.Dispatch(new CardPlayedEvent(cardData));
+        GameEventChannel.Dispatch(new CardClickedEvent(cardData));
     }
 }

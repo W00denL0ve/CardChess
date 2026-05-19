@@ -326,6 +326,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4896580791630047354}
   - component: {fileID: 7502176898355385617}
+  - component: {fileID: 4279334230077838530}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -376,6 +377,24 @@ MonoBehaviour:
   backgroundMask: {fileID: 0}
   maskAlpha: 0.5
   Mask: {fileID: 2327737297593057104, guid: e3107f06779fe684590efc27b80c956b, type: 3}
+--- !u!114 &4279334230077838530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5875597779710003868}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e7d7091d9ee2644ba930bde14d8b3c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cardPrefab: {fileID: 4414603897217659739, guid: 769c9456e3473b949b82899eb49e7ead, type: 3}
+  handCanvasPrefab: {fileID: 6250140872047030100, guid: 582ca742ef358114db0f5e48c09af85c, type: 3}
+  handContainer: {fileID: 0}
+  endTurnButtonName: EndTurnButton
+  poolSize: 10
+  cardSpacing: 100
 --- !u!1 &6033736974178568163
 GameObject:
   m_ObjectHideFlags: 0
