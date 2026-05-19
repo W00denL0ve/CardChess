@@ -5,11 +5,6 @@ using UnityEngine;
 /// </summary>
 public static class UnitFactory
 {
-    private static GameObject unitPrefab;
-
-    /// <summary>在游戏启动时设置 Unit 预制体引用</summary>
-    public static void SetUnitPrefab(GameObject prefab) => unitPrefab = prefab;
-
     /// <summary>
     /// 生成一个单位
     /// </summary>
@@ -21,26 +16,21 @@ public static class UnitFactory
             return null;
         }
 
-        // 从 Resources 加载默认预制体（若未通过 SetUnitPrefab 设置）
-        if (unitPrefab == null)
-            unitPrefab = Resources.Load<GameObject>("Prefabs/Unit");
-
-        if (unitPrefab == null)
+        if (config.unitPrefab == null)
         {
-            Logger.LogError("UnitFactory.Spawn: 未找到 Unit 预制体");
+            Logger.LogError($"UnitFactory.Spawn: {config.unitId} 的 unitPrefab 为 null");
             return null;
         }
 
-        Vector3 worldPos = GridManager.Instance != null
-            ? GridManager.Instance.GridToWorld(pos)
-            : new Vector3(pos.x, 0, pos.y);
+        Vector3 worldPos = GetWorldPosition(pos, config);
+        Quaternion rotation = Quaternion.Euler(config.xRotation, 0f, 0f);
 
-        GameObject go = Object.Instantiate(unitPrefab, worldPos, Quaternion.identity);
+        GameObject go = Object.Instantiate(config.unitPrefab, worldPos, rotation);
         Unit unit = go.GetComponent<Unit>();
 
         if (unit == null)
         {
-            Logger.LogError("UnitFactory.Spawn: 预制体上未找到 Unit 组件");
+            Logger.LogError($"UnitFactory.Spawn: {config.unitId} 的预制体上未找到 Unit 组件");
             Object.Destroy(go);
             return null;
         }
@@ -55,6 +45,21 @@ public static class UnitFactory
 
         Logger.Log($"[UnitFactory] 生成 {config.unitId} 于 ({pos.x},{pos.y})");
         return unit;
+    }
+
+    /// <summary>根据网格坐标和配置计算最终世界坐标（含偏移）</summary>
+    public static Vector3 GetWorldPosition(Vector2Int gridPos, UnitConfig config)
+    {
+        Vector3 basePos = GridManager.Instance != null
+            ? GridManager.Instance.GridToWorld(gridPos)
+            : new Vector3(gridPos.x, 0, gridPos.y);
+
+        if (config != null)
+        {
+            basePos.y += config.yOffset;
+            basePos.z += config.zOffset;
+        }
+        return basePos;
     }
 
     /// <summary>销毁并反注册单位</summary>

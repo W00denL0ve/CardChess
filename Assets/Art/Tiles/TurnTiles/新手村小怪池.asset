@@ -9,13 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2a6cd7a67351c88479d768d4537190af, type: 3}
-  m_Name: Test Unit Config
+  m_Script: {fileID: 11500000, guid: 8bbb6acc9ef00db4abfc5751348c7c7d, type: 3}
+  m_Name: "\u65B0\u624B\u6751\u5C0F\u602A\u6C60"
   m_EditorClassIdentifier: 
-  unitId: Test
-  unitName: Test
-  occupation: 0
-  defaultFaction: 0
-  icon: {fileID: 0}
-  initialAttributes: []
-  innateBuffs: []
+  spawnGroup: {fileID: 0}
+  fallbackUnitConfig: {fileID: 0}
+  allowedTerrains: 00000000
+  searchRange: 0
+  previewSprite: {fileID: 0}

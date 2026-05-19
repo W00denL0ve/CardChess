@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum Faction { Player, Enemy, Neutral }
@@ -20,6 +22,9 @@ public class Unit : MonoBehaviour
     // Buff 容器
     public BuffContainer BuffContainer { get; private set; }
 
+    // 配置引用
+    public UnitConfig Config { get; private set; }
+
     // 网格位置（由 GridManager 设置）
     public Vector2Int GridPosition { get; internal set; }
 
@@ -40,6 +45,7 @@ public class Unit : MonoBehaviour
     // 初始化
     public void Initialize(UnitConfig config, Vector2Int gridPos, Faction? overrideFaction = null)
     {
+        Config = config;
         unitId = config.unitId;
         occupation = config.occupation;
         this.Faction = overrideFaction ?? config.defaultFaction;
@@ -96,18 +102,35 @@ public class Unit : MonoBehaviour
 
 
     /// <summary>
-    /// 移动请求（效果系统调用）
+    /// 异步移动到目标格子 — 表现层逐格走路，数据层瞬移
+    /// 完成后自动派发 UnitMovedEvent，GridManager 响应更新格子占用
     /// </summary>
-    /// <param name="targetPos"></param>
-    /// <param name="context"></param>
-    public void RequestMove(Vector2Int targetPos, EffectContext context = null, bool clearPoints = true)
+    /// <param name="destination">目标格子坐标</param>
+    /// <param name="path">完整路径（包含起点和终点），用于视觉动画</param>
+    /// <param name="snap">true=瞬移（播放瞬移动画），false=逐格走路</param>
+    public IEnumerator MoveTo(Vector2Int destination, List<Vector2Int> path, bool snap = false)
     {
-        if (!IsAlive) return;
-        GameEventChannel.Dispatch(new UnitMoveRequestEvent(this, GridPosition, targetPos, context));
-        if (clearPoints) // 移动后行动力默认清零不保留
+        if (!IsAlive) yield break;
+
+        // 表现层：播放移动动画
+        var appearance = GetComponent<UnitAppearance>();
+        if (appearance != null)
         {
-            AttributeManager.SetBaseValue(AttributeType.MovePoints, 0); 
+            if (snap || path == null || path.Count <= 1)
+                yield return appearance.PlayTeleportAnimation(GridToWorld(destination));
+            else
+                yield return appearance.PlayWalkAnimation(path);
         }
+
+        // 数据层：瞬移
+        Vector2Int from = GridPosition;
+        GridPosition = destination;
+        GameEventChannel.Dispatch(new UnitMovedEvent(this, from, destination));
+    }
+
+    private Vector3 GridToWorld(Vector2Int gridPos)
+    {
+        return UnitFactory.GetWorldPosition(gridPos, Config);
     }
 
     /// <summary>

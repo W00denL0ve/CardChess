@@ -48,6 +48,8 @@ public class GameManager : MonoBehaviour
     public void StartNewGame()
     {
         Logger.Log("GameManager：开始新游戏，触发游戏开始事件...");
+        SaveManager.Instance.NewRun(new List<string> {"Warrior"});
+        SaveManager.Instance.SaveRun();
         UIManager.Instance.SetLoadingTip("正在加载游戏地图...");
         UIManager.Instance.ChangePanelsWithMask(new string[] { "all" }, new string[] { "loading" });
         // 异步切换到地图场景，加载完成后生成地图并触发游戏开始事件

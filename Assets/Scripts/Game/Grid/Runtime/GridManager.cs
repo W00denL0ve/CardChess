@@ -25,13 +25,13 @@ public class GridManager : MonoBehaviour
 
     void OnEnable()
     {
-        GameEventChannel.Register<UnitMoveRequestEvent>(HandleUnitMoveRequest);
+        GameEventChannel.Register<UnitMovedEvent>(HandleUnitMoved);
         GameEventChannel.Register<UnitDeathEvent>(HandleUnitDeath);
     }
 
     void OnDisable()
     {
-        GameEventChannel.Unregister<UnitMoveRequestEvent>(HandleUnitMoveRequest);
+        GameEventChannel.Unregister<UnitMovedEvent>(HandleUnitMoved);
         GameEventChannel.Unregister<UnitDeathEvent>(HandleUnitDeath);
     }
 
@@ -295,26 +295,25 @@ public class GridManager : MonoBehaviour
     //  事件处理
     // ====================================================================
 
-    private void HandleUnitMoveRequest(UnitMoveRequestEvent evt)
+    private void HandleUnitMoved(UnitMovedEvent evt)
     {
         Cell targetCell = GetCell(evt.To.x, evt.To.y);
         if (targetCell == null) return;
-        if (!targetCell.isWalkable) return;
-        if (targetCell.OccupyingUnit != null && targetCell.OccupyingUnit != evt.Unit) return;
 
         // 从原格子移除
         Cell fromCell = GetCell(evt.From.x, evt.From.y);
         if (fromCell != null)
-            fromCell.OccupyingUnit = null;
+        {
+            if (fromCell.OccupyingUnit == evt.Unit)
+                fromCell.OccupyingUnit = null;
+        }
 
         // 放置到目标格子
         targetCell.OccupyingUnit = evt.Unit;
-        evt.Unit.GridPosition = evt.To;
 
         GameEventChannel.Dispatch(new CellUpdatedEvent(targetCell));
         if (fromCell != null)
             GameEventChannel.Dispatch(new CellUpdatedEvent(fromCell));
-        GameEventChannel.Dispatch(new UnitMovedEvent(evt.Unit, evt.From, evt.To, evt.Context));
     }
 
     private void HandleUnitDeath(UnitDeathEvent evt)

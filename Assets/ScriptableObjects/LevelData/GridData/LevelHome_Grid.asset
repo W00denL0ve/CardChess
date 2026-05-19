@@ -12,9 +12,105 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98adc5c511385754a9773f7f332c98d8, type: 3}
   m_Name: LevelHome_Grid
   m_EditorClassIdentifier: 
-  width: 8
-  height: 5
+  width: 11
+  height: 8
   cells:
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
+  - terrainType: 0
+    height: 0
   - terrainType: 0
     height: 0
   - terrainType: 0

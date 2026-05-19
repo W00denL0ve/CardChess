@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e8091d1e61b70a6458b651031b16c949, type: 3}
+  m_Script: {fileID: 11500000, guid: ea600b3c2ccfa2640b06554b2f0a641d, type: 3}
   m_Name: "\u96BE\u5EA6\u66F2\u7EBF"
   m_EditorClassIdentifier: 
   commonMultiplier:
@@ -41,21 +41,21 @@ MonoBehaviour:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
+      value: 0.3
+      inSlope: 1.0728884
+      outSlope: 1.0728884
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0
+      outWeight: 0.027100287
     - serializedVersion: 3
       time: 3
-      value: 1
-      inSlope: 0
-      outSlope: 0
+      value: 0.5
+      inSlope: -0.0070631793
+      outSlope: -0.0070631793
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0
+      inWeight: 0.07166497
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
@@ -145,4 +145,16 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   rareMinDifficulty: 0.5
-  eliteMinDifficulty: 1.5
+  eliteMinDifficulty: 1
+  stageRange: 1
+  phases:
+  - phaseName: "\u65B0\u624B\u6751"
+    levelCount: 3
+    difficultyOffset: 0
+    mapPool:
+    - id: "\u65B0\u624B\u6751"
+      difficultyModifier: 0
+      scenes:
+      - LevelHome
+  maxRosterSize: 3
+  reviveEnabled: 1

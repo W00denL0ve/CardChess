@@ -10,7 +10,6 @@ public class TestAsyncEffect : MonoBehaviour
     [Header("单位配置")]
     public UnitConfig warriorConfig;
     public UnitConfig mageConfig;
-    public GameObject unitPrefab;
 
     [Header("可选：拖入已有卡牌资产")]
     [SerializeField] private CardData importedCard;
@@ -32,6 +31,7 @@ public class TestAsyncEffect : MonoBehaviour
         SubscribeEvents();
         BuildProgrammaticCard();
         PrintHelp();
+        GameEventChannel.Dispatch(new LevelEnteredEvent("test"));
     }
 
     void OnDestroy()
@@ -64,9 +64,9 @@ public class TestAsyncEffect : MonoBehaviour
 
     bool Validate()
     {
-        if (warriorConfig == null || mageConfig == null || unitPrefab == null)
+        if (warriorConfig == null || mageConfig == null)
         {
-            Debug.LogError("[TestAsync] 请将 warriorConfig、mageConfig、unitPrefab 拖入 Inspector");
+            Debug.LogError("[TestAsync] 请将 warriorConfig、mageConfig 拖入 Inspector");
             return false;
         }
         if (GridManager.Instance == null || LevelManager.Instance == null || PreviewManager.Instance == null)
@@ -91,7 +91,6 @@ public class TestAsyncEffect : MonoBehaviour
 
     Unit SpawnUnit(UnitConfig config, Faction faction, Vector2Int pos)
     {
-        UnitFactory.SetUnitPrefab(unitPrefab);
         return UnitFactory.Spawn(config, pos, faction);
     }
 

@@ -9,11 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8bbb6acc9ef00db4abfc5751348c7c7d, type: 3}
-  m_Name: Player
+  m_Script: {fileID: 11500000, guid: a47b3c8ac80bb4c4183f0d8c175f46a3, type: 3}
+  m_Name: PlayerSpawnTile
   m_EditorClassIdentifier: 
-  spawnGroup: {fileID: 0}
-  fallbackUnitConfig: {fileID: 0}
-  allowedTerrains: 00000000
-  searchRange: 5
-  previewSprite: {fileID: 21300000, guid: 407eea88d946d4a51b3454a22f7739ec, type: 3}
+  previewSprite: {fileID: 21300000, guid: f0f54e41a78ea8742ae54bbec1058653, type: 3}

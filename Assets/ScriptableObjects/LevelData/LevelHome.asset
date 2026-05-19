@@ -14,3 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridData: {fileID: 11400000, guid: 079b5e8a21e797d41ace1c68ce4aff9e, type: 2}
   turnData: {fileID: 11400000, guid: 3870862abeb3b9345b30683ce39a5f8f, type: 2}
+  playerSpawnPositions:
+  - {x: 1, y: 1}
+  - {x: 1, y: 2}
+  - {x: 1, y: 3}
+  - {x: 1, y: 4}
+  - {x: 1, y: 5}
+  - {x: 1, y: 6}

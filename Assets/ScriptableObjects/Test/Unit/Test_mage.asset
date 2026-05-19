@@ -15,7 +15,12 @@ MonoBehaviour:
   unitId: Test_Mage
   unitName: "\u795E\u529B\u6CD5\u5E08"
   occupation: 0
+  defaultFaction: 1
   icon: {fileID: 21300000, guid: 51de07ff79fa042dfacac0d6d4c206b2, type: 3}
+  unitPrefab: {fileID: 6974378412044888541, guid: 58786e05c73447d41922274a956d6c4f, type: 3}
+  yOffset: 0
+  zOffset: -0.3
+  xRotation: 45
   initialAttributes:
   - type: 0
     value: 30

@@ -15,7 +15,12 @@ MonoBehaviour:
   unitId: test_warrior
   unitName: "\u94C1\u8840\u6218\u58EB"
   occupation: 0
+  defaultFaction: 1
   icon: {fileID: 21300000, guid: c0ea24e5b30981d4b8c24b04ace165eb, type: 3}
+  unitPrefab: {fileID: 6974378412044888541, guid: 58786e05c73447d41922274a956d6c4f, type: 3}
+  yOffset: 0
+  zOffset: -0.3
+  xRotation: 45
   initialAttributes:
   - type: 0
     value: 50

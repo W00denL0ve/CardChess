@@ -9,14 +9,17 @@ public class Bootstrapper : MonoBehaviour
     [SerializeField] private string mainMenuSceneName = "MainMenu";
     [SerializeField] private float simulatedLoadTime; // 模拟每步加载时延，release可移除
 
-    public GameObject manager; // 管理器父物体
+    private GameObject manager; // 管理器父物体
+    private GameObject mcamera; // 主相机
 
     private void Awake()
     {
         Logger.Log("Bootstrapper Awake：引导器已创建，创建管理器...");
         // 从Resource/Prefabs获取管理器物体并将管理器实例化，各个管理器挂在Manager的子物体上
         manager = Instantiate(Resources.Load<GameObject>("Prefabs/Manager"));
+        mcamera =  Instantiate(Resources.Load<GameObject>("Prefabs/Main Camera"));
         // 不进行自动销毁
+        DontDestroyOnLoad(mcamera);
         DontDestroyOnLoad(manager);
         DontDestroyOnLoad(gameObject);
         // 订阅场景切换事件，备用

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using System.IO;
 using System.Collections.Generic;
 
@@ -42,10 +43,8 @@ public static class DemoPath
 [System.Serializable]
 public class GameSaveData
 {
-    // 在这里添加存档字段
-    // public int level;
-    // public Vector3 playerPosition;  // 需要自行处理序列化
-    // public List<string> inventory;
+    // 单局游戏运行时状态
+    public RunState runState;
 }
 
 /// <summary>
@@ -226,13 +225,81 @@ public class SaveManager : MonoBehaviour
     }
 
     // ====================================================================
-    //  玩家阵容（存档占位，后续接入实际存档系统）
+    //  RunState — 单局游戏运行时状态
     // ====================================================================
 
-    /// <summary>获取当前玩家阵容（从存档读取）</summary>
+    /// <summary>当前正在进行的 Run，null 表示无进行中的游戏</summary>
+    public RunState CurrentRun { get; private set; }
+
+    /// <summary>开始一局新游戏</summary>
+    public RunState NewRun(List<string> initialRosterIds, int seed = -1)
+    {
+        CurrentRun = new RunState
+        {
+            globalStageIndex = 1,
+            randomSeed = seed >= 0 ? seed : UnityEngine.Random.Range(int.MinValue, int.MaxValue),
+            roster = initialRosterIds.ConvertAll(id => new UnitSaveData(id))
+        };
+        return CurrentRun;
+    }
+
+    /// <summary>保存当前 Run 到 JSON 文件</summary>
+    public void SaveRun()
+    {
+        if (CurrentRun == null) return;
+        var data = new GameSaveData { runState = CurrentRun };
+        SaveToJson(data, "run.json");
+    }
+
+    /// <summary>从 JSON 文件加载 Run</summary>
+    public bool LoadRun()
+    {
+        var data = LoadFromJson("run.json");
+        if (data?.runState == null)
+        {
+            CurrentRun = null;
+            return false;
+        }
+        CurrentRun = data.runState;
+        return true;
+    }
+
+    /// <summary>删除当前 Run 存档</summary>
+    public void DeleteRun()
+    {
+        CurrentRun = null;
+        DeleteJsonFile("run.json");
+    }
+
+    // ====================================================================
+    //  玩家阵容
+    // ====================================================================
+
+    /// <summary>获取当前玩家阵容（UnitConfig 列表）</summary>
     public List<UnitConfig> GetPlayerRoster()
     {
-        // TODO: 从存档文件读取玩家持有的 UnitConfig 列表
-        return new List<UnitConfig>();
+        if (CurrentRun?.roster == null || CurrentRun.roster.Count == 0)
+            return new List<UnitConfig>();
+
+        var result = new List<UnitConfig>();
+        foreach (var saveData in CurrentRun.roster)
+        {
+            UnitConfig config = LoadUnitConfig(saveData.configId);
+            if (config != null)
+                result.Add(config);
+            else
+                Logger.LogWarning($"[SaveManager] 未找到 UnitConfig: {saveData.configId}");
+        }
+        return result;
+    }
+
+    /// <summary>通过 configId 加载 UnitConfig 资产（Addressable key = configId）</summary>
+    private UnitConfig LoadUnitConfig(string configId)
+    {
+        var handle = Addressables.LoadAssetAsync<UnitConfig>(configId);
+        var result = handle.WaitForCompletion();
+        if (result == null)
+            Logger.LogWarning($"[SaveManager] 未找到 UnitConfig: {configId}");
+        return result;
     }
 }

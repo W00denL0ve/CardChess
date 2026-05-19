@@ -101,19 +101,24 @@ public class AsyncEffectExecutor : MonoBehaviour
         {
             if (step == null) continue;
             yield return ResolveAndExecute(step, context, prevWasSelector);
-            if (context.chainBroken) break;
+            if (context.chainBroken)
+            {
+                PreviewManager.Instance?.ClearAll();
+                break;
+            }
             prevWasSelector = step is SelectorStep;
+
+            // 非效果步骤 → 高亮当前被执行者（上一步选中的目标）
+            if (!(step is EffectStep))
+                HighlightExecuted(context);
         }
 
-        // 链结束时清除所有预览视觉
-        PreviewManager.Instance?.ClearAll();
         onComplete?.Invoke();
     }
 
     IEnumerator ExecuteSingleStepRoutine(ChainStep step, EffectContext context, Action onComplete)
     {
         yield return ResolveAndExecute(step, context);
-        PreviewManager.Instance?.ClearAll();
         onComplete?.Invoke();
     }
 
@@ -178,10 +183,19 @@ public class AsyncEffectExecutor : MonoBehaviour
     IEnumerator ResolveEffectStep(EffectStep step, EffectContext context)
     {
         if (step.effect == null) yield break;
+        PreviewManager.Instance?.ClearAll();
         step.effect.OnExecute(context);
         if (step.effect is IAnimatedEffect anim)
             yield return anim.PlayAnimation(context);
         step.effect.OnComplete(context);
+    }
+
+    /// <summary>高亮当前被执行者单位（不含标记）</summary>
+    private void HighlightExecuted(EffectContext context)
+    {
+        Unit unit = context.GetExecutedUnit();
+        if (unit != null && unit.IsAlive)
+            UnitVisualizer.Instance?.HighlightUnits(new List<Unit> { unit });
     }
 
     // ====================================================================
@@ -224,6 +238,9 @@ public class AsyncEffectExecutor : MonoBehaviour
                 context.canRevert
             );
 
+            // 高亮当前被执行者（和候选格子同时显示）
+            HighlightExecuted(context);
+
             if (autoConfirm)
             {
                 Logger.Log($"[AsyncEffect] {selector.name} 自动确认 (唯一格子候选)");
@@ -244,6 +261,9 @@ public class AsyncEffectExecutor : MonoBehaviour
                 },
                 context.canRevert
             );
+
+            // 高亮当前被执行者（和候选单位同时显示）
+            HighlightExecuted(context);
 
             if (autoConfirm)
             {

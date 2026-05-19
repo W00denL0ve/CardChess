@@ -135,9 +135,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   highlightMaterial3D: {fileID: 2100000, guid: 31b7db2a43f471e42ae7ac9f5a4940c3, type: 2}
-  highlightMaterial2D: {fileID: 2100000, guid: cbc5fce233db2174a8be68bb35809dbf, type: 2}
+  highlightSortingLayer: Highlight
   hoverMaterial3D: {fileID: 2100000, guid: 31b7db2a43f471e42ae7ac9f5a4940c3, type: 2}
-  hoverMaterial2D: {fileID: 2100000, guid: cbc5fce233db2174a8be68bb35809dbf, type: 2}
+  hoverColor: {r: 0.4506348, g: 0.90249825, b: 0.9245283, a: 1}
+  hoverLerp: 0.5
 --- !u!1 &6374237709223590285
 GameObject:
   m_ObjectHideFlags: 0
@@ -186,8 +187,8 @@ MonoBehaviour:
   cellPinYOffset: 0.3
   cellPinZOffset: 0.6
   unitPinPrefab: {fileID: 3677808646879846021, guid: a6741db47bb7fc241bcdcd2c09cf05d1, type: 3}
-  unitPinYOffset: -0.1
-  unitPinZOffset: 0
+  unitPinYOffset: 0.2
+  unitPinZOffset: 0.2
   poolSize: 3
 --- !u!1 &6596832822845159777
 GameObject:

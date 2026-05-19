@@ -3,6 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// 单位可视化管理器 - 负责单位的高亮和悬停效果
+/// 2D Sprite → 切换 Sorting Layer；3D → 替换材质
 /// </summary>
 public class UnitVisualizer : MonoBehaviour
 {
@@ -10,23 +11,38 @@ public class UnitVisualizer : MonoBehaviour
 
     void Awake() { Instance = this; }
 
-    [Header("Highlight Materials")]
+    [Header("3D Highlight")]
     [SerializeField] private Material highlightMaterial3D;
-    [SerializeField] private Material highlightMaterial2D;
 
-    [Header("Hover Materials (fallback when no Animator)")]
+    [Header("2D Highlight (Sorting Layer)")]
+    [SerializeField] private string highlightSortingLayer = "Highlight";
+
+    [Header("3D Hover (fallback when no Animator)")]
     [SerializeField] private Material hoverMaterial3D;
-    [SerializeField] private Material hoverMaterial2D;
 
-    // 高亮记录：Renderer → 原始材质
-    private Dictionary<Renderer, Material> highlightedRenderers = new Dictionary<Renderer, Material>();
+    [Header("2D Hover (fallback when no Animator)")]
+    public Color hoverColor = new Color(1f, 1f, 0.6f, 1f);
+    [Range(0f, 1f)]
+    public float hoverLerp = 0.3f;
 
-    // 悬停记录：Renderer → 悬停前的材质（可能是高亮材质，也可能是原始材质）
+    // 3D 高亮记录：Renderer → 原始材质
+    private Dictionary<Renderer, Material> highlighted3D = new Dictionary<Renderer, Material>();
+
+    // 2D 高亮记录：SpriteRenderer → 原始排序信息
+    private Dictionary<SpriteRenderer, (string layer, int order)> highlighted2D = new Dictionary<SpriteRenderer, (string, int)>();
+
+    // 3D 悬停记录：Renderer → 原始材质
     private Dictionary<Renderer, Material> hoverOriginalMaterials = new Dictionary<Renderer, Material>();
+
+    // 2D 悬停记录：SpriteRenderer → 原始颜色
+    private Dictionary<SpriteRenderer, Color> hoverOriginalColors = new Dictionary<SpriteRenderer, Color>();
+
     private Unit currentHoveredUnit;
 
     /// <summary>
     /// 高亮指定单位列表
+    /// 2D Sprite → 切到 Highlight 层；
+    /// 3D → 替换材质
     /// </summary>
     public void HighlightUnits(List<Unit> units)
     {
@@ -38,35 +54,54 @@ public class UnitVisualizer : MonoBehaviour
             foreach (var renderer in renderers)
             {
                 if (renderer == null) continue;
-                // 保存原始材质
-                if (!highlightedRenderers.ContainsKey(renderer))
+
+                if (renderer is SpriteRenderer sr)
                 {
-                    highlightedRenderers[renderer] = renderer.sharedMaterial;
+                    // 2D：保存排序信息 → 切到高亮层
+                    if (!highlighted2D.ContainsKey(sr))
+                        highlighted2D[sr] = (sr.sortingLayerName, sr.sortingOrder);
+                    sr.sortingLayerName = highlightSortingLayer;
                 }
-                // 应用高亮材质
-                Material mat = renderer is SpriteRenderer ? highlightMaterial2D : highlightMaterial3D;
-                if (mat != null)
-                    renderer.material = mat;
+                else
+                {
+                    // 3D：保存材质 → 替换高亮材质
+                    if (!highlighted3D.ContainsKey(renderer))
+                        highlighted3D[renderer] = renderer.sharedMaterial;
+                    if (highlightMaterial3D != null)
+                        renderer.material = highlightMaterial3D;
+                }
             }
         }
         Logger.Log($"UnitVisualizer: 高亮 {units.Count} 个单位");
     }
 
     /// <summary>
-    /// 清除所有高亮，恢复原始材质
+    /// 清除所有高亮
     /// </summary>
     public void ClearHighlights()
     {
         Debug.Log("[UnitVis] ClearHighlights");
-        // 先清除悬停，避免悬停引用已清空的高亮记录
         ClearHoverUnit();
 
-        foreach (var kvp in highlightedRenderers)
+        // 恢复 3D 材质
+        foreach (var kvp in highlighted3D)
         {
             if (kvp.Key != null)
                 kvp.Key.material = kvp.Value;
         }
-        highlightedRenderers.Clear();
+        highlighted3D.Clear();
+
+        // 恢复 2D 排序
+        foreach (var kvp in highlighted2D)
+        {
+            if (kvp.Key != null)
+            {
+                kvp.Key.sortingLayerName = kvp.Value.layer;
+                kvp.Key.sortingOrder = kvp.Value.order;
+            }
+        }
+        highlighted2D.Clear();
+
         Logger.Log("UnitVisualizer: 已清除所有高亮");
     }
 
@@ -76,56 +111,69 @@ public class UnitVisualizer : MonoBehaviour
     public void ClearHighlightsOf(List<Unit> unitsToClear)
     {
         if (unitsToClear == null) return;
-        var toRemove = new List<Renderer>();
+
+        var toRemove3D = new List<Renderer>();
+        var toRemove2D = new List<SpriteRenderer>();
+
         foreach (var unit in unitsToClear)
         {
             if (unit == null) continue;
+
+            // 恢复 3D
             Renderer[] renderers = unit.GetComponentsInChildren<Renderer>(true);
             foreach (var renderer in renderers)
             {
-                if (renderer != null && highlightedRenderers.TryGetValue(renderer, out var original))
+                if (renderer is SpriteRenderer sr)
                 {
-                    renderer.material = original;
-                    toRemove.Add(renderer);
+                    if (highlighted2D.TryGetValue(sr, out var info))
+                    {
+                        sr.sortingLayerName = info.layer;
+                        sr.sortingOrder = info.order;
+                        toRemove2D.Add(sr);
+                    }
+                }
+                else
+                {
+                    if (renderer != null && highlighted3D.TryGetValue(renderer, out var original))
+                    {
+                        renderer.material = original;
+                        toRemove3D.Add(renderer);
+                    }
                 }
             }
         }
-        foreach (var r in toRemove)
-            highlightedRenderers.Remove(r);
+
+        foreach (var r in toRemove3D) highlighted3D.Remove(r);
+        foreach (var r in toRemove2D) highlighted2D.Remove(r);
     }
 
     /// <summary>
-    /// 设置悬停单位（优先使用 Animator 参数，否则替换材质）
+    /// 设置悬停单位 — 2D 改颜色，3D 改材质
     /// </summary>
     public void SetHoverUnit(Unit unit)
     {
         if (unit == null) return;
 
-        // 清除旧悬停
         ClearHoverUnit();
-
         currentHoveredUnit = unit;
 
-        // 尝试 Animator 方式
-        Animator anim = unit.GetComponentInChildren<Animator>();
-        if (anim != null)
-        {
-            anim.SetBool("Hovered", true);
-            return;
-        }
-
-        // 备选：替换材质
         Renderer[] renderers = unit.GetComponentsInChildren<Renderer>(true);
         foreach (var renderer in renderers)
         {
             if (renderer == null) continue;
 
-            // 保存悬停前的材质（可能是高亮材质）
-            hoverOriginalMaterials[renderer] = renderer.sharedMaterial;
-
-            Material hoverMat = renderer is SpriteRenderer ? hoverMaterial2D : hoverMaterial3D;
-            if (hoverMat != null)
-                renderer.material = hoverMat;
+            if (renderer is SpriteRenderer sr)
+            {
+                if (!hoverOriginalColors.ContainsKey(sr))
+                    hoverOriginalColors[sr] = sr.color;
+                sr.color = Color.Lerp(sr.color, hoverColor, hoverLerp);
+            }
+            else
+            {
+                hoverOriginalMaterials[renderer] = renderer.sharedMaterial;
+                if (hoverMaterial3D != null)
+                    renderer.material = hoverMaterial3D;
+            }
         }
     }
 
@@ -137,18 +185,7 @@ public class UnitVisualizer : MonoBehaviour
         if (currentHoveredUnit == null) return;
         Debug.Log($"[UnitVis] ClearHoverUnit: {currentHoveredUnit.UnitId}");
 
-        // 尝试 Animator 方式
-        Animator anim = currentHoveredUnit.GetComponentInChildren<Animator>();
-        if (anim != null)
-        {
-            anim.SetBool("Hovered", false);
-        }
-        else
-        {
-            // 备选：从 hoverOriginalMaterials 恢复材质
-            RestoreHoverMaterials(currentHoveredUnit);
-        }
-
+        RestoreHoverMaterials(currentHoveredUnit);
         currentHoveredUnit = null;
     }
 
@@ -161,12 +198,22 @@ public class UnitVisualizer : MonoBehaviour
         foreach (var renderer in renderers)
         {
             if (renderer == null) continue;
-            if (hoverOriginalMaterials.TryGetValue(renderer, out var preHoverMat))
+
+            if (renderer is SpriteRenderer sr)
             {
-                renderer.material = preHoverMat;
+                // 2D：恢复原始颜色
+                if (hoverOriginalColors.TryGetValue(sr, out var origColor))
+                    sr.color = origColor;
+            }
+            else
+            {
+                // 3D：恢复原始材质
+                if (hoverOriginalMaterials.TryGetValue(renderer, out var preMat))
+                    renderer.material = preMat;
             }
         }
         hoverOriginalMaterials.Clear();
+        hoverOriginalColors.Clear();
     }
 
     /// <summary>
@@ -178,7 +225,9 @@ public class UnitVisualizer : MonoBehaviour
         Renderer[] renderers = unit.GetComponentsInChildren<Renderer>(true);
         foreach (var r in renderers)
         {
-            if (highlightedRenderers.ContainsKey(r))
+            if (r is SpriteRenderer sr && highlighted2D.ContainsKey(sr))
+                return true;
+            if (highlighted3D.ContainsKey(r))
                 return true;
         }
         return false;

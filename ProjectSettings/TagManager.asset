@@ -47,6 +47,21 @@ TagManager:
   - name: PlayerArea
     uniqueID: 4196782659
     locked: 0
+  - name: UnitUI
+    uniqueID: 1827169793
+    locked: 0
+  - name: Unit
+    uniqueID: 4266418893
+    locked: 0
+  - name: Mask
+    uniqueID: 2155421039
+    locked: 0
+  - name: Highlight
+    uniqueID: 2740139655
+    locked: 0
   - name: UI
     uniqueID: 2416792013
+    locked: 0
+  - name: UImask
+    uniqueID: 3041332841
     locked: 0
