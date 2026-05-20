@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Game/Buffs/Test/Attack Up")]
+[CreateAssetMenu(menuName = "CardChess/Buffs/Test/AttackUp")]
 public class TestAttackUpBuff : Buff
 {
     public int attackBonus = 5;

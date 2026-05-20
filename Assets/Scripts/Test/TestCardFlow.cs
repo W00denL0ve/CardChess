@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 /// <summary>
 /// 卡牌系统测试 — 验证抽牌→出牌→效果执行的完整流程
@@ -27,7 +28,11 @@ public class TestCardFlow : MonoBehaviour
 
     void Start()
     {
+        DOTween.SetTweensCapacity(500, 50);
         if (!Validate()) return;
+
+        // 初始化玩家资源
+        ResourceManager.Instance.LoadFromRunState();
 
         // 将测试卡牌加入牌库
         foreach (var card in testCards)
@@ -36,7 +41,10 @@ public class TestCardFlow : MonoBehaviour
                 DeckManager.Instance.deck.Add(card);
         }
 
-        Logger.Log($"[TestCardFlow] 牌库已初始化，共 {DeckManager.Instance.deck.Count} 张卡牌");
+        // 从 Inspector 读取抽牌数
+        TurnManager.Instance.drawCount = drawCount;
+
+        Logger.Log($"[TestCardFlow] 牌库已初始化，共 {DeckManager.Instance.deck.Count} 张卡牌，每回合抽 {drawCount} 张");
 
         if (autoStartOnLoad)
             StartCoroutine(DelayedStart());
@@ -62,23 +70,32 @@ public class TestCardFlow : MonoBehaviour
     {
         if (DeckManager.Instance == null)
         {
-            Debug.LogError("[TestCardFlow] 场景中缺少 DeckManager");
+            Logger.LogError("[TestCardFlow] 场景中缺少 DeckManager");
             return false;
         }
         if (TurnManager.Instance == null)
         {
-            Debug.LogError("[TestCardFlow] 场景中缺少 TurnManager");
+            Logger.LogError("[TestCardFlow] 场景中缺少 TurnManager");
             return false;
         }
         if (FindObjectOfType<HandUI>() == null)
         {
-            Debug.LogError("[TestCardFlow] 场景中缺少 HandUI");
+            Logger.LogError("[TestCardFlow] 场景中缺少 HandUI");
             return false;
         }
         if (AsyncEffectExecutor.Instance == null)
         {
-            Debug.LogError("[TestCardFlow] 场景中缺少 AsyncEffectExecutor");
+            Logger.LogError("[TestCardFlow] 场景中缺少 AsyncEffectExecutor");
             return false;
+        }
+        if (ResourceManager.Instance == null)
+        {
+            Logger.LogError("[TestCardFlow] 场景中缺少 ResourceManager");
+            return false;
+        }
+        if (SaveManager.Instance == null)
+        {
+            Logger.LogWarning("[TestCardFlow] 场景中缺少 SaveManager（部分功能可能不可用）");
         }
         return true;
     }

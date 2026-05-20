@@ -1,7 +1,7 @@
 using Unity.VisualScripting;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Game/Buffs/Test/Poison")]
+[CreateAssetMenu(menuName = "CardChess/Buffs/Test/Poison")]
 public class TestPoisonBuff : Buff
 {
     public int poisonDamage = 5;

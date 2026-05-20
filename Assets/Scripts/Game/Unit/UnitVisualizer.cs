@@ -72,7 +72,7 @@ public class UnitVisualizer : MonoBehaviour
                 }
             }
         }
-        Logger.Log($"UnitVisualizer: 高亮 {units.Count} 个单位");
+        // Logger.Log($"UnitVisualizer: 高亮 {units.Count} 个单位");
     }
 
     /// <summary>

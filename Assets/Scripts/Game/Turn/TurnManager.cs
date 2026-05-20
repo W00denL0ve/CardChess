@@ -25,9 +25,15 @@ public class TurnManager : MonoBehaviour
     public int currentTurn { get; private set; } = 0;
     public int maxPlayerActions = 3;
     public int playerActionsRemaining;
+    public int drawCount = 3;
 
     private ITurnState oldState;
     private ITurnState currentState;
+
+    /// <summary>
+    /// 每回合恢复能量偏移量
+    /// </summary>
+    public int energyOffset { get; private set; } = 0;
 
     private Dictionary<TurnPhase, ITurnState> phaseStates = new Dictionary<TurnPhase, ITurnState>();
 
@@ -164,11 +170,11 @@ class DrawState : ITurnState
 {
     public TurnPhase phaseName => TurnPhase.Draw;
 
-    private int remainingDraws;
-
     public void Enter()
     {
         Logger.Log("Entering Draw Phase");
+        if (ResourceManager.Instance != null)
+            ResourceManager.Instance.RefreshEnergy(TurnManager.Instance.energyOffset);
         TurnManager.Instance.StartCoroutine(DrawCardsRoutine());
     }
 
@@ -181,20 +187,13 @@ class DrawState : ITurnState
 
     private IEnumerator DrawCardsRoutine()
     {
-        // 本回合抽牌数（示例：固定 3 张，后续可从 RunConfig 读取）
-        int drawCount = 3;
-        remainingDraws = drawCount;
+        int drawCount = TurnManager.Instance.drawCount;
 
-        for (int i = 0; i < drawCount; i++)
+        // 数据层先行 + 单次群组动画，完成后切阶段
+        yield return DeckManager.Instance?.DrawCardsAsync(drawCount, () =>
         {
-            DeckManager.Instance?.DrawCard();  // 数据层 + dispatch CardDrawnEvent
-
-            // 等待一张牌的视觉表现完成（HandUI 收到 CardDrawnEvent 后完成动画时通知）
-            // 使用 yield return new WaitForSeconds 作为简易替代，后续替换为真实动画等待
-            yield return new WaitForSeconds(0.2f);
-        }
-
-        TurnManager.Instance.ChangePhase(TurnPhase.PlayerPlay);
+            TurnManager.Instance.ChangePhase(TurnPhase.PlayerPlay);
+        });
     }
 }
 
@@ -226,7 +225,14 @@ class PlayerPlayState : ITurnState
         CardData card = evt.Card;
         if (card == null) return;
 
-        Logger.Log($"[PlayerPlay] 打出卡牌: {card.cardName}");
+        // 检查能量是否足够
+        if (!ResourceManager.Instance.SpendEnergy(card.Cost))
+        {
+            Logger.Log($"[PlayerPlay] 能量不足，无法打出 {card.cardName}（需要 {card.Cost}，当前 {ResourceManager.Instance.Energy}）");
+            return;
+        }
+
+        Logger.Log($"[PlayerPlay] 打出卡牌: {card.cardName}（消耗 {card.Cost} 能量）");
 
         // 数据层：手牌 → pending
         DeckManager.Instance?.MarkCardPlayed(card);
@@ -234,9 +240,22 @@ class PlayerPlayState : ITurnState
         // 切到行动阶段（执行期间不可再次出牌）
         TurnManager.Instance.ChangePhase(TurnPhase.PlayerAction);
 
+        // 等待卡牌飞到 pending 区后再执行效果链
+        TurnManager.Instance.StartCoroutine(PlayCardWithPendingDelay(card));
+    }
+
+    private IEnumerator PlayCardWithPendingDelay(CardData card)
+    {
+        bool arrived = false;
+        HandUI.Instance?.WaitForPendingArrival(card, () => arrived = true);
+        Logger.Log($"[PlayCardWithPendingDelay] 等待卡牌到达 pending...");
+        yield return new WaitUntil(() => arrived);
+        Logger.Log($"[PlayCardWithPendingDelay] 卡牌已到达 pending，开始执行效果链");
+
         // 执行效果链，完成后回到出牌阶段
         AsyncEffectExecutor.Instance?.ExecuteCardChainsAsync(card, () =>
         {
+            Logger.Log($"[PlayCardWithPendingDelay] 效果链完成回调触发");
             TurnManager.Instance.ChangePhase(TurnPhase.PlayerPlay);
         });
     }
@@ -290,6 +309,10 @@ class EnemyState : ITurnState
 
     private IEnumerator ExecuteEnemyTurn()
     {
+        Logger.Log("开始弃牌");
+        // 弃掉不保留的手牌
+        yield return DeckManager.Instance?.DiscardNonRetainedAsync();
+
         var enemies = LevelManager.Instance?.GetUnitsOf(Faction.Enemy);
         if (enemies != null)
         {

@@ -1,17 +1,29 @@
 using System.Collections.Generic;
 
 /// <summary>
-/// 单个单位的存档数据
+/// 单个单位的存档数据 — assetAddress 指向静态模板，其余字段为运行时实例数据
 /// </summary>
 [System.Serializable]
 public class UnitSaveData
 {
-    /// <summary>UnitConfig 的标识（用于查找资产）</summary>
-    public string configId;
+    /// <summary>UnitConfig 的 Addressable 地址（静态模板）</summary>
+    public string assetAddress;
 
-    public UnitSaveData(string configId)
+    /// <summary>当前生命值（战斗结束时保存，用于跨关继承）</summary>
+    public int currentHp;
+
+    /// <summary>生命上限（可能因升级/遗物改变）</summary>
+    public int maxHp;
+
+    /// <summary>等级</summary>
+    public int level = 1;
+
+    /// <summary>经验值</summary>
+    public int exp;
+
+    public UnitSaveData(string assetAddress)
     {
-        this.configId = configId;
+        this.assetAddress = assetAddress;
     }
 }
 
@@ -31,6 +43,17 @@ public class RunState
     /// <summary>随机种子</summary>
     public int randomSeed;
 
-    /// <summary>玩家阵容 — 存关卡的 UnitConfig 标识</summary>
+    /// <summary>玩家阵容 — 存 UnitConfig 的 Addressable 地址</summary>
     public List<UnitSaveData> roster = new();
+
+    // ── 持久化资源 ──
+
+    /// <summary>能量上限（当前能量每局从上限重置，不存档）</summary>
+    public int maxEnergy = 6;
+
+    /// <summary>金币</summary>
+    public int gold = 0;
+
+    /// <summary>牌库中卡牌的 Addressable 地址列表</summary>
+    public List<string> deckCardIds = new();
 }

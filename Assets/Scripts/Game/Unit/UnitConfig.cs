@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Game/Unit/UnitConfig")]
+[CreateAssetMenu(menuName = "CardChess/Units/UnitConfig")]
 public class UnitConfig : ScriptableObject
 {
     public string unitId;

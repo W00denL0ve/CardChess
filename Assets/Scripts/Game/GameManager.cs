@@ -49,6 +49,7 @@ public class GameManager : MonoBehaviour
     {
         Logger.Log("GameManager：开始新游戏，触发游戏开始事件...");
         SaveManager.Instance.NewRun(new List<string> {"Warrior"});
+        ResourceManager.Instance.LoadFromRunState();
         SaveManager.Instance.SaveRun();
         UIManager.Instance.SetLoadingTip("正在加载游戏地图...");
         UIManager.Instance.ChangePanelsWithMask(new string[] { "all" }, new string[] { "loading" });

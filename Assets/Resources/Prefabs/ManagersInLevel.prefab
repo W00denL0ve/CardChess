@@ -46,6 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxPlayerActions: 3
   playerActionsRemaining: 0
+  drawCount: 3
 --- !u!1 &4001519516515267018
 GameObject:
   m_ObjectHideFlags: 0
@@ -240,6 +241,7 @@ Transform:
   - {fileID: 9196501597143136481}
   - {fileID: 4227653736947464501}
   - {fileID: 6986608171972821253}
+  - {fileID: 2161455321766460726}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6981345928906795515
@@ -329,6 +331,91 @@ MonoBehaviour:
   linePrefab: {fileID: 3548650332997928668, guid: 0666911cece9e3d4790ac4f723d07ea3, type: 3}
   arrowPrefab: {fileID: 1946895567427258415, guid: 73ce58e879b2f0543b1325aff5f2106f, type: 3}
   poolSize: 20
+--- !u!1 &7485060396439910464
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2161455321766460726}
+  - component: {fileID: 3348387725745919571}
+  - component: {fileID: 470314251647648890}
+  m_Layer: 0
+  m_Name: DeckManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2161455321766460726
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7485060396439910464}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7309402844781760257}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3348387725745919571
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7485060396439910464}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79bf554b2eb410345be89d5c7b246587, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHandSize: 10
+  deck: []
+  hand: []
+  discardPile: []
+  destroyedPile: []
+--- !u!114 &470314251647648890
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7485060396439910464}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e7d7091d9ee2644ba930bde14d8b3c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cardPrefab: {fileID: 1805805207229326872, guid: 276abbcc3e986184c9994a6d69c1a0e7, type: 3}
+  handCanvasPrefab: {fileID: 6250140872047030100, guid: 582ca742ef358114db0f5e48c09af85c, type: 3}
+  handContainer: {fileID: 0}
+  pendingArea: {fileID: 0}
+  endTurnButtonName: EndTurnButton
+  drawPileButtonName: DrawPile
+  discardDeckButtonName: DiscardDeck
+  consumedDeckButtonName: ConsumedDeck
+  poolSize: 10
+  cardSpacing: 60
+  fanAngle: 15
+  arcDrop: 10
+  arcPeak: 20
+  marginBase: 0.2
+  marginShrinkPerCard: 0.02
+  hoverHeight: 20
+  hoverScale: 1.5
+  pushDistance: 40
+  layoutAnimDuration: 0.2
+  raycastPadLeft: 30
+  raycastPadBottom: 0
+  raycastPadRight: 30
+  raycastPadTop: 0
 --- !u!1 &7987962047067861000
 GameObject:
   m_ObjectHideFlags: 0

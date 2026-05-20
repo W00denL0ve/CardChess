@@ -31,7 +31,7 @@ public class PhaseConfig
 /// <summary>
 /// 全局一局游戏的完整配置 — 包含难度曲线、阶段列表、局内参数
 /// </summary>
-[CreateAssetMenu(menuName = "Game/Difficulty/RunConfig")]
+[CreateAssetMenu(menuName = "CardChess/Configs/RunConfig")]
 public class RunConfig : ScriptableObject
 {
     // ── 难度曲线（原 DifficultyConfig） ──

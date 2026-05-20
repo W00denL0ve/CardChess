@@ -62,6 +62,15 @@ public class AttributeManager
     }
 
     /// <summary>
+    /// 获取属性对象（用于遍历修饰器等高级操作）
+    /// </summary>
+    public Attribute GetAttribute(AttributeType type)
+    {
+        attributes.TryGetValue(type, out var attr);
+        return attr;
+    }
+
+    /// <summary>
     /// 检查属性是否存在
     /// </summary>
     public bool HasAttribute(AttributeType type)

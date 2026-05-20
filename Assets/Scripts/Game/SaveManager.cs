@@ -232,13 +232,16 @@ public class SaveManager : MonoBehaviour
     public RunState CurrentRun { get; private set; }
 
     /// <summary>开始一局新游戏</summary>
-    public RunState NewRun(List<string> initialRosterIds, int seed = -1)
+    public RunState NewRun(List<string> initialRosterAddresses, int seed = -1)
     {
         CurrentRun = new RunState
         {
             globalStageIndex = 1,
             randomSeed = seed >= 0 ? seed : UnityEngine.Random.Range(int.MinValue, int.MaxValue),
-            roster = initialRosterIds.ConvertAll(id => new UnitSaveData(id))
+            roster = initialRosterAddresses.ConvertAll(addr => new UnitSaveData(addr)),
+            maxEnergy = 3,
+            gold = 0,
+            deckCardIds = new System.Collections.Generic.List<string>()
         };
         return CurrentRun;
     }
@@ -247,6 +250,7 @@ public class SaveManager : MonoBehaviour
     public void SaveRun()
     {
         if (CurrentRun == null) return;
+        ResourceManager.Instance?.SaveToRunState();
         var data = new GameSaveData { runState = CurrentRun };
         SaveToJson(data, "run.json");
     }
@@ -261,6 +265,7 @@ public class SaveManager : MonoBehaviour
             return false;
         }
         CurrentRun = data.runState;
+        ResourceManager.Instance?.LoadFromRunState();
         return true;
     }
 
@@ -284,22 +289,22 @@ public class SaveManager : MonoBehaviour
         var result = new List<UnitConfig>();
         foreach (var saveData in CurrentRun.roster)
         {
-            UnitConfig config = LoadUnitConfig(saveData.configId);
+            UnitConfig config = LoadUnitConfig(saveData.assetAddress);
             if (config != null)
                 result.Add(config);
             else
-                Logger.LogWarning($"[SaveManager] 未找到 UnitConfig: {saveData.configId}");
+                Logger.LogWarning($"[SaveManager] 未找到 UnitConfig: {saveData.assetAddress}");
         }
         return result;
     }
 
-    /// <summary>通过 configId 加载 UnitConfig 资产（Addressable key = configId）</summary>
-    private UnitConfig LoadUnitConfig(string configId)
+    /// <summary>通过 Addressable 地址加载 UnitConfig 资产</summary>
+    private UnitConfig LoadUnitConfig(string assetAddress)
     {
-        var handle = Addressables.LoadAssetAsync<UnitConfig>(configId);
+        var handle = Addressables.LoadAssetAsync<UnitConfig>(assetAddress);
         var result = handle.WaitForCompletion();
         if (result == null)
-            Logger.LogWarning($"[SaveManager] 未找到 UnitConfig: {configId}");
+            Logger.LogWarning($"[SaveManager] 未找到 UnitConfig: {assetAddress}");
         return result;
     }
 }

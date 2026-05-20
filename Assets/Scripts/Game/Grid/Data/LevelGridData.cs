@@ -4,7 +4,7 @@ using UnityEngine;
 /// <summary>
 /// 关卡格子数据资源类，LevelData子资产
 /// </summary>
-[CreateAssetMenu(fileName = "LevelGridData", menuName = "Game/LevelGridData")]
+[CreateAssetMenu(fileName = "LevelGridData", menuName = "CardChess/Levels/LevelGridData")]
 public class LevelGridData : ScriptableObject
 {
     public int width;

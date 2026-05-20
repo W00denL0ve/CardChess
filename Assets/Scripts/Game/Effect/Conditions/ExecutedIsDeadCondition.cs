@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// 条件：被执行者已死亡
 /// </summary>
-[CreateAssetMenu(menuName = "Game/Condition/ExecutedIsDead")]
+[CreateAssetMenu(menuName = "CardChess/EffectChain/Conditions/ExecutedIsDead")]
 public class ExecutedIsDeadCondition : Condition
 {
     public override bool IsMet(EffectContext context)

@@ -1,5 +1,6 @@
 using System.Threading;
 using UnityEngine;
+using DG.Tweening;
 
 /// <summary>
 /// 游戏启动引导器，负责顺序初始化所有全局管理器，然后切换到主菜单。
@@ -34,6 +35,7 @@ public class Bootstrapper : MonoBehaviour
         // 执行初始化
 
         Initializer.Initialize();
+        DOTween.SetTweensCapacity(500, 50);
         UIManager.Instance.ShowLoadingScreen("正在加载游戏资源"); // 显示加载界面
 
         await System.Threading.Tasks.Task.Delay((int)(simulatedLoadTime * 1000)); // 模拟加载时延

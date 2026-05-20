@@ -27,7 +27,7 @@ public class TestAsyncEffect : MonoBehaviour
         mage = SpawnUnit(mageConfig, Faction.Enemy, new Vector2Int(3, 3));
         executor = FindObjectOfType<AsyncEffectExecutor>();
         if (executor == null)
-            Debug.LogError("[TestAsync] 场景中需要 AsyncEffectExecutor");
+            Logger.LogError("[TestAsync] 场景中需要 AsyncEffectExecutor");
         SubscribeEvents();
         BuildProgrammaticCard();
         PrintHelp();
@@ -49,7 +49,7 @@ public class TestAsyncEffect : MonoBehaviour
             if (importedCard != null)
                 ExecuteCard(importedCard);
             else
-                Debug.LogWarning("[TestAsync] 请将 CardData 资产拖入 importedCard");
+                Logger.LogWarning("[TestAsync] 请将 CardData 资产拖入 importedCard");
         }
         else if (Input.GetKeyDown(KeyCode.Alpha1)) TestDamageStep();
         else if (Input.GetKeyDown(KeyCode.Alpha2)) TestMoveStep();
@@ -66,12 +66,12 @@ public class TestAsyncEffect : MonoBehaviour
     {
         if (warriorConfig == null || mageConfig == null)
         {
-            Debug.LogError("[TestAsync] 请将 warriorConfig、mageConfig 拖入 Inspector");
+            Logger.LogError("[TestAsync] 请将 warriorConfig、mageConfig 拖入 Inspector");
             return false;
         }
         if (GridManager.Instance == null || LevelManager.Instance == null || PreviewManager.Instance == null)
         {
-            Debug.LogError("[TestAsync] 场景中需要 GridManager、LevelManager、PreviewManager");
+            Logger.LogError("[TestAsync] 场景中需要 GridManager、LevelManager、PreviewManager");
             return false;
         }
         return true;
@@ -86,7 +86,7 @@ public class TestAsyncEffect : MonoBehaviour
         for (int i = 0; i < 36; i++)
             gridData.cells[i] = new CellData { terrainType = TerrainType.ground, height = 0 };
         GridManager.Instance.LoadGridData(gridData);
-        Debug.Log("[TestAsync] 6x6 网格已创建");
+        Logger.Log("[TestAsync] 6x6 网格已创建");
     }
 
     Unit SpawnUnit(UnitConfig config, Faction faction, Vector2Int pos)
@@ -120,7 +120,7 @@ public class TestAsyncEffect : MonoBehaviour
 
     void PrintHelp()
     {
-        Debug.Log("[TestAsync] 按键: 0-拖入卡牌 1-伤害 2-移动 3-双步骤 4-异步延迟测试");
+        Logger.Log("[TestAsync] 按键: 0-拖入卡牌 1-伤害 2-移动 3-双步骤 4-异步延迟测试");
     }
 
     // ====================================================================
@@ -145,7 +145,7 @@ public class TestAsyncEffect : MonoBehaviour
                 }
             }
         };
-        Debug.Log("[TestAsync] 程序化卡牌已构建 (2个步骤)");
+        Logger.Log("[TestAsync] 程序化卡牌已构建 (2个步骤)");
     }
 
     UnitSelector CreateUnitSelector()
@@ -167,7 +167,7 @@ public class TestAsyncEffect : MonoBehaviour
     {
         var eff = ScriptableObject.CreateInstance<DamageEffect>();
         eff.effectName = "造成伤害";
-        eff.damageAmount = 15;
+        eff.addDamage = 15;
         eff.damageType = DamageType.Physical;
         return eff;
     }
@@ -203,11 +203,11 @@ public class TestAsyncEffect : MonoBehaviour
             executor = new UnitTarget(warrior),
             executed = new UnitTarget(warrior)
         };
-        Debug.Log("[测试1] 请选择敌方单位");
+        Logger.Log("[测试1] 请选择敌方单位");
         executor.ExecuteStepAsync(step, ctx, null);
         executor.ExecuteStepAsync(step2, ctx, () =>
         {
-            Debug.Log($"[测试1] 完成！法师 HP: {mage.CurrentHealth}/{mage.MaxHealth}");
+            Logger.Log($"[测试1] 完成！法师 HP: {mage.CurrentHealth}/{mage.MaxHealth}");
         });
     }
 
@@ -221,11 +221,11 @@ public class TestAsyncEffect : MonoBehaviour
             executor = new UnitTarget(warrior),
             executed = new UnitTarget(warrior)
         };
-        Debug.Log("[测试2] 请选择移动目标格");
+        Logger.Log("[测试2] 请选择移动目标格");
         executor.ExecuteStepAsync(step, ctx, null);
         executor.ExecuteStepAsync(step2, ctx, () =>
         {
-            Debug.Log($"[测试2] 完成！战士位置: ({warrior.GridPosition.x},{warrior.GridPosition.y})");
+            Logger.Log($"[测试2] 完成！战士位置: ({warrior.GridPosition.x},{warrior.GridPosition.y})");
         });
     }
 
@@ -242,10 +242,10 @@ public class TestAsyncEffect : MonoBehaviour
             executed = new UnitTarget(warrior)
         };
 
-        Debug.Log("[测试4] 异步延迟效果: OnExecute → 等待 1s → OnComplete");
+        Logger.Log("[测试4] 异步延迟效果: OnExecute → 等待 1s → OnComplete");
         executor.ExecuteStepAsync(step, ctx, () =>
         {
-            Debug.Log("[测试4] ✅ 步骤完成！1秒延迟确认");
+            Logger.Log("[测试4] ✅ 步骤完成！1秒延迟确认");
         });
     }
 
@@ -261,11 +261,11 @@ public class TestAsyncEffect : MonoBehaviour
 
     void OnHealthChanged(UnitHealthChangedEvent evt)
     {
-        Debug.Log($"[Event] {evt.Unit.UnitId} HP: {evt.OldHealth} → {evt.NewHealth}");
+        Logger.Log($"[Event] {evt.Unit.UnitId} HP: {evt.OldHealth} → {evt.NewHealth}");
     }
 
     void OnMoved(UnitMovedEvent evt)
     {
-        Debug.Log($"[Event] {evt.Unit.UnitId} 移动 {evt.From} → {evt.To}");
+        Logger.Log($"[Event] {evt.Unit.UnitId} 移动 {evt.From} → {evt.To}");
     }
 }

@@ -5,7 +5,7 @@ using UnityEngine;
 /// <summary>
 /// 交换效果 - 将 context.executor 与 context.executed 交换位置
 /// </summary>
-[CreateAssetMenu(fileName = "SwapEffect", menuName = "Game/Effect/Swap")]
+[CreateAssetMenu(fileName = "SwapEffect", menuName = "CardChess/EffectChain/Effects/Swap")]
 public class SwapEffect : Effect, IAnimatedEffect
 {
     // 在 OnExecute 中记录位置，供 PlayAnimation 使用

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public enum Faction { Player, Enemy, Neutral }
 
@@ -22,22 +23,26 @@ public class Unit : MonoBehaviour
     // Buff 容器
     public BuffContainer BuffContainer { get; private set; }
 
-    // 配置引用
+    [Header("血条")]
+    [SerializeField] private Slider healthBar;
+
+    /// <summary>血量百分比 0~1</summary>
+    public float HpPercent => MaxHealth > 0 ? (float)CurrentHealth / MaxHealth : 0f;
     public UnitConfig Config { get; private set; }
 
     // 网格位置（由 GridManager 设置）
     public Vector2Int GridPosition { get; internal set; }
 
-    // 便捷属性（查询 AttributeManager 的最终值）
+    // 便捷属性（查询 AttributeManager 的基础值，修饰器仅在具体公式中按需遍历）
     public int CurrentHealth        => (int)AttributeManager.GetFinalValue(AttributeType.Health);
     public int MaxHealth            => (int)AttributeManager.GetFinalValue(AttributeType.MaxHealth);
-    public int Attack               => (int)AttributeManager.GetFinalValue(AttributeType.Attack);
-    public int Intelligence         => (int)AttributeManager.GetFinalValue(AttributeType.Intelligence);
-    public int PhysicalDefense      => (int)AttributeManager.GetFinalValue(AttributeType.PhysicalDefense);
-    public int MagicDefense         => (int)AttributeManager.GetFinalValue(AttributeType.MagicDefense);
+    public int Attack               => (int)AttributeManager.GetBaseValue(AttributeType.Attack);
+    public int Intelligence         => (int)AttributeManager.GetBaseValue(AttributeType.Intelligence);
+    public int PhysicalDefense      => (int)AttributeManager.GetBaseValue(AttributeType.PhysicalDefense);
+    public int MagicDefense         => (int)AttributeManager.GetBaseValue(AttributeType.MagicDefense);
     public int MovePointLimit     => (int)AttributeManager.GetFinalValue(AttributeType.MovePointLimit);
     public int MovePoints         => (int)AttributeManager.GetFinalValue(AttributeType.MovePoints);
-    public int DamageBonus          => (int)AttributeManager.GetFinalValue(AttributeType.DamageBonus);
+    public int DamageBonus          => (int)AttributeManager.GetBaseValue(AttributeType.DamageBonus);
 
     // 防御查询
     public int GetDefenseFor(DamageType type) => type == DamageType.Physical ? PhysicalDefense : MagicDefense;
@@ -59,6 +64,8 @@ public class Unit : MonoBehaviour
         BuffContainer = new BuffContainer(this);
         foreach (var buff in config.innateBuffs)
             BuffContainer.ApplyBuff(buff, new EffectContext { executor = new UnitTarget(this) });
+
+        UpdateHealthBar();
     }
 
     // 伤害（由效果系统调用，finalDamage 已扣除类型防御）
@@ -84,6 +91,8 @@ public class Unit : MonoBehaviour
             // 使用 BuffContainer 封装的后置回调
             BuffContainer.OnAfterDamageTaken(finalDamage, context);
         }
+
+        UpdateHealthBar();
     }
 
     /// <summary>
@@ -98,6 +107,13 @@ public class Unit : MonoBehaviour
         int newHealth = Mathf.Clamp(oldHealth + amount, 0, MaxHealth);
         AttributeManager.SetBaseValue(AttributeType.Health, newHealth);
         GameEventChannel.Dispatch(new UnitHealthChangedEvent(this, oldHealth, newHealth, MaxHealth));
+        UpdateHealthBar();
+    }
+
+    private void UpdateHealthBar()
+    {
+        if (healthBar != null)
+            healthBar.value = HpPercent;
     }
 
 

@@ -32,7 +32,9 @@ public class AsyncEffectExecutor : MonoBehaviour
     /// </summary>
     public void ExecuteCardChainsAsync(CardData card, Action onComplete = null)
     {
-        if (card == null) { onComplete?.Invoke(); return; }
+        if (card == null) { Logger.Log("[AsyncEffect] card is null"); onComplete?.Invoke(); return; }
+
+        Logger.Log($"[AsyncEffect] 开始执行卡牌效果链: {card.cardName}，链数量: {card.chains?.Count ?? 0}");
 
         var source = new CardTarget(card);
         var ctx = new EffectContext
@@ -43,7 +45,9 @@ public class AsyncEffectExecutor : MonoBehaviour
         };
         StartCoroutine(ExecuteAllChainsRoutine(card.chains, ctx, () =>
         {
+            Logger.Log($"[AsyncEffect] 所有效果链完成，调用 CompleteCard");
             DeckManager.Instance?.CompleteCard(card);
+            Logger.Log($"[AsyncEffect] onComplete 回调");
             onComplete?.Invoke();
         }));
     }
@@ -53,11 +57,19 @@ public class AsyncEffectExecutor : MonoBehaviour
     /// </summary>
     IEnumerator ExecuteAllChainsRoutine(List<EffectChain> chains, EffectContext baseContext, Action onComplete)
     {
-        if (chains == null) { onComplete?.Invoke(); yield break; }
+        if (chains == null) { Logger.Log("[ExecuteAllChains] chains 为 null，直接完成"); onComplete?.Invoke(); yield break; }
+
+        Logger.Log($"[ExecuteAllChains] 开始执行 {chains.Count} 条链");
 
         foreach (var chain in chains)
         {
-            if (chain == null || chain.steps == null || chain.steps.Count == 0) continue;
+            if (chain == null || chain.steps == null || chain.steps.Count == 0)
+            {
+                Logger.Log("[ExecuteAllChains] 跳过空链");
+                continue;
+            }
+
+            Logger.Log($"[ExecuteAllChains] 执行链，步骤数: {chain.steps.Count}");
 
             // 每条链独立创建 context 副本，避免链间互扰
             var ctx = new EffectContext
@@ -69,6 +81,7 @@ public class AsyncEffectExecutor : MonoBehaviour
             yield return ExecuteStepsRoutine(chain.steps, ctx, null);
         }
 
+        Logger.Log("[ExecuteAllChains] 所有链执行完毕");
         onComplete?.Invoke();
     }
 
@@ -104,13 +117,17 @@ public class AsyncEffectExecutor : MonoBehaviour
     {
         if (steps == null) { onComplete?.Invoke(); yield break; }
 
+        Logger.Log($"[ExecuteSteps] 开始执行 {steps.Count} 个步骤");
+
         bool prevWasSelector = false;
         foreach (var step in steps)
         {
             if (step == null) continue;
+            Logger.Log($"[ExecuteSteps] 执行步骤: {step.GetType().Name}");
             yield return ResolveAndExecute(step, context, prevWasSelector);
             if (context.chainBroken)
             {
+                Logger.Log("[ExecuteSteps] 链中断");
                 PreviewManager.Instance?.ClearAll();
                 break;
             }
@@ -121,6 +138,7 @@ public class AsyncEffectExecutor : MonoBehaviour
                 HighlightExecuted(context);
         }
 
+        Logger.Log("[ExecuteSteps] 步骤序列完成");
         onComplete?.Invoke();
     }
 
@@ -191,11 +209,17 @@ public class AsyncEffectExecutor : MonoBehaviour
     IEnumerator ResolveEffectStep(EffectStep step, EffectContext context)
     {
         if (step.effect == null) yield break;
+        Logger.Log($"[ResolveEffectStep] 执行效果: {step.effect.name}");
         PreviewManager.Instance?.ClearAll();
         step.effect.OnExecute(context);
         if (step.effect is IAnimatedEffect anim)
+        {
+            Logger.Log("[ResolveEffectStep] 播放动画");
             yield return anim.PlayAnimation(context);
+            Logger.Log("[ResolveEffectStep] 动画完成");
+        }
         step.effect.OnComplete(context);
+        Logger.Log("[ResolveEffectStep] 效果执行完毕");
     }
 
     /// <summary>高亮当前被执行者单位（不含标记）</summary>

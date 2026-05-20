@@ -4,7 +4,7 @@ using UnityEngine;
 /// <summary>
 /// 地形预设资产
 /// </summary>
-[CreateAssetMenu(fileName = "TerrainConfig", menuName = "Game/TerrainConfig")]
+[CreateAssetMenu(fileName = "TerrainConfig", menuName = "CardChess/Grid/TerrainConfig")]
 public class TerrainConfig : ScriptableObject
 {
     [System.Serializable]

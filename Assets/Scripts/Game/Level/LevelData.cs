@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
-[CreateAssetMenu(fileName = "LevelData", menuName = "Game/LevelData")]
+[CreateAssetMenu(fileName = "LevelData", menuName = "CardChess/Levels/LevelData")]
 public class LevelData : ScriptableObject
 {
     // 存储格子数据

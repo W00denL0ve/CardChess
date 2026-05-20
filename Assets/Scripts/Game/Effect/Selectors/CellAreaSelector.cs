@@ -7,7 +7,7 @@ using UnityEngine;
 /// 按形状和距离范围选择格子，可选按格子上单位过滤
 /// 会触发上下文链更新：executor ← old executed, executed ← 目标格
 /// </summary>
-[CreateAssetMenu(menuName = "Game/TargetSelector/CellAreaSelector")]
+[CreateAssetMenu(menuName = "CardChess/EffectChain/Selectors/CellArea")]
 public class CellAreaSelector : TargetSelector
 {
     public enum CenterSource { Executor, Executed }

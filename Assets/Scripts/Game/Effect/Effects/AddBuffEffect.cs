@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// 添加 Buff 效果 - 为 context.executed 单位添加一个 Buff
 /// </summary>
-[CreateAssetMenu(fileName = "AddBuffEffect", menuName = "Game/Effect/AddBuff")]
+[CreateAssetMenu(fileName = "AddBuffEffect", menuName = "CardChess/EffectChain/Effects/AddBuff")]
 public class AddBuffEffect : Effect
 {
     /// <summary>要添加的 Buff</summary>

@@ -16,6 +16,7 @@ MonoBehaviour:
   artwork: {fileID: 21300000, guid: 79beae1d6dd2fcb41bac5650f1d58eba, type: 3}
   description: "\u9009\u62E9\u4E00\u4E2A\u6211\u65B9\u6218\u58EB\u83B7\u5F975\u70B9\u884C\u52A8\u529B"
   destination: 0
+  retain: 0
   chains:
   - steps:
     - rid: 8418122003770769408

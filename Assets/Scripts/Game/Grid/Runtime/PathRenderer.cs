@@ -160,7 +160,7 @@ public class PathRenderer : MonoBehaviour
     /// </summary>
     public void HidePath()
     {
-        Debug.Log($"[Path] HidePath (lines:{activeLines.Count}, arrows:{activeArrows.Count})");
+        // Debug.Log($"[Path] HidePath (lines:{activeLines.Count}, arrows:{activeArrows.Count})");
         foreach (var go in activeLines.ToArray())
             Recycle(go, linePool, activeLines);
         foreach (var go in activeArrows.ToArray())

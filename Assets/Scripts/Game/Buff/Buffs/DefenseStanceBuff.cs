@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "DefenseStanceBuff", menuName = "Buffs/DefenseStanceBuff")]
+[CreateAssetMenu(fileName = "DefenseStanceBuff", menuName = "CardChess/Buffs/DefenseStance")]
 public class DefenseStanceBuff : Buff
 {
     public float damageReduction = 0.5f;

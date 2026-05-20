@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "PoisonBuff", menuName = "Buffs/PoisonBuff")]
+[CreateAssetMenu(fileName = "PoisonBuff", menuName = "CardChess/Buffs/Poison")]
 public class PoisonBuff : Buff
 {
     public float damagePerTurn = 10f;

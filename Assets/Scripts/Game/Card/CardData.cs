@@ -12,7 +12,7 @@ public class EffectChain
     public List<ChainStep> steps = new();
 }
 
-[CreateAssetMenu(fileName = "CardData", menuName = "Cards/CardData")]
+[CreateAssetMenu(fileName = "CardData", menuName = "CardChess/Cards/CardData")]
 public class CardData : ScriptableObject
 {
     public string cardName;
@@ -21,6 +21,12 @@ public class CardData : ScriptableObject
 
     [Header("打出后去向")]
     public DestinationOnPlay destination = DestinationOnPlay.Discard;
+
+    [Header("消耗")]
+    public int Cost = 1;
+
+    [Header("回合结束保留")]
+    public bool retain = false;
 
     [Tooltip("多条效果链，每条链是一个顺序执行的步骤序列")]
     public List<EffectChain> chains = new();

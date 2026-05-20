@@ -5,7 +5,7 @@ using UnityEngine;
 /// 移动效果 - 将 context.executor 移动到 context.executed 所在格子
 /// 优先使用 context.cachedPath，其次重新计算
 /// </summary>
-[CreateAssetMenu(fileName = "MoveEffect", menuName = "Game/Effect/Move")]
+[CreateAssetMenu(fileName = "MoveEffect", menuName = "CardChess/EffectChain/Effects/Move")]
 public class MoveEffect : Effect, IAnimatedEffect
 {
     [Tooltip("是否需要路径可达")]

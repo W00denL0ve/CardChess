@@ -7,7 +7,7 @@ using UnityEngine;
 /// 范围默认使用执行者的 ActionPoints，也可固定值
 /// 包含路径缓存（cachedPath）供 MoveEffect 使用
 /// </summary>
-[CreateAssetMenu(menuName = "Game/TargetSelector/CellPath")]
+[CreateAssetMenu(menuName = "CardChess/EffectChain/Selectors/CellPath")]
 public class CellPathSelector : TargetSelector
 {
     [Header("范围")]

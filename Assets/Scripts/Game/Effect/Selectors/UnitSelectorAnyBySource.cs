@@ -5,7 +5,7 @@ using UnityEngine;
 /// <summary>
 /// 单位选择器 — 依据被执行者 + OR 筛选
 /// </summary>
-[CreateAssetMenu(menuName = "Game/TargetSelector/UnitAnyBySource")]
+[CreateAssetMenu(menuName = "CardChess/EffectChain/Selectors/UnitAnyBySource")]
 public class UnitSelectorAnyBySource : TargetSelector
 {
     [System.Flags]

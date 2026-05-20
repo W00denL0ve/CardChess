@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// 移动效果 - 将 context.executor 移动到 context.executed 所在格子
 /// </summary>
-[CreateAssetMenu(fileName = "GiveMovePointEffect", menuName = "Game/Effect/GiveMovePoint")]
+[CreateAssetMenu(fileName = "GiveMovePointEffect", menuName = "CardChess/EffectChain/Effects/GiveMovePoint")]
 public class GiveMovePointEffect : Effect
 {
     /// <summary>是否忽视行动力上限</summary>

@@ -4,7 +4,7 @@ using UnityEngine;
 /// <summary>
 /// 可复用的单位生成池 — 按稀有度 + 权重随机抽取
 /// </summary>
-[CreateAssetMenu(menuName = "Game/Unit/SpawnGroup")]
+[CreateAssetMenu(menuName = "CardChess/Units/SpawnGroup")]
 public class SpawnGroup : ScriptableObject
 {
     public List<WeightedEntry> entries = new();

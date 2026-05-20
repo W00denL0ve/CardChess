@@ -4,7 +4,7 @@ using UnityEngine;
 /// <summary>
 /// 回合行动数据资产 - 存储关卡中每回合自动执行的行动列表
 /// </summary>
-[CreateAssetMenu(fileName = "LevelTurnData", menuName = "Game/LevelTurnData")]
+[CreateAssetMenu(fileName = "LevelTurnData", menuName = "CardChess/Levels/LevelTurnData")]
 public class LevelTurnData : ScriptableObject
 {
     /// <summary>所有回合的行动列表</summary>

@@ -2,11 +2,14 @@
     "runState": {
         "version": 1,
         "globalStageIndex": 1,
-        "randomSeed": 829634914,
+        "randomSeed": -1456809014,
         "roster": [
             {
-                "configId": "Warrior"
+                "assetAddress": "Warrior"
             }
-        ]
+        ],
+        "maxEnergy": 3,
+        "gold": 0,
+        "deckCardIds": []
     }
 }

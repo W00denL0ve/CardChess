@@ -218,7 +218,7 @@ public class GridVisualizer : MonoBehaviour
     /// </summary>
     public void ClearHighlights()
     {
-        Debug.Log("[GridVis] ClearHighlights");
+        // Logger.Log("[GridVis] ClearHighlights");
         // 先清除悬停
         ClearHoverCell();
 
@@ -230,7 +230,7 @@ public class GridVisualizer : MonoBehaviour
         }
         originalMaterials.Clear();
         highlightedCells.Clear();
-        Logger.Log("GridVisualizer: 已清除所有高亮");
+        // Logger.Log("GridVisualizer: 已清除所有高亮");
     }
 
     /// <summary>
@@ -267,7 +267,7 @@ public class GridVisualizer : MonoBehaviour
     public void ClearHoverCell()
     {
         if (!hoveredCell.HasValue) return;
-        Logger.Log($"[GridVis] ClearHoverCell ({hoveredCell.Value.x},{hoveredCell.Value.y})");
+        // Logger.Log($"[GridVis] ClearHoverCell ({hoveredCell.Value.x},{hoveredCell.Value.y})");
 
         GameObject visual = FindVisualCube(hoveredCell.Value.x, hoveredCell.Value.y);
         if (visual != null && hoveredCellOriginalMaterial != null)
