@@ -19,6 +19,8 @@ MonoBehaviour:
   destination: 0
   Cost: 2
   retain: 0
+  colorPreset: 1
+  cardColor: {r: 0.9, g: 0.2, b: 0.2, a: 1}
   chains:
   - steps:
     - rid: 8418122063526232064

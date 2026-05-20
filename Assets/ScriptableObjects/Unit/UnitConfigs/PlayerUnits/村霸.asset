@@ -10,16 +10,33 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2a6cd7a67351c88479d768d4537190af, type: 3}
-  m_Name: Warrior
+  m_Name: "\u6751\u9738"
   m_EditorClassIdentifier: 
-  unitId: Warrior
+  unitId: 0
   unitName: "\u6751\u9738"
   occupation: 0
   defaultFaction: 0
   icon: {fileID: 0}
   unitPrefab: {fileID: 6974378412044888541, guid: 58786e05c73447d41922274a956d6c4f, type: 3}
+  aiDeck: {fileID: 0}
   yOffset: 0
   zOffset: -0.3
   xRotation: 45
-  initialAttributes: []
+  initialAttributes:
+  - type: 0
+    value: 50
+  - type: 1
+    value: 50
+  - type: 2
+    value: 12
+  - type: 3
+    value: 5
+  - type: 5
+    value: 0
+  - type: 6
+    value: 0
+  - type: 7
+    value: 3
+  - type: 8
+    value: 0
   innateBuffs: []

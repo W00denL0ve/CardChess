@@ -54,6 +54,19 @@ public class CardVisualizer : MonoBehaviour, IPointerClickHandler, IPointerEnter
         if (nameTMP != null) nameTMP.text = cardData.cardName;
         if (descriptionTMP != null) descriptionTMP.text = cardData.description;
         SetCostText(cardData.Cost);
+
+        // 应用卡牌颜色到三个背景 Image
+        ApplyCardColor();
+    }
+
+    private void ApplyCardColor()
+    {
+        var images = GetComponentsInChildren<Image>(true);
+        foreach (var img in images)
+        {
+            if (img.name == "frontBackground" || img.name == "front" || img.name == "imageBackground")
+                img.color = cardData.cardColor;
+        }
     }
 
     /// <summary>设置能量消耗数字</summary>
@@ -88,7 +101,7 @@ public class CardVisualizer : MonoBehaviour, IPointerClickHandler, IPointerEnter
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        Logger.Log("鼠标点击");
+        // Logger.Log("鼠标点击");
         if (cardData == null) return;
         // 先缓存自身引用，供 HandUI.OnCardPlayed 精确取到（避免同名卡 Find 歧义）
         HandUI.Instance?.OnCardClicked(this);
@@ -97,7 +110,7 @@ public class CardVisualizer : MonoBehaviour, IPointerClickHandler, IPointerEnter
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        Logger.Log("鼠标悬停");
+        // Logger.Log("鼠标悬停");
         HandUI.Instance?.OnCardHovered(handIndex);
     }
 

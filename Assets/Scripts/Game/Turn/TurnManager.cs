@@ -310,6 +310,7 @@ class EnemyState : ITurnState
     private IEnumerator ExecuteEnemyTurn()
     {
         Logger.Log("开始弃牌");
+
         // 弃掉不保留的手牌
         yield return DeckManager.Instance?.DiscardNonRetainedAsync();
 

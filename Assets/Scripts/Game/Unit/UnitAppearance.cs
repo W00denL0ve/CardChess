@@ -57,6 +57,7 @@ public class UnitAppearance : MonoBehaviour
         float stepDuration = 1f / moveSpeed;
         for (int i = 0; i < path.Count - 1; i++)
         {
+            FaceTo(path[i + 1]);
             Vector3 from = GridToWorld(path[i]);
             Vector3 to = GridToWorld(path[i + 1]);
 
@@ -152,6 +153,8 @@ public class UnitAppearance : MonoBehaviour
     {
         pendingHitTarget = target;
         onHitCallback = onHit;
+        if (target != null)
+            FaceTo(target.GridPosition);
     }
 
     /// <summary>
@@ -168,7 +171,10 @@ public class UnitAppearance : MonoBehaviour
         if (pendingHitTarget == null) return;
         var app = pendingHitTarget.GetComponent<UnitAppearance>();
         if (app != null)
+        {
+            app.FaceTo(unit.GridPosition);
             StartCoroutine(app.PlayHitReaction());
+        }
         pendingHitTarget = null;
     }
 
@@ -180,6 +186,22 @@ public class UnitAppearance : MonoBehaviour
     {
         if (evt.Unit != unit) return;
         StartCoroutine(PlayDeathAnimation());
+    }
+
+    // ====================================================================
+    //  方向
+    // ====================================================================
+
+    /// <summary>面向目标方向（通过翻转 X 缩放）</summary>
+    public void FaceTo(Vector2Int targetPos)
+    {
+        if (animator == null) return;
+        Vector2Int diff = targetPos - unit.GridPosition;
+        if (diff.x == 0) return;
+
+        Vector3 scale = animator.transform.localScale;
+        scale.x = Mathf.Abs(scale.x) * (diff.x > 0 ? 1 : -1);
+        animator.transform.localScale = scale;
     }
 
     // ====================================================================

@@ -28,16 +28,22 @@ public class UnitSelector : TargetSelector
         if (lm == null) return new List<ITarget>();
 
         IEnumerable<Unit> units = lm.AllUnits.Where(u => u.IsAlive);
+        var alive = units.ToList();
+        Logger.Log($"[UnitSelector] AllUnits={lm.AllUnits.Count}, 存活={alive.Count}, factions={(int)factions}, occ={(int)occupations}, nameFilter='{nameFilter}'");
+        foreach (var u in alive)
+            Logger.Log($"[UnitSelector]   单位: {u.UnitId} Faction={(int)u.Faction} Occ={(int)u.Occupation} IsAlive={u.IsAlive}");
 
-        units = units.Where(u => (factions & (FactionMask)(1 << (int)u.Faction)) != 0);
+        var afterFaction = alive.Where(u => (factions & (FactionMask)(1 << (int)u.Faction)) != 0).ToList();
+        Logger.Log($"[UnitSelector] 阵营过滤后: {afterFaction.Count}");
 
         if (occupations != (OccMask)7)
-            units = units.Where(u => (occupations & (OccMask)(1 << (int)u.Occupation)) != 0);
+            afterFaction = afterFaction.Where(u => (occupations & (OccMask)(1 << (int)u.Occupation)) != 0).ToList();
 
         if (!string.IsNullOrEmpty(nameFilter))
-            units = units.Where(u => MatchWildcard(u.UnitId ?? u.name, nameFilter));
+            afterFaction = afterFaction.Where(u => MatchWildcard(u.UnitId ?? u.name, nameFilter)).ToList();
 
-        return units.Select(u => (ITarget)new UnitTarget(u)).ToList();
+        Logger.Log($"[UnitSelector] 最终结果: {afterFaction.Count}");
+        return afterFaction.Select(u => (ITarget)new UnitTarget(u)).ToList();
     }
 
     public override void PreviewHighlight(EffectContext context, bool show)

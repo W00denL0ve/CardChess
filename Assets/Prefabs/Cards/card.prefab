@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5430155882641231817}
   - component: {fileID: 6166170960178343965}
   m_Layer: 5
-  m_Name: background
+  m_Name: imageBackground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -59,14 +59,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.2784314, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 0, b: 0.15294118, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 0
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 6dbea9ff26b18cb4288e82976bc85a87, type: 3}
+  m_Sprite: {fileID: 21300000, guid: ade8343e66261d4489542b10d386ef21, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -277,8 +277,8 @@ MonoBehaviour:
   descriptionTMP: {fileID: 501561218640407452}
   costTMP: {fileID: 961645473110236108}
   glowOverlay: {fileID: 8751795222847415881}
-  affordableColor: {r: 1, g: 0.84705883, b: 0, a: 1}
-  unaffordableColor: {r: 0.78431374, g: 0, b: 0, a: 1}
+  affordableColor: {r: 0, g: 0.6156863, b: 0.16470589, a: 1}
+  unaffordableColor: {r: 0.62352943, g: 0, b: 0, a: 1}
 --- !u!222 &1369562762531855053
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -362,7 +362,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 1
+  m_PresetInfoIsWorld: 0
 --- !u!114 &6177747216090067651
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -467,7 +467,7 @@ GameObject:
   - component: {fileID: 3655816035407897206}
   - component: {fileID: 8338760684843475330}
   m_Layer: 5
-  m_Name: front_back
+  m_Name: frontBackground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -513,14 +513,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0, b: 0.15343046, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 0
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 2c6e59feacf05d04eaf94a8e4a4c7e52, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6dbea9ff26b18cb4288e82976bc85a87, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -797,14 +797,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.45882353, g: 0, b: 0.05490196, a: 1}
+  m_Color: {r: 1, g: 0, b: 0.15294118, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 0
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 6dbea9ff26b18cb4288e82976bc85a87, type: 3}
+  m_Sprite: {fileID: 21300000, guid: dee4282caf0547e4985dfc184b91cdaa, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -873,7 +873,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.8553459, g: 0.8553459, b: 0.8553459, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1039,8 +1039,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190280
-  m_fontColor: {r: 0.78616345, g: 0, b: 0, a: 1}
+    rgba: 4278190239
+  m_fontColor: {r: 0.6226415, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:

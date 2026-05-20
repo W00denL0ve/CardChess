@@ -24387,8 +24387,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4174038cbf57cc5448f5829ea7a3f764, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  warriorConfig: {fileID: 11400000, guid: 7269658f7f69c0745a9cb8297b12cb57, type: 2}
-  mageConfig: {fileID: 11400000, guid: e27148ed337c950498000280be705723, type: 2}
+  warriorConfig: {fileID: 11400000, guid: fcb0152c9e40331459f1eb2c5d02a277, type: 2}
+  mageConfig: {fileID: 11400000, guid: 9a263c825ca954547a61417a496e48bf, type: 2}
   importedCard: {fileID: 11400000, guid: b4d86c500f35d784fb9fbe5d3701682b, type: 2}
 --- !u!114 &2044537686
 MonoBehaviour:

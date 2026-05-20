@@ -12,7 +12,7 @@ public class UnitConfig : ScriptableObject
     public GameObject unitPrefab;
     public AIDeck aiDeck;
 
-    [Header("坐标偏移（编辑器调整用）")]
+    [Header("坐标偏移（单独设置）")]
     public float yOffset;
     public float zOffset = -0.3f;
     public float xRotation = 45;

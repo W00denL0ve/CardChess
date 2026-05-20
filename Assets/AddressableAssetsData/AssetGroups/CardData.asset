@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
-  m_Name: UnitConfig
+  m_Name: CardData
   m_EditorClassIdentifier: 
-  m_GroupName: UnitConfig
+  m_GroupName: CardData
   m_Data:
     m_SerializedData: []
-  m_GUID: 536bf217058446b4097076562254aff4
+  m_GUID: bb76a1fba43e9a54dae1d361b6cff36c
   m_SerializeEntries:
-  - m_GUID: fcb0152c9e40331459f1eb2c5d02a277
-    m_Address: Warrior
+  - m_GUID: 3eab97737f09bee4aa5ff0eb4510d93e
+    m_Address: Move
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9a263c825ca954547a61417a496e48bf
-    m_Address: GoblinWarrior
+  - m_GUID: 07e561c661f6abe49b46f237b6e4d0c9
+    m_Address: Attack
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -31,5 +31,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: bc4b6f5e91000944e9f64a2e9cdfe459, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 74137d608626dcb408ef63ed503319c7, type: 2}
-    - {fileID: 11400000, guid: 9a92ca11ac07ec749881721f988c2543, type: 2}
+    - {fileID: 11400000, guid: df3d6fd65631f5a47a629c934d5cf0bd, type: 2}
+    - {fileID: 11400000, guid: 891a84f89eb050f409f4de02ed773cbd, type: 2}
