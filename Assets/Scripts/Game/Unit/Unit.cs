@@ -141,6 +141,8 @@ public class Unit : MonoBehaviour
         // 数据层：瞬移
         Vector2Int from = GridPosition;
         GridPosition = destination;
+        // 移动后刷新 Y 轴排序
+        if (appearance != null) appearance.RefreshSortingOrder();
         GameEventChannel.Dispatch(new UnitMovedEvent(this, from, destination));
     }
 

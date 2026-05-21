@@ -23,11 +23,12 @@ public class GameResumeEvent : GameEvent
 }
 
 /// <summary>
-/// 游戏结束事件
+/// 关卡结束事件（胜利或失败）
 /// </summary>
-public class GameOverEvent : GameEvent
+public class LevelOverEvent : GameEvent
 {
-
+    public bool isVictory;
+    public LevelOverEvent(bool victory) => isVictory = victory;
 }
 
 /// <summary>

@@ -9,15 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 37b6ca83072dbd147bb94a53bb336ee7, type: 3}
-  m_Name: "\u9009\u4E00\u4E2A1\u683C\u8303\u56F4\u5185\u7684\u654C\u65B9"
+  m_Script: {fileID: 11500000, guid: 0aa89107e56f661468d9995b2df9641f, type: 3}
+  m_Name: all_player_warrior
   m_EditorClassIdentifier: 
   selectorName: 
   changesExecutor: 1
-  includeSelf: 0
-  includeOthers: 1
-  minRange: 1
-  maxRange: 1
-  factions: 2
-  occupations: 0
+  factions: 1
+  occupations: 1
   nameFilter: 

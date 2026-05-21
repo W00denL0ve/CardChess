@@ -21,7 +21,7 @@ public class AIChainEntry
     public int maxUsePerBattle;
 
     [Tooltip("此链的目标类型")]
-    public AITargetType targetType = AITargetType.Enemy;
+    public AITargetType targetType = AITargetType.Hostile;
 
     [Tooltip("链的类型，影响策略权重")]
     public ChainCategory category = ChainCategory.Attack;
@@ -31,18 +31,24 @@ public class AIChainEntry
 }
 
 /// <summary>
-/// AI 目标偏好类型
+/// AI 目标类型
 /// </summary>
 public enum AITargetType
 {
-    [Tooltip("攻击敌方单位")]
-    Enemy,
-    [Tooltip("治疗/增益己方单位")]
+    [Tooltip("对敌方(不含中立单位)使用")]
+    Hostile,
+    [Tooltip("对敌方(包括中立单位)使用")]
+    Hostile_Neutral,
+    [Tooltip("对盟友(不包括自身)使用")]
     Ally,
     [Tooltip("对自身使用")]
     Self,
-    [Tooltip("任意存活单位")]
-    Any
+    [Tooltip("对自身或盟友使用")]
+    Ally_Self,
+    [Tooltip("对任意存活单位使用")]
+    Any,
+    [Tooltip("对格子使用")]
+    Grid
 }
 
 /// <summary>
@@ -53,6 +59,5 @@ public enum ChainCategory
     Attack,
     Heal,
     Buff,
-    Debuff,
-    Utility
+    Debuff
 }

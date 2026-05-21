@@ -12,6 +12,8 @@ public class LevelManager : MonoBehaviour
     private List<Unit> allUnits = new();
     public IReadOnlyList<Unit> AllUnits => allUnits;
 
+    private Unit lastDeadUnit;
+
     /// <summary>当前关卡数据引用</summary>
     public LevelData CurrentLevel { get; private set; }
 
@@ -46,17 +48,30 @@ public class LevelManager : MonoBehaviour
         allUnits.Remove(unit);
     }
 
-    public List<Unit> GetEnemiesOf(Unit unit)
+    /// <summary>
+    /// 获取unit所有对立阵营单位，参数控制是否包括中立阵营（中立阵营默认与其他都对立）
+    /// </summary>
+    public List<Unit> GetEnemiesOf(Unit unit, bool includeNeutral)
     {
-        return allUnits.Where(u => u.Faction != unit.Faction && u.IsAlive).ToList();
+        List<Unit> enemies = allUnits.Where(u => u.Faction != unit.Faction && u.IsAlive).ToList();
+        if (!includeNeutral) enemies.RemoveAll(u => u.Faction == Faction.Neutral);
+        return enemies;
     }
 
-    public List<Unit> GetAlliesOf(Unit unit)
+    /// <summary>
+    /// 返回unit同阵营单位，参数控制是否包含自身
+    /// </summary>
+    public List<Unit> GetAlliesOf(Unit unit, bool includeSelf)
     {
-        return allUnits.Where(u => u.Faction == unit.Faction && u != unit && u.IsAlive).ToList();
+        List<Unit> allies = allUnits.Where(u => u.Faction == unit.Faction && u.IsAlive).ToList();
+        if (!includeSelf) allies.Remove(unit);
+        return allies;
     }
 
-    public List<Unit> GetUnitsOf(Faction faction)
+    /// <summary>
+    /// 获取所有指定阵营Unit
+    /// </summary>
+    public List<Unit> GetUnitsByFaction(Faction faction)
     {
         return allUnits.Where(u => u.Faction == faction && u.IsAlive).ToList();
     }
@@ -64,12 +79,21 @@ public class LevelManager : MonoBehaviour
     private void HandleUnitDeath(UnitDeathEvent evt)
     {
         UnregisterUnit(evt.Unit);
+        lastDeadUnit = evt.Unit;
+    }
+
+    /// <summary>
+    /// 获取上一个阵亡的Unit
+    /// </summary>
+    public Unit GetLastDeadUnit()
+    {
+        return lastDeadUnit;
     }
 
     /// <summary>
     /// 加载关卡
     /// </summary>
-    public void Initialize(LevelData levelData)
+    public void Initialize(LevelData levelData, List<CardData> initialCards = null)
     {
         CurrentLevel = levelData;
 
@@ -84,6 +108,20 @@ public class LevelManager : MonoBehaviour
 
         // 部署玩家单位（在所有敌方/中立单位生成前执行）
         SpawnPlayerUnits(levelData.playerSpawnPositions);
+
+        // 初始化牌库
+        var deckManager = FindObjectOfType<DeckManager>();
+        if (deckManager != null)
+            deckManager.Initialize(initialCards);
+        else
+            Logger.LogWarning("[LevelManager] 场景中未找到 DeckManager");
+
+        // 初始化胜利条件检查器
+        var checker = FindObjectOfType<VictoryChecker>();
+        if (checker != null)
+            checker.Initialize(levelData.rootCondition);
+        else
+            Logger.LogWarning("[LevelManager] 场景中未找到 VictoryChecker，跳过胜利条件初始化");
     }
 
     /// <summary>

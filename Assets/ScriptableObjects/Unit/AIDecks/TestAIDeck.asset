@@ -17,18 +17,6 @@ MonoBehaviour:
   entries:
   - chain:
       steps:
-      - rid: 8418122071870013444
-      - rid: 8418122071870013445
-      - rid: 8418122071870013447
-    energyCost: 0
-    cooldown: 1
-    maxUsePerBattle: 0
-    targetType: 2
-    category: 4
-    isMovement: 1
-    baseScore: 0
-  - chain:
-      steps:
       - rid: 8418122071870013441
       - rid: 8418122071870013449
     energyCost: 1
@@ -36,7 +24,6 @@ MonoBehaviour:
     maxUsePerBattle: 0
     targetType: 0
     category: 0
-    isMovement: 0
     baseScore: 0
   references:
     version: 2
@@ -44,19 +31,7 @@ MonoBehaviour:
     - rid: 8418122071870013441
       type: {class: SelectorStep, ns: , asm: Assembly-CSharp}
       data:
-        selector: {fileID: 11400000, guid: 442df1c0681282b4ab224983b393efaf, type: 2}
-    - rid: 8418122071870013444
-      type: {class: EffectStep, ns: , asm: Assembly-CSharp}
-      data:
-        effect: {fileID: 11400000, guid: ab4a0f7419067354cad3a7bbaa19f583, type: 2}
-    - rid: 8418122071870013445
-      type: {class: SelectorStep, ns: , asm: Assembly-CSharp}
-      data:
-        selector: {fileID: 11400000, guid: 1d6b170f50a1f5c40b5b15e1b463f129, type: 2}
-    - rid: 8418122071870013447
-      type: {class: EffectStep, ns: , asm: Assembly-CSharp}
-      data:
-        effect: {fileID: 11400000, guid: 5d0f817ccbc428b478889be96007d4ae, type: 2}
+        selector: {fileID: 11400000, guid: 041bfec5c754223479d4b2fdf834b66e, type: 2}
     - rid: 8418122071870013449
       type: {class: EffectStep, ns: , asm: Assembly-CSharp}
       data:

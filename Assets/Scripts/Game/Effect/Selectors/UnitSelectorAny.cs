@@ -1,11 +1,13 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// 单位选择器 — 全图 OR 筛选
+/// (弃用)单位选择器 — 全图 OR 筛选
 /// </summary>
-[CreateAssetMenu(menuName = "CardChess/EffectChain/Selectors/UnitAny")]
+// [CreateAssetMenu(menuName = "CardChess/EffectChain/Selectors/UnitAny")]
+[Obsolete]
 public class UnitSelectorAny : TargetSelector
 {
     [System.Flags]

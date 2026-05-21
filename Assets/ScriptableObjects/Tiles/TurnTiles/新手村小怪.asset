@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8bbb6acc9ef00db4abfc5751348c7c7d, type: 3}
-  m_Name: "\u65B0\u624B\u6751\u5C0F\u602A\u6C60"
+  m_Name: "\u65B0\u624B\u6751\u5C0F\u602A"
   m_EditorClassIdentifier: 
-  spawnGroup: {fileID: 0}
-  fallbackUnitConfig: {fileID: 0}
+  spawnGroup: {fileID: 11400000, guid: 659bf03867cb56d49811a8a9af98bc04, type: 2}
+  fallbackUnitConfig: {fileID: 11400000, guid: 9a263c825ca954547a61417a496e48bf, type: 2}
   allowedTerrains: 00000000
-  searchRange: 0
-  previewSprite: {fileID: 0}
+  searchRange: 3
+  previewSprite: {fileID: 21300000, guid: c0ea24e5b30981d4b8c24b04ace165eb, type: 3}

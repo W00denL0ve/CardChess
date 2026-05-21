@@ -2,14 +2,23 @@
     "runState": {
         "version": 1,
         "globalStageIndex": 1,
-        "randomSeed": -1456809014,
+        "randomSeed": 10889547,
         "roster": [
             {
-                "assetAddress": "Warrior"
+                "assetAddress": "Warrior",
+                "currentHp": 0,
+                "maxHp": 0,
+                "level": 1,
+                "exp": 0
             }
         ],
         "maxEnergy": 3,
         "gold": 0,
-        "deckCardIds": []
+        "deckCardIds": [
+            "移动",
+            "移动",
+            "普通攻击",
+            "普通攻击"
+        ]
     }
 }

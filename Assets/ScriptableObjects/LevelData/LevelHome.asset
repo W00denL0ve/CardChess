@@ -21,3 +21,13 @@ MonoBehaviour:
   - {x: 1, y: 4}
   - {x: 1, y: 5}
   - {x: 1, y: 6}
+  goalPositions: []
+  rootCondition:
+    rid: 8418122075306459139
+  references:
+    version: 2
+    RefIds:
+    - rid: 8418122075306459139
+      type: {class: KillAllEnemiesCondition, ns: , asm: Assembly-CSharp}
+      data:
+        description: 

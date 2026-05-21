@@ -24,6 +24,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject Mask; // 初始化时实例化并隐藏
     
     private MaskRadiusAnimator maskRadiusAnimator; // 转场用的镂空遮罩动画组件
+    private Coroutine panelSwitchCoroutine;        // 防止多个 DelayedPanelSwitch 竞态
 
     // 面板实例字典（按名称索引）
     private Dictionary<string, GameObject> panels = new Dictionary<string, GameObject>();
@@ -196,8 +197,9 @@ public class UIManager : MonoBehaviour
             // 调用MaskRadiusAnimator的PlayAnimation方法，播放前半段转场动画
             // Logger.Log("UIManager: 开始播放转场动画，等待动画结束后切换面板...");
             maskRadiusAnimator.PlayAnimation();
-            // duration秒后执行切换面板的逻辑，采用协程实现（便于传递参数）
-            StartCoroutine(DelayedPanelSwitch(previousPanelNames, nextPanelNames, duration));
+            // 停止旧的切换协程，防止重叠的 DelayedPanelSwitch 竞态
+            if (panelSwitchCoroutine != null) StopCoroutine(panelSwitchCoroutine);
+            panelSwitchCoroutine = StartCoroutine(DelayedPanelSwitch(previousPanelNames, nextPanelNames, duration));
         }
         else Logger.LogError("UIManager: MaskRadiusAnimator 组件未找到，无法执行遮罩转场动画。");
     }
@@ -226,11 +228,12 @@ public class UIManager : MonoBehaviour
         {
             maskRadiusAnimator.PlayAnimationReverse();
             // 等待动画结束后隐藏遮罩
-            yield return new WaitForSeconds(maskRadiusAnimator.duration);
+            yield return new WaitForSeconds(maskRadiusAnimator.duration + 0.01f);
             maskRadiusAnimator.gameObject.SetActive(false);
         }
         // 广播面板切换完成事件
         GameEventChannel.Dispatch(new PanelSwitchedEvent(previousPanelNames, nextPanelNames));
+        panelSwitchCoroutine = null;
     }
 
 

@@ -9,11 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0aa89107e56f661468d9995b2df9641f, type: 3}
-  m_Name: "\u6307\u5B9A\u4E00\u4E2A\u6211\u65B9\u6218\u58EB"
+  m_Script: {fileID: 11500000, guid: a07c8a5f85da124419ed7fb322793ea2, type: 3}
+  m_Name: 1-1_hostile
   m_EditorClassIdentifier: 
   selectorName: 
   changesExecutor: 1
-  factions: 1
-  occupations: 1
-  nameFilter: 
+  minRange: 1
+  maxRange: 1
+  factions: 2
+  occupations: -1
+  IDFilter: 

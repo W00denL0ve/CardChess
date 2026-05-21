@@ -9,59 +9,93 @@ using UnityEngine;
 public class UnitSelectorBySource : TargetSelector
 {
     [System.Flags]
-    public enum FactionMask { Player = 1, Enemy = 2, Neutral = 4 }
+    public enum FactionMask { Ally = 1, Hostile = 2, Neutral = 4, Self = 8 }
     [System.Flags]
     public enum OccMask { Warrior = 1, Rogue = 2, Mage = 4 }
 
-    [Header("包含")]
-    public bool includeSelf = true;
-    public bool includeOthers = true;
-
-    [Header("范围（曼哈顿距离，以被执行者为中心）")]
+    [Header("范围（执行者为中心）")]
     public int minRange = 0;
     public int maxRange = 0; // 0=不限
 
-    [Header("阵营（多选）")]
-    public FactionMask factions = (FactionMask)7;
+    [Header("阵营关系（多选）")]
+    public FactionMask factions = (FactionMask)0;
     [Header("职业（多选）")]
-    public OccMask occupations = (OccMask)7;
-    [Header("名称（通配）")]
-    public string nameFilter;
+    public OccMask occupations = (OccMask)0;
+    [Header("ID（通配）")]
+    public string IDFilter;
 
     public override List<ITarget> GetTargets(EffectContext context)
     {
         var lm = LevelManager.Instance;
-        var execUnit = context.GetExecutedUnit();
-        if (lm == null || execUnit == null) return new List<ITarget>();
+        Unit execUnit;
+        if (changesExecutor)
+            execUnit = context.GetExecutedUnit();      // 如果选择器会改变执行者，则使用新执行者
+        else
+            execUnit = context.GetExecutorUnit();      // 否则使用原执行者
 
-        var all = lm.AllUnits.Where(u => u.IsAlive).ToList();
+        if (lm == null || execUnit == null || !execUnit.IsAlive)
+            return new List<ITarget>();
+
         var center = execUnit.GridPosition;
+        var candidates = new HashSet<Unit>();           // 用HashSet自动去重
 
-        var result = new List<Unit>();
+        // 1. 根据阵营掩码收集单位
+        if (factions.HasFlag(FactionMask.Self))
+            candidates.Add(execUnit);
 
-        foreach (var u in all)
+        if (factions.HasFlag(FactionMask.Ally))
         {
-            // 包含
-            if (u == execUnit && !includeSelf) continue;
-            if (u != execUnit && !includeOthers) continue;
-
-            // 范围
-            int dist = Mathf.Abs(u.GridPosition.x - center.x) + Mathf.Abs(u.GridPosition.y - center.y);
-            if (maxRange > 0 && (dist < minRange || dist > maxRange)) continue;
-
-            // AND 阵营
-            if (((int)factions & (1 << (int)u.Faction)) == 0) continue;
-
-            // AND 职业
-            if (occupations != (OccMask)7 && ((int)occupations & (1 << (int)u.Occupation)) == 0) continue;
-
-            // AND 名称
-            if (!string.IsNullOrEmpty(nameFilter) && !MatchWildcard(u.UnitId ?? u.name, nameFilter)) continue;
-
-            result.Add(u);
+            var allies = lm.GetAlliesOf(execUnit, includeSelf: false);  // 不包含自己，避免重复
+            foreach (var u in allies) candidates.Add(u);
         }
 
-        return result.Select(u => (ITarget)new UnitTarget(u)).ToList();
+        if (factions.HasFlag(FactionMask.Hostile))
+        {
+            var enemies = lm.GetEnemiesOf(execUnit, includeNeutral: false);
+            foreach (var u in enemies) candidates.Add(u);
+        }
+
+        if (factions.HasFlag(FactionMask.Neutral))
+        {
+            // 当明确要求中立单位时（且没有Hostile），单独获取中立
+            var neutrals = lm.GetUnitsByFaction(Faction.Neutral);
+            foreach (var u in neutrals) candidates.Add(u);
+        }
+
+        // 2. 职业筛选
+        if (occupations != 0)
+        {
+            candidates.RemoveWhere(u =>
+            {
+                OccMask unitMask = 0;
+                switch (u.Occupation)   // 假设 Unit 有 Occupation 属性
+                {
+                    case Occupation.Warrior: unitMask = OccMask.Warrior; break;
+                    case Occupation.Rogue:  unitMask = OccMask.Rogue;  break;
+                    case Occupation.Mage:   unitMask = OccMask.Mage;   break;
+                    default: return true;   // 未知职业，排除
+                }
+                return (occupations & unitMask) == 0;   // 不匹配则移除
+            });
+        }
+
+        // 3. 名称通配符筛选
+        if (!string.IsNullOrEmpty(IDFilter))
+        {
+            candidates.RemoveWhere(u => !MatchWildcard(u.UnitId, IDFilter));
+        }
+
+        // 4. 范围筛选（曼哈顿距离）
+        candidates.RemoveWhere(u =>
+        {
+            int dist = Mathf.Abs(u.GridPosition.x - center.x) + Mathf.Abs(u.GridPosition.y - center.y);
+            if (maxRange > 0 && (dist < minRange || dist > maxRange)) return true;
+            if (minRange > 0 && dist < minRange) return true;
+            return false;
+        });
+
+        // 5. 转换为 ITarget 列表
+        return candidates.Select(u => (ITarget)new UnitTarget(u)).ToList();
     }
 
     public override void PreviewHighlight(EffectContext context, bool show)

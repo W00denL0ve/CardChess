@@ -17,7 +17,7 @@ MonoBehaviour:
   description: "\u9009\u62E9\u4E00\u4E2A\u6211\u65B9\u6218\u58EB, \u5BF9 1 \u683C\u5185\u7684
     1 \u4E2A\u654C\u65B9\u5355\u4F4D\u9020\u6210 1x \u529B\u91CF \u7684 \u7269\u7406\u4F24\u5BB3"
   destination: 0
-  Cost: 2
+  Cost: 1
   retain: 0
   colorPreset: 1
   cardColor: {r: 0.9, g: 0.2, b: 0.2, a: 1}
@@ -36,7 +36,7 @@ MonoBehaviour:
     - rid: 8418122063526232065
       type: {class: SelectorStep, ns: , asm: Assembly-CSharp}
       data:
-        selector: {fileID: 11400000, guid: eeb3dd9a15c38ad47ae38a839919264a, type: 2}
+        selector: {fileID: 11400000, guid: 041bfec5c754223479d4b2fdf834b66e, type: 2}
     - rid: 8418122063526232067
       type: {class: EffectStep, ns: , asm: Assembly-CSharp}
       data:

@@ -12,7 +12,8 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    public Player player;
+    [Header("开局选项，替代主城")]
+    public GameStartConfig startConfig;
 
     private void Awake()
     {
@@ -28,6 +29,29 @@ public class GameManager : MonoBehaviour
 
     private void OnEnable()
     {
+        GameEventChannel.Register<LevelOverEvent>(OnLevelOver);
+    }
+
+    private void OnDisable()
+    {
+        GameEventChannel.Unregister<LevelOverEvent>(OnLevelOver);
+    }
+
+    private void OnLevelOver(LevelOverEvent evt)
+    {
+        Unit lastDead = LevelManager.Instance.GetLastDeadUnit();
+        if (evt.isVictory)
+        {
+            Logger.Log($"[GameManager] 🏆 关卡胜利！");
+            // todo
+        }
+        else
+        {
+            Logger.Log($"[GameManager] 💀 关卡失败！");
+            // todo
+        }
+        CameraEffectManager.Instance.SetVCamActive();
+        CameraEffectManager.Instance.PlayCombinedEffect(lastDead.transform, 2f, 0.2f, 0.7f, 1f, 3f);
     }
 
     private void Start()
@@ -47,9 +71,27 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void StartNewGame()
     {
-        Logger.Log("GameManager：开始新游戏，触发游戏开始事件...");
-        SaveManager.Instance.NewRun(new List<string> {"Warrior"});
+        Logger.Log("GameManager：开始新游戏");
+
+        // 从配置读取初始角色和卡牌
+        var roster = startConfig != null && startConfig.initialRoster.Count > 0
+            ? startConfig.initialRoster
+            : new List<string> { "Warrior" };
+
+        SaveManager.Instance.NewRun(roster);
         ResourceManager.Instance.LoadFromRunState();
+
+        // 将配置中的初始卡牌写入牌库
+        if (startConfig != null && startConfig.initialCards.Count > 0)
+        {
+            ResourceManager.Instance.DeckCardIds.Clear();
+            foreach (var card in startConfig.initialCards)
+            {
+                // 暂存 CardData 引用，等 DeckManager 就绪后加载
+                ResourceManager.Instance.DeckCardIds.Add(card.name);
+            }
+        }
+
         SaveManager.Instance.SaveRun();
         UIManager.Instance.SetLoadingTip("正在加载游戏地图...");
         UIManager.Instance.ChangePanelsWithMask(new string[] { "all" }, new string[] { "loading" });
@@ -153,6 +195,9 @@ public class GameManager : MonoBehaviour
 
     IEnumerator LoadLevelCoroutine(string levelDataAddress, Action onComplete)
     {
+        // 等一帧确保场景中所有 MonoBehaviour 的 Start() 已执行
+        yield return null;
+
         // 1. 异步加载 LevelData
         var loadHandle = Addressables.LoadAssetAsync<LevelData>(levelDataAddress);
         while (!loadHandle.IsDone)
@@ -167,7 +212,7 @@ public class GameManager : MonoBehaviour
             // 3. 场景加载完成，查找 LevelManager 并传入数据
             LevelManager levelManager = FindObjectOfType<LevelManager>();
             if (levelManager != null)
-                levelManager.Initialize(levelData);
+                levelManager.Initialize(levelData, startConfig?.initialCards);
             else
                 Logger.LogError("场景中未找到 LevelManager！");
 

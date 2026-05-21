@@ -12,7 +12,49 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 177e94d5d6e5bbc4c956c89eb5a35c61, type: 3}
   m_Name: LevelHome_Turns
   m_EditorClassIdentifier: 
-  rounds: []
+  rounds:
+  - roundNumber: 1
+    actions:
+    - rid: 8418122075306459136
+  - roundNumber: 3
+    actions:
+    - rid: 8418122075306459137
+  - roundNumber: 5
+    actions:
+    - rid: 8418122075306459138
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 8418122075306459136
+      type: {class: SpawnUnitAction, ns: , asm: Assembly-CSharp}
+      data:
+        coord: {x: 4, y: 4}
+        spawnGroup: {fileID: 11400000, guid: 659bf03867cb56d49811a8a9af98bc04, type: 2}
+        fallbackUnitConfig: {fileID: 11400000, guid: 9a263c825ca954547a61417a496e48bf, type: 2}
+        factionOverride: 0
+        useConfigFaction: 1
+        count: 1
+        allowedTerrains: 00000000
+        searchRange: 3
+    - rid: 8418122075306459137
+      type: {class: SpawnUnitAction, ns: , asm: Assembly-CSharp}
+      data:
+        coord: {x: 8, y: 4}
+        spawnGroup: {fileID: 11400000, guid: 659bf03867cb56d49811a8a9af98bc04, type: 2}
+        fallbackUnitConfig: {fileID: 11400000, guid: 9a263c825ca954547a61417a496e48bf, type: 2}
+        factionOverride: 0
+        useConfigFaction: 1
+        count: 1
+        allowedTerrains: 00000000
+        searchRange: 3
+    - rid: 8418122075306459138
+      type: {class: SpawnUnitAction, ns: , asm: Assembly-CSharp}
+      data:
+        coord: {x: 6, y: 2}
+        spawnGroup: {fileID: 11400000, guid: 659bf03867cb56d49811a8a9af98bc04, type: 2}
+        fallbackUnitConfig: {fileID: 11400000, guid: 9a263c825ca954547a61417a496e48bf, type: 2}
+        factionOverride: 0
+        useConfigFaction: 1
+        count: 1
+        allowedTerrains: 00000000
+        searchRange: 3

@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using DG.Tweening;
 
 /// <summary>
 /// 单位外观表现组件 — 动画、位移、视觉反馈
@@ -33,6 +35,12 @@ public class UnitAppearance : MonoBehaviour
         animator = GetComponentInChildren<Animator>();
     }
 
+    void Start()
+    {
+        // 初始排序：Y 越大（越靠上）排序值越小，画在后面
+        RefreshSortingOrder();
+    }
+
     void OnEnable()
     {
         GameEventChannel.Register<UnitDeathEvent>(OnDeath);
@@ -42,6 +50,28 @@ public class UnitAppearance : MonoBehaviour
     {
         GameEventChannel.Unregister<UnitDeathEvent>(OnDeath);
     }
+
+    /// <summary>根据网格 Y 刷新所有 SpriteRenderer 的排序顺序</summary>
+    public void RefreshSortingOrder()
+    {
+        if (unit == null) return;
+        int yOffset = -unit.GridPosition.y * 10;
+
+        if (_baseOrders == null)
+        {
+            // 首次调用：缓存预制体原始 order，后续只加 Y 偏移
+            _baseOrders = new Dictionary<SpriteRenderer, int>();
+            foreach (var sr in GetComponentsInChildren<SpriteRenderer>(true))
+                _baseOrders[sr] = sr.sortingOrder;
+        }
+
+        foreach (var kvp in _baseOrders)
+        {
+            if (kvp.Key != null)
+                kvp.Key.sortingOrder = kvp.Value + yOffset;
+        }
+    }
+    private Dictionary<SpriteRenderer, int> _baseOrders;
 
     // ====================================================================
     //  公开协程 — 由效果链的 PlayAnimation 调用
@@ -97,12 +127,26 @@ public class UnitAppearance : MonoBehaviour
         yield return WaitForCurrentClip();
     }
 
-    /// <summary>播放死亡动画，等待播完</summary>
+    /// <summary>播放死亡动画，同时渐隐所有子物体，完成后销毁</summary>
     public IEnumerator PlayDeathAnimation()
     {
         if (animator == null) yield break;
         animator.SetTrigger(triggerDead);
+
+        // 同时渐隐所有子物体的 Image 和 SpriteRenderer
+        float fadeDuration = 1.0f;
+        var images = GetComponentsInChildren<Image>(true);
+        foreach (var img in images) img.DOFade(0f, fadeDuration);
+        var sprites = GetComponentsInChildren<SpriteRenderer>(true);
+        foreach (var sr in sprites) sr.DOFade(0f, fadeDuration);
+
+        // 等待死亡动画播完（渐隐同时进行）
+        float startTime = Time.time;
         yield return WaitForCurrentClip();
+        // 确保渐隐至少播完
+        float elapsed = Time.time - startTime;
+        if (elapsed < fadeDuration)
+            yield return new WaitForSeconds(fadeDuration - elapsed);
     }
 
     /// <summary>回到待机动画</summary>
@@ -185,7 +229,14 @@ public class UnitAppearance : MonoBehaviour
     private void OnDeath(UnitDeathEvent evt)
     {
         if (evt.Unit != unit) return;
-        StartCoroutine(PlayDeathAnimation());
+        StartCoroutine(DeathRoutine());
+    }
+
+    private IEnumerator DeathRoutine()
+    {
+        yield return PlayDeathAnimation();
+        // 动画完毕，销毁 GameObject（LevelManager 已在事件中 Unregister）
+        Destroy(gameObject);
     }
 
     // ====================================================================

@@ -57,6 +57,22 @@ public class TurnManager : MonoBehaviour
         //处理订阅事件
     }
 
+    private void OnEnable()
+    {
+        GameEventChannel.Register<LevelEnteredEvent>(OnLevelEntered);
+    }
+
+    private void OnDisable()
+    {
+        GameEventChannel.Unregister<LevelEnteredEvent>(OnLevelEntered);
+    }
+
+    private void OnLevelEntered(LevelEnteredEvent evt)
+    {
+        Logger.Log($"[TurnManager] 关卡进入，开始第一回合");
+        StartTurn();
+    }
+
     private void Start()
     {
         phaseStates.Add(TurnPhase.Start, new StartState());
@@ -314,12 +330,13 @@ class EnemyState : ITurnState
         // 弃掉不保留的手牌
         yield return DeckManager.Instance?.DiscardNonRetainedAsync();
 
-        var enemies = LevelManager.Instance?.GetUnitsOf(Faction.Enemy);
+        var enemies = LevelManager.Instance?.GetUnitsByFaction(Faction.Enemy);
         if (enemies != null)
         {
             foreach (var enemy in enemies)
             {
                 if (enemy == null || !enemy.IsAlive) continue;
+                Logger.Log("TurnManager：执行ai");
                 yield return AIController.Instance.ExecuteTurn(enemy);
                 yield return new WaitForSeconds(
                     AIController.Instance != null ? AIController.Instance.delayBetweenUnits : 0.5f);

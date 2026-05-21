@@ -13,12 +13,6 @@ MonoBehaviour:
   m_Name: "\u65B0\u624B\u6751\u5C0F\u602A\u6C60"
   m_EditorClassIdentifier: 
   entries:
-  - unitConfig: {fileID: 0}
-    rarity: 0
-    weight: 0
-  - unitConfig: {fileID: 0}
-    rarity: 0
-    weight: 0
-  - unitConfig: {fileID: 0}
+  - unitConfig: {fileID: 11400000, guid: 9a263c825ca954547a61417a496e48bf, type: 2}
     rarity: 0
     weight: 0

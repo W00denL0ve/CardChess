@@ -46,8 +46,13 @@ public class InputManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-        mainCamera = Camera.main;
         gameInput = new GameInput();
+    }
+
+    private void Start()
+    {
+        mainCamera = Camera.main;
+        Logger.Log($"获取到相机{mainCamera.name}");
     }
 
     private void OnEnable()
@@ -90,6 +95,7 @@ public class InputManager : MonoBehaviour
     /// </summary>
     private void OnClickPerformed(InputAction.CallbackContext context)
     {
+        // Logger.Log("[Input] Click performed!"); 
         // 检测单位
         Unit unit = GetUnitUnderMouse();
         if (unit != null)

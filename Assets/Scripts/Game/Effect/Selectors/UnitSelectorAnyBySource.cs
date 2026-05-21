@@ -1,15 +1,17 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// 单位选择器 — 依据被执行者 + OR 筛选
+/// (弃用)单位选择器 — 依据被执行者 + OR 筛选
 /// </summary>
-[CreateAssetMenu(menuName = "CardChess/EffectChain/Selectors/UnitAnyBySource")]
+// [CreateAssetMenu(menuName = "CardChess/EffectChain/Selectors/UnitAnyBySource")]
+[Obsolete]
 public class UnitSelectorAnyBySource : TargetSelector
 {
     [System.Flags]
-    public enum FactionMask { Player = 1, Enemy = 2, Neutral = 4 }
+    public enum FactionMask { Ally = 1, Hostile = 2, Neutral = 4, Self = 8 }
     [System.Flags]
     public enum OccMask { Warrior = 1, Rogue = 2, Mage = 4 }
 

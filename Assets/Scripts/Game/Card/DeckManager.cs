@@ -25,6 +25,21 @@ public class DeckManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
+    /// <summary>由 LevelManager 在关卡初始化时调用，注入初始牌库</summary>
+    public void Initialize(List<CardData> initialCards)
+    {
+        deck.Clear();
+        if (initialCards != null && initialCards.Count > 0)
+        {
+            deck.AddRange(initialCards);
+            Logger.Log($"[DeckManager] 初始牌库已加载，共 {deck.Count} 张卡牌");
+        }
+        else
+        {
+            Logger.LogWarning("[DeckManager] 初始卡牌列表为空");
+        }
+    }
+
     // ═══ 手牌检测 ═══
     public bool IsCardInHand(CardData card) => hand.Contains(card);
 

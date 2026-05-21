@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEditor;
@@ -85,11 +86,50 @@ public class LevelDataMenuExtractor : EditorWindow
             }
         }
 
+        // ---------- 3.6. 解析目标点 Tilemap ----------
+        Tilemap goalTm = GetTilemapByNames("Goal", "VictoryPoint");
+        List<Vector2Int> goalPositions = new List<Vector2Int>();
+        if (goalTm != null)
+        {
+            goalTm.CompressBounds();
+            BoundsInt baseBounds = baseTilemap.cellBounds;
+            foreach (Vector3Int pos in goalTm.cellBounds.allPositionsWithin)
+            {
+                if (goalTm.GetTile(pos) is GoalTile)
+                {
+                    int col = pos.x - baseBounds.xMin;
+                    int row = pos.y - baseBounds.yMin;
+                    if (col >= 0 && col < baseBounds.size.x && row >= 0 && row < baseBounds.size.y)
+                        goalPositions.Add(new Vector2Int(col, row));
+                }
+            }
+        }
+
+        // ---------- 3.7. 解析胜利条件 Tilemap ----------
+        Tilemap condTm = GetTilemapByNames("WinCondition", "VictoryCondition");
+        VictoryCondition rootCondition = null;
+        if (condTm != null)
+        {
+            condTm.CompressBounds();
+            BoundsInt condBounds = condTm.cellBounds;
+            var rows = new Dictionary<int, List<ConditionTile>>();
+            foreach (Vector3Int pos in condBounds.allPositionsWithin)
+            {
+                var tile = condTm.GetTile<ConditionTile>(pos);
+                if (tile == null) continue;
+                if (!rows.ContainsKey(pos.y)) rows[pos.y] = new List<ConditionTile>();
+                rows[pos.y].Add(tile);
+            }
+            rootCondition = BuildConditionTree(rows, goalPositions);
+        }
+
         // ---------- 4. 创建主 LevelData 资产 ----------
         LevelData mainAsset = ScriptableObject.CreateInstance<LevelData>();
         mainAsset.gridData = gridAsset;
         mainAsset.turnData = turnAsset;
         mainAsset.playerSpawnPositions = spawnPositions;
+        mainAsset.goalPositions = goalPositions;
+        mainAsset.rootCondition = rootCondition;
 
         // ---------- 5. 保存所有资产 ----------
         string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Substring(2);
@@ -320,5 +360,83 @@ public class LevelDataMenuExtractor : EditorWindow
         if (all.Length == 1)
             return all[0];
         return null;
+    }
+
+    // ====================================================================
+    //  胜利条件解析
+    // ====================================================================
+
+    /// <summary>
+    /// 按行解析条件 Tilemap
+    ///   同一行内：相同 Tile 的数量 = 参数值；不同 Tile 类型 = AND
+    ///   行之间：OR
+    /// </summary>
+    static VictoryCondition BuildConditionTree(Dictionary<int, List<ConditionTile>> rows, List<Vector2Int> goalPositions)
+    {
+        if (rows.Count == 0) return null;
+
+        var rowConditions = new List<VictoryCondition>();
+        foreach (var kvp in rows.OrderBy(r => r.Key))
+        {
+            var rowCond = BuildRowCondition(kvp.Value);
+            if (rowCond != null)
+                rowConditions.Add(rowCond);
+        }
+
+        if (rowConditions.Count == 0) return null;
+        if (rowConditions.Count == 1) return rowConditions[0];
+        return new CompositeCondition
+        {
+            op = LogicOperator.Or,
+            children = rowConditions
+        };
+    }
+
+    /// <summary>解析一行：相同 Tile 计数 = 参数，不同 Tile AND</summary>
+    static VictoryCondition BuildRowCondition(List<ConditionTile> tiles)
+    {
+        // 按 Tile 类型分组并计数
+        var groups = new Dictionary<System.Type, (ConditionTile tile, int count)>();
+        foreach (var t in tiles)
+        {
+            if (groups.ContainsKey(t.GetType()))
+                groups[t.GetType()] = (t, groups[t.GetType()].count + 1);
+            else
+                groups[t.GetType()] = (t, 1);
+        }
+
+        var conds = new List<VictoryCondition>();
+        foreach (var kvp in groups.Values)
+        {
+            var cond = TileGroupToCondition(kvp.tile, kvp.count);
+            if (cond != null) conds.Add(cond);
+        }
+
+        if (conds.Count == 0) return null;
+        if (conds.Count == 1) return conds[0];
+        return new CompositeCondition { op = LogicOperator.And, children = conds };
+    }
+
+    /// <summary>
+    /// 将 (Tile, count) 映射为 VictoryCondition
+    /// count = 同类型 Tile 在同行中的数量，作为主参数
+    /// 非数值参数（如 unitId）从 Tile asset 的字段读取，提取默认值后手动修改
+    /// </summary>
+    static VictoryCondition TileGroupToCondition(ConditionTile tile, int count)
+    {
+        switch (tile)
+        {
+            case SurviveRoundsTile _:
+                return new SurviveRoundsCondition { requiredRounds = count };
+            case KillAllEnemiesTile _:
+                return new KillAllEnemiesCondition();
+            case ProtectUnitTile t:
+                return new ProtectUnitCondition { targetUnitId = t.targetUnitId ?? "" };
+            case ReachGoalTile _:
+                return new ReachGoalCondition();
+            default:
+                Debug.LogWarning($"未处理的 ConditionTile: {tile.GetType().Name}");
+                return null;
+        }
     }
 }
