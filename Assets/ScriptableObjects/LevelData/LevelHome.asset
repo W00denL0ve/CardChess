@@ -15,19 +15,25 @@ MonoBehaviour:
   gridData: {fileID: 11400000, guid: 079b5e8a21e797d41ace1c68ce4aff9e, type: 2}
   turnData: {fileID: 11400000, guid: 3870862abeb3b9345b30683ce39a5f8f, type: 2}
   playerSpawnPositions:
-  - {x: 1, y: 1}
-  - {x: 1, y: 2}
-  - {x: 1, y: 3}
-  - {x: 1, y: 4}
-  - {x: 1, y: 5}
-  - {x: 1, y: 6}
+  - {x: 2, y: 1}
+  - {x: 4, y: 1}
+  - {x: 6, y: 1}
+  - {x: 8, y: 1}
+  - {x: 2, y: 2}
+  - {x: 2, y: 3}
+  - {x: 2, y: 4}
+  - {x: 2, y: 5}
+  - {x: 2, y: 6}
+  - {x: 4, y: 7}
+  - {x: 6, y: 7}
+  - {x: 8, y: 7}
   goalPositions: []
   rootCondition:
-    rid: 8418122075306459139
+    rid: 8418122111713804291
   references:
     version: 2
     RefIds:
-    - rid: 8418122075306459139
+    - rid: 8418122111713804291
       type: {class: KillAllEnemiesCondition, ns: , asm: Assembly-CSharp}
       data:
         description: 
