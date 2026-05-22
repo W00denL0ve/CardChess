@@ -84,7 +84,7 @@ public class Unit : MonoBehaviour
         if (newHealth <= 0)
         {
             IsAlive = false;
-            GameEventChannel.Dispatch(new UnitDeathEvent(this, context));
+            LevelManager.Instance.HandleUnitDeath(this, context);
         }
         else
         {

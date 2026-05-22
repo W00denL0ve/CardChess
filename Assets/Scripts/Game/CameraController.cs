@@ -47,6 +47,16 @@ public class CameraController : MonoBehaviour
     private Vector2 gridMin;
     private Vector2 gridMax;
 
+    private bool playerControl = true; // 是否由玩家控制
+
+    // 聚焦状态
+    private bool isFocusing;
+    private Transform focusTarget;
+    private float focusDuration;
+    private float focusTimer;
+    private Vector2 focusStartPos;
+    private float focusStartDistance;
+
     // 鼠标拖动状态
     private Vector2 lastMousePos;
     private bool isDragging;
@@ -117,6 +127,7 @@ public class CameraController : MonoBehaviour
         HandleKeyboardPan();
         HandleMouseDrag();
         HandleZoom();
+        HandleFocus();
     }
 
     // ====================================================================
@@ -150,6 +161,7 @@ public class CameraController : MonoBehaviour
 
     private void HandleKeyboardPan()
     {
+        if (!playerControl) return;
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
         if (Mathf.Approximately(h, 0f) && Mathf.Approximately(v, 0f)) return;
@@ -164,6 +176,7 @@ public class CameraController : MonoBehaviour
 
     private void HandleMouseDrag()
     {
+        if (!playerControl) { isDragging = false; return; }
         if (Input.GetMouseButtonDown(mouseButtonForDrag))
         {
             isDragging = true;
@@ -200,6 +213,7 @@ public class CameraController : MonoBehaviour
 
     private void HandleZoom()
     {
+        if(!playerControl) return;
         float scroll = Input.GetAxis("Mouse ScrollWheel");
         if (Mathf.Approximately(scroll, 0f)) return;
 
@@ -244,6 +258,47 @@ public class CameraController : MonoBehaviour
         );
 
         ApplyCameraTransform();
+    }
+
+    // ====================================================================
+    //  聚焦 — 由外部相机效果系统调用
+    // ====================================================================
+
+    /// <summary>
+    /// 聚焦到目标，禁用玩家控制，lerp 跟随 duration 秒后恢复控制
+    /// </summary>
+    public void FocusOnTarget(Transform target, float duration = 1f)
+    {
+        playerControl = false;
+        isFocusing = true;
+        focusTarget = target;
+        focusDuration = duration;
+        focusTimer = 0f;
+        focusStartPos = targetPoint;
+        focusStartDistance = currentDistance;
+    }
+
+    private void HandleFocus()
+    {
+        if (!isFocusing || focusTarget == null) return;
+
+        focusTimer += Time.deltaTime;
+        float t = Mathf.Clamp01(focusTimer / focusDuration);
+
+        // 目标点 lerp 到聚焦对象的 XZ
+        var targetXZ = new Vector2(focusTarget.position.x, focusTarget.position.z);
+        targetPoint = Vector2.Lerp(focusStartPos, targetXZ, t);
+
+        // 距离 lerp 到最小距离（推近）
+        currentDistance = Mathf.Lerp(focusStartDistance, minDistance, t);
+
+        ApplyCameraTransform();
+
+        if (t >= 1f)
+        {
+            isFocusing = false;
+            playerControl = true;
+        }
     }
 
     // ====================================================================

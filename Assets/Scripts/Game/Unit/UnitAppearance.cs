@@ -43,7 +43,8 @@ public class UnitAppearance : MonoBehaviour
 
     void OnEnable()
     {
-        GameEventChannel.Register<UnitDeathEvent>(OnDeath);
+        GameEventChannel.Register<
+        UnitDeathEvent>(OnDeath);
     }
 
     void OnDisable()
@@ -236,6 +237,7 @@ public class UnitAppearance : MonoBehaviour
     {
         yield return PlayDeathAnimation();
         // 动画完毕，销毁 GameObject（LevelManager 已在事件中 Unregister）
+        yield return new WaitForSeconds(20f);
         Destroy(gameObject);
     }
 

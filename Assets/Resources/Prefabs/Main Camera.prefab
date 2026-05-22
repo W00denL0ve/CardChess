@@ -12,8 +12,6 @@ GameObject:
   - component: {fileID: 3749105278197999561}
   - component: {fileID: 3984860332694692359}
   - component: {fileID: 5274087754700716872}
-  - component: {fileID: -7731006500852276573}
-  - component: {fileID: 6176583987544085764}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -118,55 +116,6 @@ MonoBehaviour:
   initialDistance: 5
   extraMargin: 2
   initialZOffset: 3
---- !u!114 &-7731006500852276573
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3638062001449165267}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c98962c92ed4f78409949080530c09c6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  virtualCamera: {fileID: 1827661298586043281, guid: 786d1df9183344d4ca72990c1608e4a6, type: 3}
-  focusPriority: 100
-  resetToOriginalPositionAfterFocus: 1
---- !u!114 &6176583987544085764
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3638062001449165267}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 72ece51f2901e7445ab60da3685d6b5f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_ShowDebugText: 0
-  m_ShowCameraFrustum: 1
-  m_IgnoreTimeScale: 0
-  m_WorldUpOverride: {fileID: 0}
-  m_UpdateMethod: 2
-  m_BlendUpdateMethod: 1
-  m_DefaultBlend:
-    m_Style: 1
-    m_Time: 2
-    m_CustomCurve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-  m_CustomBlends: {fileID: 0}
-  m_CameraCutEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_CameraActivatedEvent:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!1001 &3861478881830663590
 PrefabInstance:
   m_ObjectHideFlags: 0

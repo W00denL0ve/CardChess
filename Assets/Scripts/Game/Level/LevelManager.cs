@@ -29,18 +29,21 @@ public class LevelManager : MonoBehaviour
 
     void OnEnable()
     {
-        GameEventChannel.Register<UnitDeathEvent>(HandleUnitDeath);
     }
 
     void OnDisable()
     {
-        GameEventChannel.Unregister<UnitDeathEvent>(HandleUnitDeath);
     }
 
     public void RegisterUnit(Unit unit)
     {
         if (!allUnits.Contains(unit))
             allUnits.Add(unit);
+
+        if (lastDeadUnit == null)
+        {
+            lastDeadUnit = unit; // 避免无单位死亡导致空值
+        }
     }
 
     public void UnregisterUnit(Unit unit)
@@ -76,10 +79,11 @@ public class LevelManager : MonoBehaviour
         return allUnits.Where(u => u.Faction == faction && u.IsAlive).ToList();
     }
 
-    private void HandleUnitDeath(UnitDeathEvent evt)
+    public void HandleUnitDeath(Unit unit, EffectContext context)
     {
-        UnregisterUnit(evt.Unit);
-        lastDeadUnit = evt.Unit;
+        UnregisterUnit(unit);
+        lastDeadUnit = unit;
+        GameEventChannel.Dispatch(new UnitDeathEvent(unit, context));
     }
 
     /// <summary>

@@ -50,8 +50,7 @@ public class GameManager : MonoBehaviour
             Logger.Log($"[GameManager] 💀 关卡失败！");
             // todo
         }
-        CameraEffectManager.Instance.SetVCamActive();
-        CameraEffectManager.Instance.PlayCombinedEffect(lastDead.transform, 2f, 0.2f, 0.7f, 1f, 3f);
+        CameraController.Instance.FocusOnTarget(lastDead.transform, 2f);
     }
 
     private void Start()
