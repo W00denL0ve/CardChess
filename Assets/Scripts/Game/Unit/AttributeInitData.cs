@@ -1,6 +1,9 @@
+using System;
+
 [System.Serializable]
+[Obsolete]
 public struct AttributeInitData
 {
-    public AttributeType type;
+    public ModifierField type;
     public float value;
 }

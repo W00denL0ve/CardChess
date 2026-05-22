@@ -25,6 +25,7 @@ MonoBehaviour:
     targetType: 0
     category: 0
     baseScore: 0
+    editorLabel: "\u666E\u901A\u653B\u51FB"
   references:
     version: 2
     RefIds:

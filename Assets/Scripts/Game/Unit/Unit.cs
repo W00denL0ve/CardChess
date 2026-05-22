@@ -1,9 +1,25 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public enum Faction { Player, Enemy, Neutral }
+
+// 基础属性
+[Serializable]
+public struct UnitBaseValue
+{    
+    public int currentHealth;
+    public int maxHealth;
+    public int attack;
+    public int intelligence;
+    public int physicalDefense;
+    public int magicDefense;
+    public int movePointLimit;
+    public int movePoints;
+    public int hasMoved;
+}
 
 public class Unit : MonoBehaviour
 {
@@ -17,8 +33,12 @@ public class Unit : MonoBehaviour
     public Faction Faction { get; private set; }
     public bool IsAlive { get; private set; }
 
-    // 属性系统
-    public AttributeManager AttributeManager { get; private set; }
+    // 修饰器系统
+    public ModifierManager modifierManager { get; private set; }
+
+    // 属性
+    [SerializeField]
+    public UnitBaseValue baseValue;
 
     // Buff 容器
     public BuffContainer BuffContainer { get; private set; }
@@ -27,25 +47,25 @@ public class Unit : MonoBehaviour
     [SerializeField] private Slider healthBar;
 
     /// <summary>血量百分比 0~1</summary>
-    public float HpPercent => MaxHealth > 0 ? (float)CurrentHealth / MaxHealth : 0f;
+    public float HpPercent => baseValue.maxHealth > 0 ? (float)baseValue.currentHealth / baseValue.maxHealth : 0f;
     public UnitConfig Config { get; private set; }
 
     // 网格位置（由 GridManager 设置）
     public Vector2Int GridPosition { get; internal set; }
 
-    // 便捷属性（查询 AttributeManager 的基础值，修饰器仅在具体公式中按需遍历）
-    public int CurrentHealth        => (int)AttributeManager.GetFinalValue(AttributeType.Health);
-    public int MaxHealth            => (int)AttributeManager.GetFinalValue(AttributeType.MaxHealth);
-    public int Attack               => (int)AttributeManager.GetBaseValue(AttributeType.Attack);
-    public int Intelligence         => (int)AttributeManager.GetBaseValue(AttributeType.Intelligence);
-    public int PhysicalDefense      => (int)AttributeManager.GetBaseValue(AttributeType.PhysicalDefense);
-    public int MagicDefense         => (int)AttributeManager.GetBaseValue(AttributeType.MagicDefense);
-    public int MovePointLimit     => (int)AttributeManager.GetFinalValue(AttributeType.MovePointLimit);
-    public int MovePoints         => (int)AttributeManager.GetFinalValue(AttributeType.MovePoints);
-    public int DamageBonus          => (int)AttributeManager.GetBaseValue(AttributeType.DamageBonus);
-
     // 防御查询
-    public int GetDefenseFor(DamageType type) => type == DamageType.Physical ? PhysicalDefense : MagicDefense;
+    public int GetDefenseFor(DamageType type) => type == DamageType.Physical ? baseValue.physicalDefense : baseValue.magicDefense;
+
+    private void Start()
+    {
+        GameEventChannel.Register<TurnStartedEvent>(OnTurnStarted);
+    }
+
+    public void OnTurnStarted(TurnStartedEvent evt)
+    {
+        baseValue.hasMoved = 0;
+    }
+
 
     // 初始化
     public void Initialize(UnitConfig config, Vector2Int gridPos, Faction? overrideFaction = null)
@@ -53,17 +73,13 @@ public class Unit : MonoBehaviour
         Config = config;
         unitId = config.unitId;
         occupation = config.occupation;
-        this.Faction = overrideFaction ?? config.defaultFaction;
+        Faction = overrideFaction ?? config.defaultFaction;
         GridPosition = gridPos;
         IsAlive = true;
-
-        AttributeManager = new AttributeManager();
-        foreach (var attr in config.initialAttributes)
-            AttributeManager.AddAttribute(attr.type, attr.value);
-
+        baseValue = config.initialValue;
         BuffContainer = new BuffContainer(this);
         foreach (var buff in config.innateBuffs)
-            BuffContainer.ApplyBuff(buff, new EffectContext { executor = new UnitTarget(this) });
+            BuffContainer.ApplyBuff(buff, new UnitTarget(this));
 
         UpdateHealthBar();
     }
@@ -76,10 +92,10 @@ public class Unit : MonoBehaviour
         // 使用 BuffContainer 封装的前置回调，允许 Buff 修改伤害值
         BuffContainer.OnBeforeDamageTaken(ref finalDamage, context);
 
-        int oldHealth = CurrentHealth;
-        int newHealth = Mathf.Clamp(oldHealth - finalDamage, 0, MaxHealth);
-        AttributeManager.SetBaseValue(AttributeType.Health, newHealth);
-        GameEventChannel.Dispatch(new UnitHealthChangedEvent(this, oldHealth, newHealth, MaxHealth));
+        int oldHealth = baseValue.currentHealth;
+        int newHealth = Mathf.Clamp(oldHealth - finalDamage, 0, baseValue.maxHealth);
+        baseValue.currentHealth = newHealth;
+        GameEventChannel.Dispatch(new UnitHealthChangedEvent(this, oldHealth, newHealth, baseValue.maxHealth));
 
         if (newHealth <= 0)
         {
@@ -103,10 +119,10 @@ public class Unit : MonoBehaviour
     public void Heal(int amount, EffectContext context = null)
     {
         if (!IsAlive || amount <= 0) return;
-        int oldHealth = CurrentHealth;
-        int newHealth = Mathf.Clamp(oldHealth + amount, 0, MaxHealth);
-        AttributeManager.SetBaseValue(AttributeType.Health, newHealth);
-        GameEventChannel.Dispatch(new UnitHealthChangedEvent(this, oldHealth, newHealth, MaxHealth));
+        int oldHealth = baseValue.currentHealth;
+        int newHealth = Mathf.Clamp(oldHealth + amount, 0, baseValue.maxHealth);
+        baseValue.currentHealth = newHealth;
+        GameEventChannel.Dispatch(new UnitHealthChangedEvent(this, oldHealth, newHealth, baseValue.maxHealth));
         UpdateHealthBar();
     }
 
@@ -138,6 +154,12 @@ public class Unit : MonoBehaviour
                 yield return appearance.PlayWalkAnimation(path);
         }
 
+        // 设置本回合已行动步数
+        if (path != null)
+        {
+            baseValue.hasMoved += Mathf.Clamp(path.Count - 1, 0, int.MaxValue);
+        }
+
         // 数据层：瞬移
         Vector2Int from = GridPosition;
         GridPosition = destination;
@@ -160,19 +182,11 @@ public class Unit : MonoBehaviour
     public void AcquireMovePoint(int amount, bool ignoreLimit = false, EffectContext context = null)
     {
         if (!IsAlive) return;
-        Logger.Log($"Unit: {UnitId}试图获得{amount}点行动力，" + (ignoreLimit ? "忽略" : "约束于") + "行动力上限");
-        int limit = (int)AttributeManager.GetBaseValue(AttributeType.MovePointLimit);
-        int points = (int)AttributeManager.GetBaseValue(AttributeType.MovePoints) + amount;
-        if (points > limit)
-        {
-            points = limit;
-        }
-        if (points < 0)
-        {
-            points = 0;
-        }
-        AttributeManager.SetBaseValue(AttributeType.MovePoints, points);
-        Logger.Log($"Unit: {UnitId}获得{points}点行动力");
+        //Logger.Log($"Unit: {UnitId}试图获得{amount}点行动力，" + (ignoreLimit ? "忽略" : "约束于") + "行动力上限");
+        int limit = baseValue.movePointLimit;
+        int points = Mathf.Clamp(baseValue.movePoints + amount, 0, limit);
+        baseValue.movePoints = points;
+        //Logger.Log($"Unit: {UnitId}获得{points}点行动力");
         GameEventChannel.Dispatch(new UnitAcquireMovePointEvent(this, points));
     }
 }

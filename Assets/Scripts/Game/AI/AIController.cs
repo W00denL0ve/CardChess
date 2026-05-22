@@ -134,7 +134,7 @@ public class AIController : MonoBehaviour
                 var fullPath = GridManager.Instance?.FindPath(unit.GridPosition, best.targetCell);
                 if (fullPath != null && fullPath.Count > 1)
                 {
-                    int maxSteps = unit.MovePointLimit + 1;
+                    int maxSteps = unit.baseValue.movePointLimit + 1;
                     var truncated = fullPath.Take(maxSteps).ToList();
                     Vector2Int dest = truncated.Last();
 
@@ -245,7 +245,7 @@ public class AIController : MonoBehaviour
         float bestScore = float.MinValue;
         Vector2Int bestCell = new Vector2Int();
 
-        float selfHpNorm = (float)unit.CurrentHealth / Mathf.Max(unit.MaxHealth, 1);
+        float selfHpNorm = (float)unit.baseValue.currentHealth / Mathf.Max(unit.baseValue.maxHealth, 1);
         float escapeBaseScore = escapeWeight[decks[unit].strategy] * (selfHpNorm > 0.01f ? 1f / selfHpNorm : 100f); // HP越低基础分越高
 
         // 获取所有 Hostile 和 Ally 单位
@@ -255,7 +255,7 @@ public class AIController : MonoBehaviour
         int allyCount = allies.Count;
 
         // 获取所有可达格子
-        var reachable = GridManager.Instance?.GetReachableCells(unit.GridPosition, unit.MovePointLimit);
+        var reachable = GridManager.Instance?.GetReachableCells(unit.GridPosition, unit.baseValue.movePointLimit);
         if (reachable == null || reachable.Count == 0) return result;
 
         foreach (var cell in reachable)
@@ -335,7 +335,7 @@ public class AIController : MonoBehaviour
             float currentDist = Vector2Int.Distance(self.GridPosition, target.GridPosition);
             if (currentDist <= range) return self.GridPosition;
 
-            var reachable = GridManager.Instance?.GetReachableCells(self.GridPosition, self.MovePointLimit);
+            var reachable = GridManager.Instance?.GetReachableCells(self.GridPosition, self.baseValue.movePointLimit);
             if (reachable != null)
             {
                 Vector2Int best = self.GridPosition;
@@ -390,8 +390,8 @@ public class AIController : MonoBehaviour
         // 原始值 × 归一化
         float dist = Mathf.Max(Vector2Int.Distance(cell, target.GridPosition), 0.5f);
         float distNorm     = 1f / dist;
-        float selfHpNorm   = (float)self.CurrentHealth / Mathf.Max(self.MaxHealth, 1);
-        float targetHpNorm = (float)target.CurrentHealth / Mathf.Max(target.MaxHealth, 1);
+        float selfHpNorm   = (float)self.baseValue.currentHealth / Mathf.Max(self.baseValue.maxHealth, 1);
+        float targetHpNorm = (float)target.baseValue.currentHealth / Mathf.Max(target.baseValue.maxHealth, 1);
         // 能量消耗率：消耗/maxEnergy
         float energyNorm   = (float)entry.energyCost / Mathf.Max(deck.energyPerTurn, 1);
         // 冷却惩罚：值越大说明还需等待越久，负向减分

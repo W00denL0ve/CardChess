@@ -5,8 +5,8 @@ using UnityEngine;
 /// </summary>
 public class AnimationEventForwarder : MonoBehaviour
 {
-    public void OnHitFrame()
+    public void OnAnimationFrame()
     {
-        GetComponentInParent<UnitAppearance>()?.OnHitFrame();
+        GetComponentInParent<UnitAppearance>()?.OnAnimationFrame();
     }
 }

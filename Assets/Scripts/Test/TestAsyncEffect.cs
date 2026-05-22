@@ -28,15 +28,11 @@ public class TestAsyncEffect : MonoBehaviour
         executor = FindObjectOfType<AsyncEffectExecutor>();
         if (executor == null)
             Logger.LogError("[TestAsync] 场景中需要 AsyncEffectExecutor");
-        SubscribeEvents();
-        BuildProgrammaticCard();
-        PrintHelp();
         GameEventChannel.Dispatch(new LevelEnteredEvent("test"));
     }
 
     void OnDestroy()
     {
-        UnsubscribeEvents();
         CleanupUnits();
     }
 
@@ -44,18 +40,6 @@ public class TestAsyncEffect : MonoBehaviour
     {
         if (executor == null) return;
 
-        if (Input.GetKeyDown(KeyCode.Alpha0))
-        {
-            if (importedCard != null)
-                ExecuteCard(importedCard);
-            else
-                Logger.LogWarning("[TestAsync] 请将 CardData 资产拖入 importedCard");
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha1)) TestDamageStep();
-        else if (Input.GetKeyDown(KeyCode.Alpha2)) TestMoveStep();
-        else if (Input.GetKeyDown(KeyCode.Alpha3)) TestFullCard();
-        else if (Input.GetKeyDown(KeyCode.Alpha4)) TestAsyncDelay();
-        else if (Input.GetKeyDown(KeyCode.F5)) Debug.Break();
     }
 
     // ====================================================================
@@ -104,168 +88,5 @@ public class TestAsyncEffect : MonoBehaviour
                 Destroy(u.gameObject);
             }
         }
-    }
-
-    void SubscribeEvents()
-    {
-        GameEventChannel.Register<UnitHealthChangedEvent>(OnHealthChanged);
-        GameEventChannel.Register<UnitMovedEvent>(OnMoved);
-    }
-
-    void UnsubscribeEvents()
-    {
-        GameEventChannel.Unregister<UnitHealthChangedEvent>(OnHealthChanged);
-        GameEventChannel.Unregister<UnitMovedEvent>(OnMoved);
-    }
-
-    void PrintHelp()
-    {
-        Logger.Log("[TestAsync] 按键: 0-拖入卡牌 1-伤害 2-移动 3-双步骤 4-异步延迟测试");
-    }
-
-    // ====================================================================
-    //  构建程序化卡牌
-    // ====================================================================
-
-    void BuildProgrammaticCard()
-    {
-        programmaticCard = ScriptableObject.CreateInstance<CardData>();
-        programmaticCard.cardName = "Programmatic Card";
-        programmaticCard.description = "效果链: 选目标→伤害→选格子→移动";
-        programmaticCard.chains = new List<EffectChain>
-        {
-            new EffectChain
-            {
-                steps = new List<ChainStep>
-                {
-                    new SelectorStep { selector = CreateUnitSelector() },
-                    new EffectStep { effect = CreateDamageEffect() },
-                    new SelectorStep { selector = CreateCellSelector() },
-                    new EffectStep { effect = CreateMoveEffect() }
-                }
-            }
-        };
-        Logger.Log("[TestAsync] 程序化卡牌已构建 (2个步骤)");
-    }
-
-    UnitSelector CreateUnitSelector()
-    {
-        var sel = ScriptableObject.CreateInstance<UnitSelector>();
-        sel.factions = (UnitSelector.FactionMask)(1 << (int)Faction.Enemy);
-        return sel;
-    }
-
-    CellPathSelector CreateCellSelector()
-    {
-        var sel = ScriptableObject.CreateInstance<CellPathSelector>();
-        sel.range = warrior.MovePoints;
-        sel.includeOrigin = true;
-        return sel;
-    }
-
-    DamageEffect CreateDamageEffect()
-    {
-        var eff = ScriptableObject.CreateInstance<DamageEffect>();
-        eff.effectName = "造成伤害";
-        eff.addDamage = 15;
-        eff.damageType = DamageType.Physical;
-        return eff;
-    }
-
-    MoveEffect CreateMoveEffect()
-    {
-        var eff = ScriptableObject.CreateInstance<MoveEffect>();
-        eff.effectName = "移动至目标格";
-        eff.requirePath = true;
-        return eff;
-    }
-
-    // ====================================================================
-    //  测试方法
-    // ====================================================================
-
-    void ExecuteCard(CardData card)
-    {
-        Logger.Log($"[执行] 开始执行卡牌: {card.name} ({card.chains?.Count ?? 0} 条效果链)");
-        executor.ExecuteCardChainsAsync(card, () =>
-        {
-            Logger.Log($"[执行] 卡牌效果全部完成！");
-        });
-    }
-
-    void TestDamageStep()
-    {
-        var step = new SelectorStep { selector = CreateUnitSelector() };
-        var step2 = new EffectStep { effect = CreateDamageEffect() };
-        var ctx = new EffectContext
-        {
-            sourceCard = programmaticCard,
-            executor = new UnitTarget(warrior),
-            executed = new UnitTarget(warrior)
-        };
-        Logger.Log("[测试1] 请选择敌方单位");
-        executor.ExecuteStepAsync(step, ctx, null);
-        executor.ExecuteStepAsync(step2, ctx, () =>
-        {
-            Logger.Log($"[测试1] 完成！法师 HP: {mage.CurrentHealth}/{mage.MaxHealth}");
-        });
-    }
-
-    void TestMoveStep()
-    {
-        var step = new SelectorStep { selector = CreateCellSelector() };
-        var step2 = new EffectStep { effect = CreateMoveEffect() };
-        var ctx = new EffectContext
-        {
-            sourceCard = programmaticCard,
-            executor = new UnitTarget(warrior),
-            executed = new UnitTarget(warrior)
-        };
-        Logger.Log("[测试2] 请选择移动目标格");
-        executor.ExecuteStepAsync(step, ctx, null);
-        executor.ExecuteStepAsync(step2, ctx, () =>
-        {
-            Logger.Log($"[测试2] 完成！战士位置: ({warrior.GridPosition.x},{warrior.GridPosition.y})");
-        });
-    }
-
-    void TestAsyncDelay()
-    {
-        var animEffect = ScriptableObject.CreateInstance<TestAnimatedDelayEffect>();
-        animEffect.delay = 1.0f;
-
-        var step = new EffectStep { effect = animEffect };
-        var ctx = new EffectContext
-        {
-            sourceCard = programmaticCard,
-            executor = new UnitTarget(warrior),
-            executed = new UnitTarget(warrior)
-        };
-
-        Logger.Log("[测试4] 异步延迟效果: OnExecute → 等待 1s → OnComplete");
-        executor.ExecuteStepAsync(step, ctx, () =>
-        {
-            Logger.Log("[测试4] ✅ 步骤完成！1秒延迟确认");
-        });
-    }
-
-    void TestFullCard()
-    {
-        Logger.Log("[测试3] 完整双步骤卡牌: 选目标伤害 → 选格子移动");
-        executor.ExecuteCardChainsAsync(programmaticCard, () =>
-        {
-            Logger.Log($"[测试3] 完成！法师 HP: {mage.CurrentHealth}/{mage.MaxHealth}");
-            Logger.Log($"[测试3] 战士位置: ({warrior.GridPosition.x},{warrior.GridPosition.y})");
-        });
-    }
-
-    void OnHealthChanged(UnitHealthChangedEvent evt)
-    {
-        Logger.Log($"[Event] {evt.Unit.UnitId} HP: {evt.OldHealth} → {evt.NewHealth}");
-    }
-
-    void OnMoved(UnitMovedEvent evt)
-    {
-        Logger.Log($"[Event] {evt.Unit.UnitId} 移动 {evt.From} → {evt.To}");
     }
 }

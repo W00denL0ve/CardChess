@@ -7,3 +7,11 @@ public class PhaseChangedEvent : GameEvent
     public TurnPhase oldPhase;
     public TurnPhase newPhase;
 }
+
+/// <summary>
+/// 回合开始事件
+/// </summary>
+public class TurnStartedEvent : GameEvent
+{
+    public int turnNumber;
+}

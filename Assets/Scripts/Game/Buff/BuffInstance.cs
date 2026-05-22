@@ -4,32 +4,18 @@ public class BuffInstance
 {
     public Buff BuffData { get; }
     public Unit Host { get; }
-    public EffectContext SourceContext { get; }
+    public ITarget Caster { get; }
 
     public int RemainingDuration { get; set; }
     public int CurrentStacks { get; private set; }
 
-    private List<(AttributeType type, Modifier modifier)> appliedModifiers = new();
-
-    public BuffInstance(Buff data, Unit host, EffectContext source = null)
+    public BuffInstance(Buff data, Unit host, ITarget caster)
     {
         BuffData = data;
         Host = host;
         RemainingDuration = data.maxDuration;
         CurrentStacks = 1;
-        SourceContext = source;
-    }
-
-    /// <summary>记录一个修饰器</summary>
-    public void RegisterModifier(AttributeType type, Modifier modifier)
-    {
-        appliedModifiers.Add((type, modifier));
-    }
-
-    /// <summary>移除一个修饰器的记录</summary>
-    public void UnregisterModifier(AttributeType type, Modifier modifier)
-    {
-        appliedModifiers.Remove((type, modifier));
+        Caster = caster;
     }
 
     /// <summary>
@@ -39,13 +25,9 @@ public class BuffInstance
     /// <param name="modifierType">修饰器类型（Add/Multiply/FinalAdd/FinalMultiply）</param>
     /// <param name="source">修饰器来源（通常是 Buff 资产本身）</param>
     /// <returns>找到的修饰器，不存在则返回 null</returns>
-    public Modifier FindModifier(AttributeType type, ModifierType modifierType, object source)
+    public Modifier FindModifier(ModifierField type, ModifierType modifierType, object source)
     {
-        foreach (var item in appliedModifiers)
-        {
-            if (item.type == type && item.modifier.type == modifierType && item.modifier.source == source)
-                return item.modifier;
-        }
+        
         return null;
     }
 
@@ -83,10 +65,6 @@ public class BuffInstance
     /// <summary>清理该实例添加的所有修饰器</summary>
     public void Cleanup()
     {
-        foreach (var (type, modifier) in appliedModifiers)
-        {
-            Host.AttributeManager.RemoveModifier(type, modifier);
-        }
-        appliedModifiers.Clear();
+        Host.modifierManager.RemoveModifiersFromSource(this);
     }
 }

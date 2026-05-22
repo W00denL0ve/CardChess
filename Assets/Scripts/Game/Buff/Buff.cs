@@ -3,8 +3,8 @@ using UnityEngine;
 public abstract class Buff : ScriptableObject
 {
     public string buffId;
-    public string buffName;
     public Sprite icon;
+
     /// <summary>
     /// <0 永久
     /// </summary>
@@ -20,14 +20,12 @@ public abstract class Buff : ScriptableObject
     public virtual void OnBeforeDamageTaken(BuffInstance instance, ref int damage, EffectContext context) { }
     public virtual void OnAfterDamageTaken(BuffInstance instance, int damage, EffectContext context) { }
 
-    protected void AddModifier(BuffInstance instance, AttributeType type, Modifier modifier)
+    protected void AddModifier(BuffInstance instance, float value, ModifierType type, ModifierField field)
     {
-        instance.Host.AttributeManager.AddModifier(type, modifier);
-        instance.RegisterModifier(type, modifier);
+        instance.Host.modifierManager.AddModifier(instance.Host, value, ModifierType.Add, ModifierField.None);
     }
-    protected void RemoveModifier(BuffInstance instance, AttributeType type, Modifier modifier)
+    protected void RemoveModifier(BuffInstance instance)
     {
-        instance.Host.AttributeManager.RemoveModifier(type, modifier);
-        instance.UnregisterModifier(type, modifier);
+        instance.Host.modifierManager.RemoveModifiersFromSource(instance);
     }
 }

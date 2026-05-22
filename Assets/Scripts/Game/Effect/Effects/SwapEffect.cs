@@ -38,6 +38,11 @@ public class SwapEffect : Effect, IAnimatedEffect
         yield return execdUnit.MoveTo(posA, pathBA);
     }
 
+    public void ExecuteOnAnimationFrame(Unit er, Unit ed, EffectContext context)
+    {
+        
+    }
+
     public override void OnComplete(EffectContext context)
     {
         // 交换不清理行动力

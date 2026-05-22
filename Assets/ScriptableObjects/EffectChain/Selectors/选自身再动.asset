@@ -9,13 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d7f1155fd3b24674aa12aceed3690732, type: 3}
-  m_Name: "\u9020\u62101x\u7269\u7406\u4F24\u5BB3"
+  m_Script: {fileID: 11500000, guid: a07c8a5f85da124419ed7fb322793ea2, type: 3}
+  m_Name: "\u9009\u81EA\u8EAB\u518D\u52A8"
   m_EditorClassIdentifier: 
-  effectName: "\u666E\u901A\u653B\u51FB"
-  icon: {fileID: 0}
-  addDamage: 0
-  multiplyDamage: 1
-  finalAddDamage: 0
-  finalMultiplyDamage: 1
-  damageType: 0
+  selectorName: 
+  changesExecutor: 1
+  minRange: 0
+  maxRange: 0
+  factions: 0
+  occupations: 0
+  IDFilter: 

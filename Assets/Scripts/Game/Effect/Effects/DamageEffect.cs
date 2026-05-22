@@ -1,93 +1,128 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[Serializable]
+public struct Multiplier
+{
+    [Tooltip("力量")]
+    public float attack;
+
+    [Tooltip("智慧")]
+    public float intelligence;
+
+    [Tooltip("当前生命")]
+    public float currentHealth;
+
+    [Tooltip("已损失生命")]
+    public float lossHealth;
+
+    [Tooltip("最大生命")]
+    public float maxHealth;
+
+    [Tooltip("本回合移动步数")]
+    public float hasMoved;
+
+    [Tooltip("物理防御")]
+    public float physicalDefense;
+
+    [Tooltip("魔法防御")]
+    public float magicDefense;
+}
+
 /// <summary>
 /// 伤害效果 - 对 context.executed 单位造成伤害
 /// 异步时序：OnExecute 计算 → PlayAnimation 播放攻击/受击 → OnComplete 扣血
-///
-/// 伤害公式（基准值 = 攻击者基础攻击力，再合并所有修饰器）：
-///   addSum = 攻击者.Attack + 卡牌.addDamage + Unit.DamageBonus.Add
-///   mulSum = 卡牌.multiplyDamage × Unit.DamageBonus.Multiply
-///   finalAddSum = 卡牌.finalAddDamage + Unit.DamageBonus.FinalAdd
-///   finalMulSum = 卡牌.finalMultiplyDamage × Unit.DamageBonus.FinalMultiply
-///   原始伤害 = (addSum × mulSum + finalAddSum) × finalMulSum
-///   最终伤害 = max(1, round(原始伤害) - 目标基础防御)
 /// </summary>
 [CreateAssetMenu(fileName = "DamageEffect", menuName = "CardChess/EffectChain/Effects/Damage")]
 public class DamageEffect : Effect, IAnimatedEffect
 {
-    [Header("卡牌自身修饰器（仅本次伤害有效）")]
-    public float addDamage;
-    public float multiplyDamage = 1f;
-    public float finalAddDamage;
-    public float finalMultiplyDamage = 1f;
+    [Header("倍率依据")]
+    public Multiplier multiplier;
+
+    [Header("卡牌修饰器")]
+    public List<Modifier> modifiers = new();
 
     public DamageType damageType = DamageType.Physical;
 
     private int _finalDamage;
 
+    private float GetValueByMultiplier(UnitBaseValue b, Multiplier m)
+    {
+        return b.attack * m.attack + b.intelligence * m.intelligence + b.currentHealth * m.currentHealth
+            + b.maxHealth * m.maxHealth + (b.maxHealth - b.currentHealth) * m.lossHealth + b.hasMoved * m.hasMoved
+            + b.physicalDefense * m.physicalDefense + b.magicDefense * m.magicDefense;
+    }
+
     public override void OnExecute(EffectContext context)
     {
-        Unit target = context.GetExecutedUnit();
-        Unit attacker = context.GetExecutorUnit();
-        if (target == null) return;
+        Unit executed = context.GetExecutedUnit();
+        Unit executor = context.GetExecutorUnit();
+        if (executed == null) return;
 
-        // 基准值 = 攻击者基础攻击力
-        float addSum = attacker?.Attack ?? 0;
-        float mulSum = 1f;
-        float finalAddSum = 0f;
-        float finalMulSum = 1f;
+        List<Modifier> modifiers_or = new();
+        List<Modifier> modifiers_ed = new();
+        float defenseBase = 0;
 
-        // 卡牌自身修饰器
-        addSum      += addDamage;
-        mulSum      *= multiplyDamage;
-        finalAddSum += finalAddDamage;
-        finalMulSum *= finalMultiplyDamage;
+        // 根据倍率获取施方基础值
+        float damageBase = GetValueByMultiplier(executor.baseValue, multiplier);
 
-        // 攻击者 DamageBonus 的持久修饰器（buff/装备）
-        var attr = attacker?.AttributeManager?.GetAttribute(AttributeType.DamageBonus);
-        if (attr != null)
+        if (damageType == DamageType.Physical)
         {
-            foreach (var mod in attr.modifiers)
-            {
-                switch (mod.type)
-                {
-                    case ModifierType.Add:            addSum      += mod.value; break;
-                    case ModifierType.Multiply:       mulSum      *= mod.value; break;
-                    case ModifierType.FinalAdd:       finalAddSum += mod.value; break;
-                    case ModifierType.FinalMultiply:  finalMulSum *= mod.value; break;
-                }
-            }
+            // 获取施方所有物理伤害修饰器
+            modifiers_or = executor.modifierManager.GetModifiers(ModifierField.Physic);
+            // 获取受方所有物理防御修饰器
+            modifiers_ed = executed.modifierManager.GetModifiers(ModifierField.PhysicalDefense);
+
+            // 获取受方物理防御基础值
+            defenseBase = executed.baseValue.physicalDefense;
         }
+        else if (damageType == DamageType.Magical)
+        {
+            // 获取施方所有魔法伤害修饰器
+            modifiers_or = executor.modifierManager.GetModifiers(ModifierField.Magic);
+            // 获取受方所有魔法防御修饰器
+            modifiers_ed = executor.modifierManager.GetModifiers(ModifierField.MagicDefense);
 
-        float damage = (addSum * mulSum + finalAddSum) * finalMulSum;
-
-        // 减去目标基础防御
-        int defense = target.GetDefenseFor(damageType);
-        _finalDamage = Mathf.Max(1, Mathf.RoundToInt(damage) - defense);
+            // 获取受方魔法防御基础值
+            defenseBase = executed.baseValue.magicDefense;
+        }
+        // 加入卡牌修饰器
+        modifiers_or.AddRange(modifiers);
+        // 注入公式
+        _finalDamage = AttributeCulculator.CulculateFinalValue(damageBase, modifiers_or, defenseBase, modifiers_ed);
     }
 
     public IEnumerator PlayAnimation(EffectContext context)
     {
-        Unit attacker = context.GetExecutorUnit();
-        Unit target = context.GetExecutedUnit();
-        if (target == null || attacker == null) yield break;
+        Unit executor = context.GetExecutorUnit();
+        Unit executed = context.GetExecutedUnit();
+        if (executed == null || executor == null) yield break;
 
-        var atkApp = attacker.GetComponent<UnitAppearance>();
-        var tgtApp = target.GetComponent<UnitAppearance>();
+        var executorApp = executor.GetComponent<UnitAppearance>();
 
-        if (atkApp != null)
+        if (executorApp != null)
         {
-            // 注册击打回调 → 击打帧同时触发受击动画 + 扣血
-            atkApp.RegisterHitFrameTarget(target, () => target.TakeDamage(_finalDamage, context));
-            yield return atkApp.PlayAttack();
+            executorApp.FaceTo(executed.GridPosition);
+            executorApp.SetAnimationFrameAction(() => ExecuteOnAnimationFrame(executor, executed, context));
+            yield return executorApp.PlayAttack();
         }
-        // 受击动画已由 OnHitFrame 自动触发，无需额外等待
+    }
+
+    public void ExecuteOnAnimationFrame(Unit executor, Unit executed, EffectContext context)
+    {
+        executed.TakeDamage(_finalDamage, context); // 扣血
+        var executedApp = executed.GetComponent<UnitAppearance>();
+        if (executedApp != null)
+        {
+            executedApp.FaceTo(executor.GridPosition); // 更改朝向
+            executedApp.StartCoroutine(executedApp.PlayHitReaction()); // 播放受击动画
+        }
     }
 
     public override void OnComplete(EffectContext context)
     {
-        // 伤害已在击打帧时扣除
+        // 无需后处理
     }
 }

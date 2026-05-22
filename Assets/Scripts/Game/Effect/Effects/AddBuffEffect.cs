@@ -14,6 +14,6 @@ public class AddBuffEffect : Effect
         Unit unit = context.GetExecutedUnit();
         if (unit == null) return;
 
-        unit.BuffContainer.ApplyBuff(buff, context);
+        unit.BuffContainer.ApplyBuff(buff, context.executor);
     }
 }

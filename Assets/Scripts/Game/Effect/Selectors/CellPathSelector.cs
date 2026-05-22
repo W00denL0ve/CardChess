@@ -25,7 +25,7 @@ public class CellPathSelector : TargetSelector
         Unit exec = context.GetExecutedUnit();
         if (exec == null) return new List<ITarget>();
 
-        int steps = range >= 0 ? range : exec.MovePoints;
+        int steps = range >= 0 ? range : exec.baseValue.movePoints;
         var cells = GridManager.Instance?.GetReachableCells(
             exec.GridPosition, steps, ignoreOccupied, canPassUnwalkable);
 

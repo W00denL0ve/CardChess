@@ -1,107 +1,32 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
-public enum AttributeType
+/// <summary>
+/// 修饰器管理器，每个可以挂修饰器的对象一个
+/// </summary>
+public class ModifierManager
 {
-    Health,
-    MaxHealth,
-    Attack,                // 力量（物理伤害基础）
-    Intelligence,          // 智慧（法术伤害基础）
-    DamageBonus,           // 伤害加成（加算，通用）
-    PhysicalDefense,       // 物理护甲
-    MagicDefense,          // 魔法抗性（默认0）
-    MovePointLimit,      // 每回合行动力上限
-    MovePoints           // 当前行动力
-}
-
-public class AttributeManager
-{
-    private Dictionary<AttributeType, Attribute> attributes = new Dictionary<AttributeType, Attribute>();
+    private List<Modifier> modifiers = new();
 
     /// <summary>
-    /// 添加一个属性（如果已存在则设置基础值）
+    /// 添加修饰器
     /// </summary>
-    public void AddAttribute(AttributeType type, float baseValue)
+    /// <param name="source">来源，调用者自行处理</param>
+    /// <param name="value">修饰器值</param>
+    /// <param name="type">修饰器类型</param>
+    /// <param name="field">修饰器作用域</param>
+    public void AddModifier(object source, float value, ModifierType type, ModifierField field)
     {
-        if (attributes.ContainsKey(type))
-        {
-            attributes[type].baseValue = baseValue;
-        }
-        else
-        {
-            attributes[type] = new Attribute(baseValue);
-        }
-    }
-
-    /// <summary>
-    /// 设置属性的基础值
-    /// </summary>
-    public void SetBaseValue(AttributeType type, float value)
-    {
-        if (attributes.TryGetValue(type, out var attr))
-        {
-            attr.baseValue = value;
-            return;
-        }
-            Logger.LogWarning($"AttributeManager: 设置属性基础值时找不到属性类型：{type}");
-    }
-
-    /// <summary>
-    /// 获取属性的基础值
-    /// </summary>
-    public float GetBaseValue(AttributeType type)
-    {
-        return attributes.TryGetValue(type, out var attr) ? attr.baseValue : 0f;
-    }
-
-    /// <summary>
-    /// 获取属性的最终值（含所有修饰器）
-    /// </summary>
-    public float GetFinalValue(AttributeType type)
-    {
-        return attributes.TryGetValue(type, out var attr) ? attr.FinalValue : 0f;
-    }
-
-    /// <summary>
-    /// 获取属性对象（用于遍历修饰器等高级操作）
-    /// </summary>
-    public Attribute GetAttribute(AttributeType type)
-    {
-        attributes.TryGetValue(type, out var attr);
-        return attr;
-    }
-
-    /// <summary>
-    /// 检查属性是否存在
-    /// </summary>
-    public bool HasAttribute(AttributeType type)
-    {
-        return attributes.ContainsKey(type);
+        modifiers.Add(new Modifier(source, value, type, field));
     }
 
     /// <summary>
     /// 添加修饰器
     /// </summary>
-    public void AddModifier(AttributeType type, Modifier modifier)
+    public void AddModifier(Modifier modifier)
     {
-        if (attributes.TryGetValue(type, out var attr))
-        {
-            attr.AddModifier(modifier);
-            return;
-        }
-        Logger.LogWarning($"AttributeManager: 添加修饰器时找不到属性类型：{type}");
-    }
-
-    /// <summary>
-    /// 移除修饰器
-    /// </summary>
-    public void RemoveModifier(AttributeType type, Modifier modifier)
-    {
-        if (attributes.TryGetValue(type, out var attr))
-        {
-            attr.modifiers.Remove(modifier);
-            return;
-        }
-        Logger.LogWarning($"AttributeManager: 移除修饰器时找不到属性类型：{type}");
+        modifiers.Add(modifier);
     }
 
     /// <summary>
@@ -109,9 +34,46 @@ public class AttributeManager
     /// </summary>
     public void RemoveModifiersFromSource(object source)
     {
-        foreach (var attr in attributes.Values)
+        modifiers.RemoveAll(modifier => modifier.source == source);
+    }
+
+    /// <summary>
+    /// 根据给定修饰域获取修饰器
+    /// </summary>
+    /// <param name="field">修饰域</param>
+    /// <returns>修饰器列表</returns>
+    public List<Modifier> GetModifiers(ModifierField field)
+    {
+        List<Modifier> mods = new();
+        if (modifiers == null)
+            return mods;
+        foreach (Modifier modifier in modifiers)
         {
-            attr.RemoveModifiersFromSource(source);
+            if (modifier.field.HasFlag(field))
+            {
+                mods.Add(modifier);
+            }
         }
+        return mods;
+    }
+
+    /// <summary>
+    /// 根据给定修饰器类型获取修饰器
+    /// </summary>
+    /// <param name="type">修饰器类型</param>
+    /// <returns>修饰器列表</returns>
+    public List<Modifier> GetModifiers(ModifierType type)
+    {
+        List<Modifier> mods = new();
+        if (modifiers == null)
+            return mods;
+        foreach (Modifier modifier in modifiers)
+        {
+            if (modifier.type == type)
+            {
+                mods.Add(modifier);
+            }
+        }
+        return mods;
     }
 }

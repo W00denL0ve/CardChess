@@ -7,6 +7,6 @@ public class PoisonBuff : Buff
 
     public override void OnTurnEnd(BuffInstance instance)
     {
-        instance.Host.TakeDamage((int)damagePerTurn, instance.SourceContext);
+        instance.Host.TakeDamage((int)damagePerTurn);
     }
 }

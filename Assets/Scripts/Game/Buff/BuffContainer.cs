@@ -10,7 +10,7 @@ public class BuffContainer
     public BuffContainer(Unit unit) => host = unit;
 
     /// <summary>应用一个 Buff</summary>
-    public void ApplyBuff(Buff buffData, EffectContext context = null)
+    public void ApplyBuff(Buff buffData, ITarget caster)
     {
         if (buffData == null) return;
         var existing = buffs.FirstOrDefault(b => b.BuffData == buffData);
@@ -20,7 +20,7 @@ public class BuffContainer
             existing.RemainingDuration = buffData.maxDuration;
             return;
         }
-        var instance = new BuffInstance(buffData, host, context);
+        var instance = new BuffInstance(buffData, host, caster);
         buffs.Add(instance);
         buffData.OnApply(instance);
     }

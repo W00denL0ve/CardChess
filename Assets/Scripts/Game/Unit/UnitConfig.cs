@@ -17,6 +17,7 @@ public class UnitConfig : ScriptableObject
     public float zOffset = -0.3f;
     public float xRotation = 45;
 
-    public List<AttributeInitData> initialAttributes = new();
+    [SerializeField]
+    public UnitBaseValue initialValue;
     public List<Buff> innateBuffs;
 }

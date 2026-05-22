@@ -49,13 +49,18 @@ public class MoveEffect : Effect, IAnimatedEffect
             appearance.SetIdle();
     }
 
+    public void ExecuteOnAnimationFrame(Unit er, Unit ed, EffectContext context)
+    {
+        
+    }
+
     public override void OnComplete(EffectContext context)
     {
         if (clearPoints)
         {
             Unit unit = context.GetExecutorUnit();
             if (unit != null)
-                unit.AttributeManager.SetBaseValue(AttributeType.MovePoints, 0);
+                unit.baseValue.movePoints = 0;
         }
     }
 }

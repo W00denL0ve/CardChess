@@ -12,16 +12,18 @@ public abstract class Effect : ScriptableObject
 {
     [Header("效果基本信息")]
     public string effectName;
+    
     public Sprite icon;
 
     /// <summary>
-    /// 数据执行的时刻（对齐表现中的"打击瞬间"）
-    /// Unit.TakeDamage、Heal、Buff 添加、移动请求等实际数据变更在此发生
+    /// 先发数据执行的时刻
+    /// Buff 添加、移动请求等实际数据变更在此发生
+    /// 如果需要对齐动画表现，需要继承IAnimatedEffect接口
     /// </summary>
     public virtual void OnExecute(EffectContext context) { }
 
     /// <summary>
-    /// 效果完全结束的时刻（对齐表现完全结束的时刻）
+    /// 效果完全结束的时刻，进行后处理
     /// </summary>
     public virtual void OnComplete(EffectContext context) { }
 }

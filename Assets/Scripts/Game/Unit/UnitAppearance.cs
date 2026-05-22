@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -21,12 +22,12 @@ public class UnitAppearance : MonoBehaviour
     public string triggerAttack = "Attack";
     public string triggerHit = "Hit";
     public string triggerDead = "Dead";
+    public string triggerHeal = "Heal";
+    public string triggerCast = "Cast";
 
     private Animator animator;
     private Unit unit;
 
-    /// <summary>由效果在 PlayAttack 前注册，AnimationEvent 在击打帧触发</summary>
-    private Unit pendingHitTarget;
     private System.Action onHitCallback;
 
     void Awake()
@@ -128,6 +129,22 @@ public class UnitAppearance : MonoBehaviour
         yield return WaitForCurrentClip();
     }
 
+    /// <summary>播放受治疗动画，等待播完</summary>
+    public IEnumerator PlayHeal()
+    {
+        if (animator == null) yield break;
+        animator.SetTrigger(triggerHeal);
+        yield return WaitForCurrentClip(); 
+    }
+
+    /// <summary>播放施法动画，等待播完</summary>
+    public IEnumerator PlayCast()
+    {
+        if (animator == null) yield break;
+        animator.SetTrigger(triggerCast);
+        yield return WaitForCurrentClip();
+    }
+
     /// <summary>播放死亡动画，同时渐隐所有子物体，完成后销毁</summary>
     public IEnumerator PlayDeathAnimation()
     {
@@ -190,37 +207,25 @@ public class UnitAppearance : MonoBehaviour
     }
 
     // ====================================================================
-    //  击打帧同步 — 由 AnimationEvent 调用
+    //  效果执行方与被执行方动画同步 — 由 AnimationEvent 调用
     // ====================================================================
 
-    /// <summary>攻击前注册受击目标及扣血回调，供 AnimationEvent 使用</summary>
-    public void RegisterHitFrameTarget(Unit target, System.Action onHit = null)
+    /// <summary>
+    /// 效果调用，效果决定事件帧如何处理。
+    /// </summary>
+    public void SetAnimationFrameAction(Action action)
     {
-        pendingHitTarget = target;
-        onHitCallback = onHit;
-        if (target != null)
-            FaceTo(target.GridPosition);
+        onHitCallback = action;
     }
 
     /// <summary>
-    /// Animation Event 回调 — 在攻击动画的击打帧调用
+    /// Animation Event 回调 — 在动画的触发帧调用
     /// 请在 Animation Clip 中合适时间点添加 AnimationEvent
     /// </summary>
-    public void OnHitFrame()
+    public void OnAnimationFrame()
     {
-        // 先扣血（同步，随动画帧立即生效）
         onHitCallback?.Invoke();
-        onHitCallback = null;
-
-        // 再播受击动画（异步协程）
-        if (pendingHitTarget == null) return;
-        var app = pendingHitTarget.GetComponent<UnitAppearance>();
-        if (app != null)
-        {
-            app.FaceTo(unit.GridPosition);
-            StartCoroutine(app.PlayHitReaction());
-        }
-        pendingHitTarget = null;
+        onHitCallback = null; // 清空以防二次调用
     }
 
     // ====================================================================
