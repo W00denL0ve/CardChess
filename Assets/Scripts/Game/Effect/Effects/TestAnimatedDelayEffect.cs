@@ -4,7 +4,7 @@ using UnityEngine;
 /// <summary>
 /// 测试用动画效果 — 在 OnExecute 后等待 delay 秒再 OnComplete
 /// </summary>
-[CreateAssetMenu(menuName = "CardChess/EffectChain/Effects/Test/AnimatedDelay")]
+// [CreateAssetMenu(menuName = "CardChess/EffectChain/Effects/Test/AnimatedDelay")]
 public class TestAnimatedDelayEffect : Effect, IAnimatedEffect
 {
     [Tooltip("动画等待秒数")]

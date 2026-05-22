@@ -28,6 +28,12 @@ public class AIChainEntry
 
     [Tooltip("基础分")]
     public int baseScore = 10;
+
+#if UNITY_EDITOR
+    [Tooltip("编辑器内显示的名称（仅用于 Inspector 识别，不参与运行时逻辑）")]
+    [SerializeField]
+    public string editorLabel = "";
+#endif
 }
 
 /// <summary>
