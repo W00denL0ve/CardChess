@@ -6,24 +6,23 @@ public class CardDataEditor : Editor
 {
     private SerializedProperty colorPresetProp;
     private SerializedProperty cardColorProp;
-    private CardColorPreset prevPreset;
+    private SerializedProperty chainsProp;
 
     private void OnEnable()
     {
         colorPresetProp = serializedObject.FindProperty("colorPreset");
         cardColorProp = serializedObject.FindProperty("cardColor");
-        prevPreset = (CardColorPreset)colorPresetProp.enumValueIndex;
+        chainsProp = serializedObject.FindProperty("chains");
     }
 
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
 
-        // 默认字段
-        DrawPropertiesExcluding(serializedObject,
-            "colorPreset", "cardColor", "m_Script");
+        // 绘制默认字段（排除颜色和 chains）
+        DrawPropertiesExcluding(serializedObject, "colorPreset", "cardColor", "m_Script", "chains");
 
-        // ── 颜色区域 ──
+        // 颜色区域
         EditorGUILayout.Space();
         GUILayout.Label("卡牌颜色", EditorStyles.boldLabel);
 
@@ -37,8 +36,28 @@ public class CardDataEditor : Editor
 
         EditorGUILayout.PropertyField(cardColorProp, new GUIContent("自定义颜色"));
 
+        // 效果链区域
+        EditorGUILayout.Space();
+        GUILayout.Label("效果链", EditorStyles.boldLabel);
+
+        // 使用默认的 PropertyField 绘制列表（可以展开每个 EffectChain 的内部 steps）
+        EditorGUILayout.PropertyField(chainsProp, new GUIContent("效果链列表"), true);
+
+        // 自定义添加按钮（可选），Unity 默认列表也会有一个“+”按钮，但您可以保留这个更明确的按钮
+        // if (GUILayout.Button("+ 添加新链", GUILayout.Height(25)))
+        // {
+        //     AddNewChain();
+        // }
+
         serializedObject.ApplyModifiedProperties();
     }
+
+    // private void AddNewChain()
+    // {
+    //     // 由于 EffectChain 是普通可序列化类，arraySize++ 会自动创建新的 EffectChain 实例
+    //     // 并且该实例独立于其他任何链（因为是内联序列化）
+    //     chainsProp.arraySize++;
+    // }
 
     private void ApplyPresetColor()
     {

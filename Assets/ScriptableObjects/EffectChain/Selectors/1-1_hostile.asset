@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a07c8a5f85da124419ed7fb322793ea2, type: 3}
   m_Name: 1-1_hostile
   m_EditorClassIdentifier: 
-  selectorName: 
-  changesExecutor: 1
+  selectorName: "\u9009\u62E91\u683C\u5185\u7684\u654C\u4EBA"
+  chooseExecutor: 0
+  chooseExecuted: 1
   minRange: 1
   maxRange: 1
   factions: 2

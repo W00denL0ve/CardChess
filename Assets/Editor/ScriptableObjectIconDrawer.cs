@@ -49,6 +49,10 @@ public static class ScriptableObjectIconDrawer
         if (so is UnitConfig unit && unit.icon != null)
             return unit.icon.texture;
 
+        // Effect → icon
+        if (so is Effect effect && effect.icon != null)
+            return effect.icon.texture;
+
         return null;
     }
 }

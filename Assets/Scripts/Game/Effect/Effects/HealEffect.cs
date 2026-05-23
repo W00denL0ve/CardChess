@@ -76,6 +76,7 @@ public class HealEffect : Effect, IAnimatedEffect
         {
             executedApp.StartCoroutine(executedApp.PlayHeal()); // 播放受治疗动画
         }
+        AudioManager.Instance.PlaySound("heal"); // 播放治疗音效
     }
 
     public override void OnComplete(EffectContext context)

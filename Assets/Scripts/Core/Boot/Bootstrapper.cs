@@ -31,6 +31,7 @@ public class Bootstrapper : MonoBehaviour
     private async void Start()
     {
         await System.Threading.Tasks.Task.Yield(); // 等待一帧，确保所有Awake执行完毕
+        AudioManager.Instance.PlayMusic("Theme", true); // 播放主菜单音乐
 
         // 执行初始化
 

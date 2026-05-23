@@ -1,7 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using DG.Tweening;
 
 public class AudioManager : MonoBehaviour
@@ -16,11 +14,6 @@ public class AudioManager : MonoBehaviour
     public int soundSourceCount = 4;
     public int loopSoundSourceCount = 2;
 
-    [Header("音量 UI（可选）")]
-    [Tooltip("可为空，没有 Slider 时使用默认值")]
-    public Slider musicVolumeSlider;
-    public Slider soundVolumeSlider;
-
     // 音频源
     private AudioSource musicSource;
     private List<AudioSource> soundSources = new();
@@ -28,13 +21,19 @@ public class AudioManager : MonoBehaviour
 
     // 运行时缓存
     private float masterVolume = 1f;
-    private float cachedMusicVolume = 0.5f;
-    private float cachedSoundVolume = 0.5f;
+    private float musicVolume = 0.5f;
+    private float soundVolume = 0.5f;
     private Dictionary<string, AudioClip> audioCache = new();
 
-    private const float DefaultVolume = 0.5f;
+    // PlayerPrefs 键名（与 SaveManager.LoadSettings 保持一致）
+    private const string MasterVolumeKey = "MasterVolume";
     private const string MusicVolumeKey = "MusicVolume";
-    private const string SoundVolumeKey = "SoundVolume";
+    private const string SoundVolumeKey = "SfxVolume";     // 统一为 SfxVolume
+
+    private const float DefaultMasterVolume = 1f;
+    private const float DefaultMusicVolume = 0.5f;
+    private const float DefaultSoundVolume = 0.5f;
+    private const string HasLaunchedKey = "HasLaunched";
 
     void Awake()
     {
@@ -45,10 +44,11 @@ public class AudioManager : MonoBehaviour
         }
         Instance = this;
 
+        // 初始化音频源数量限制
         soundSourceCount = Mathf.Clamp(soundSourceCount, 1, 16);
         loopSoundSourceCount = Mathf.Clamp(loopSoundSourceCount, 1, 8);
 
-        // 音频源
+        // 创建音频源
         musicSource = gameObject.AddComponent<AudioSource>();
         musicSource.loop = true;
         musicSource.playOnAwake = false;
@@ -57,33 +57,24 @@ public class AudioManager : MonoBehaviour
         for (int i = 0; i < loopSoundSourceCount; i++)
             loopSoundSources.Add(CreateSource(true));
 
-        // 音量初始化（从 SaveManager 读，首次设默认值）
+        // 首次启动写入默认值
         var save = SaveManager.Instance;
-        if (save != null && !save.GetBool("HasLaunched"))
+        if (save != null && !save.GetBool(HasLaunchedKey))
         {
-            save.SetFloat(MusicVolumeKey, DefaultVolume);
-            save.SetFloat(SoundVolumeKey, DefaultVolume);
-            save.SetBool("HasLaunched", true);
+            save.SetFloat(MasterVolumeKey, DefaultMasterVolume);
+            save.SetFloat(MusicVolumeKey, DefaultMusicVolume);
+            save.SetFloat(SoundVolumeKey, DefaultSoundVolume);
+            save.SetBool(HasLaunchedKey, true);
         }
-        float master = save?.GetFloat("MasterVolume", 1f) ?? 1f;
-        float musicVol = save?.GetFloat(MusicVolumeKey, DefaultVolume) ?? DefaultVolume;
-        float soundVol = save?.GetFloat(SoundVolumeKey, DefaultVolume) ?? DefaultVolume;
 
-        SetMasterVolume(master);
-        SetMusicVolume(musicVol);
-        SetSoundVolume(soundVol);
+        // 从持久层读取音量值
+        masterVolume = save?.GetFloat(MasterVolumeKey, DefaultMasterVolume) ?? DefaultMasterVolume;
+        musicVolume  = save?.GetFloat(MusicVolumeKey, DefaultMusicVolume) ?? DefaultMusicVolume;
+        soundVolume  = save?.GetFloat(SoundVolumeKey, DefaultSoundVolume) ?? DefaultSoundVolume;
 
-        // 绑定 UI Slider（可选）
-        if (musicVolumeSlider != null)
-        {
-            musicVolumeSlider.value = musicVol;
-            musicVolumeSlider.onValueChanged.AddListener(OnMusicSliderChanged);
-        }
-        if (soundVolumeSlider != null)
-        {
-            soundVolumeSlider.value = soundVol;
-            soundVolumeSlider.onValueChanged.AddListener(OnSoundSliderChanged);
-        }
+        // 应用到音频源
+        ApplyMusicVolume();
+        ApplySoundVolume();
     }
 
     private AudioSource CreateSource(bool loop)
@@ -94,60 +85,54 @@ public class AudioManager : MonoBehaviour
         return src;
     }
 
-    void OnDestroy()
-    {
-        if (musicVolumeSlider != null)
-            musicVolumeSlider.onValueChanged.RemoveListener(OnMusicSliderChanged);
-        if (soundVolumeSlider != null)
-            soundVolumeSlider.onValueChanged.RemoveListener(OnSoundSliderChanged);
-    }
-
     // ====================================================================
-    //  音量
+    //  音量控制（公开方法，供 UI 或其它系统调用）
     // ====================================================================
 
+    /// <summary>设置主音量（会同时影响音乐和音效的实际输出）</summary>
     public void SetMasterVolume(float volume)
     {
         masterVolume = Mathf.Clamp01(volume);
+        SaveManager.Instance?.SetFloat(MasterVolumeKey, masterVolume);
         ApplyMusicVolume();
         ApplySoundVolume();
     }
 
+    /// <summary>设置音乐音量（原始值，最终输出 = musicVolume * masterVolume）</summary>
     public void SetMusicVolume(float volume)
     {
-        cachedMusicVolume = Mathf.Clamp01(volume);
-        SaveManager.Instance?.SetFloat(MusicVolumeKey, volume);
+        musicVolume = Mathf.Clamp01(volume);
+        SaveManager.Instance?.SetFloat(MusicVolumeKey, musicVolume);
         ApplyMusicVolume();
     }
 
+    /// <summary>设置音效音量（原始值，最终输出 = soundVolume * masterVolume）</summary>
     public void SetSoundVolume(float volume)
     {
-        cachedSoundVolume = Mathf.Clamp01(volume);
-        SaveManager.Instance?.SetFloat(SoundVolumeKey, volume);
+        soundVolume = Mathf.Clamp01(volume);
+        SaveManager.Instance?.SetFloat(SoundVolumeKey, soundVolume);
         ApplySoundVolume();
     }
 
     private void ApplyMusicVolume()
     {
-        musicSource.volume = cachedMusicVolume * masterVolume;
+        musicSource.volume = musicVolume * masterVolume;
     }
 
     private void ApplySoundVolume()
     {
-        float v = cachedSoundVolume * masterVolume;
-        foreach (var s in soundSources) s.volume = v;
-        foreach (var s in loopSoundSources) s.volume = v;
+        float finalVol = soundVolume * masterVolume;
+        foreach (var s in soundSources) s.volume = finalVol;
+        foreach (var s in loopSoundSources) s.volume = finalVol;
     }
 
-    private void OnMusicSliderChanged(float v) => SetMusicVolume(v);
-    private void OnSoundSliderChanged(float v) => SetSoundVolume(v);
-
-    public float MusicVolume => cachedMusicVolume;
-    public float SoundVolume => cachedSoundVolume;
+    // 公开属性，供 UI 主动拉取当前值
     public float MasterVolume => masterVolume;
+    public float MusicVolume => musicVolume;
+    public float SoundVolume => soundVolume;
 
     // ====================================================================
-    //  音乐
+    //  音乐播放
     // ====================================================================
 
     public void PlayMusic(string musicName, bool fade = false)
@@ -156,7 +141,7 @@ public class AudioManager : MonoBehaviour
 
         if (fade && musicSource.isPlaying)
         {
-            float targetVolume = cachedMusicVolume * masterVolume;
+            float targetVolume = musicVolume * masterVolume;
             musicSource.DOFade(0f, 0.5f).OnComplete(() =>
             {
                 musicSource.clip = LoadClip($"{musicPath}/{musicName}");
@@ -183,7 +168,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip GetCurrentMusicClip() => musicSource.clip;
 
     // ====================================================================
-    //  音效
+    //  音效播放
     // ====================================================================
 
     public void PlaySound(string soundName)
@@ -246,12 +231,8 @@ public class AudioManager : MonoBehaviour
         for (int i = 0; i < soundSources.Count; i++)
             if (!soundSources[i].isPlaying)
                 return i;
-        return 0; // 全在忙则覆盖第一个
+        return 0;
     }
-
-    // ====================================================================
-    //  循环音效获取
-    // ====================================================================
 
     public AudioClip GetLoopSoundClip(int index = 0)
     {
@@ -260,4 +241,3 @@ public class AudioManager : MonoBehaviour
         return null;
     }
 }
-

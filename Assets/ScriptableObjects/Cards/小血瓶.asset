@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0acd29ce000acef42a53ef4641f42a76, type: 3}
+  m_Name: "\u5C0F\u8840\u74F6"
+  m_EditorClassIdentifier: 
+  cardName: "\u5C0F\u8840\u74F6"
+  artwork: {fileID: 21300000, guid: f94ba324fec56154c88c8917766b482b, type: 3}
+  description: "\u9009\u62E9\u4E00\u4E2A\u6211\u65B9\u89D2\u8272,\u4E3A\u5176\u6062\u590D1x<color=yellow>\u529B\u91CF</color>\u7684\u751F\u547D\u503C<br>\u9500\u6BC1"
+  destination: 1
+  Cost: 0
+  retain: 0
+  colorPreset: 0
+  cardColor: {r: 1, g: 1, b: 1, a: 1}
+  chains:
+  - steps:
+    - rid: 8418122131295698964
+    - rid: 8418122131295698966
+  references:
+    version: 2
+    RefIds:
+    - rid: 8418122131295698964
+      type: {class: SelectorStep, ns: , asm: Assembly-CSharp}
+      data:
+        selector: {fileID: 11400000, guid: 619104db628e9a849a87f7a351f29be3, type: 2}
+    - rid: 8418122131295698966
+      type: {class: EffectStep, ns: , asm: Assembly-CSharp}
+      data:
+        effect: {fileID: 11400000, guid: 97e454a9c4f2caf4fb5fdb7d0de26a5d, type: 2}

@@ -26,7 +26,6 @@ public class PauseMenuUI : MonoBehaviour
     private void OnSettingsClicked()
     {
         UIManager.Instance.Show("settings");
-        UIManager.Instance.Hide("pauseMenu");
     }
 
     private void OnMainMenuClicked()

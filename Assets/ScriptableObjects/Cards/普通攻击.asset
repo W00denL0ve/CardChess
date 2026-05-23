@@ -15,7 +15,7 @@ MonoBehaviour:
   cardName: "\u666E\u901A\u653B\u51FB"
   artwork: {fileID: 21300000, guid: 407eea88d946d4a51b3454a22f7739ec, type: 3}
   description: "\u9009\u62E9\u4E00\u4E2A\u6211\u65B9\u6218\u58EB, \u5BF9 1 \u683C\u5185\u7684
-    1 \u4E2A\u654C\u65B9\u5355\u4F4D\u9020\u6210 1x \u529B\u91CF \u7684 \u7269\u7406\u4F24\u5BB3"
+    1 \u4E2A\u654C\u65B9\u5355\u4F4D\u9020\u62101x<color=yellow>\u529B\u91CF</color>\u7684<color=yellow>\u7269\u7406\u4F24\u5BB3</color>"
   destination: 0
   Cost: 1
   retain: 0

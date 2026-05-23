@@ -3,36 +3,39 @@ using UnityEditor;
 
 /// <summary>
 /// 自定义 AI 行为配置（AIDeck）的 Inspector 面板
-/// 提供效果链条目的增删、预设快速配置、空链警告等功能
+/// 提供效果链条目的增删、预设快速配置、深度克隆等功能
 /// </summary>
 [CustomEditor(typeof(AIDeck))]
 public class AIDeckEditor : Editor
 {
-    // 记录当前在下拉列表中选择的预设索引（仅用于 UI，不序列化）
     private int selectedPresetIndex = 0;
+
+    // 存储自定义预设的值（除 chain 外的所有字段）
+    private int customEnergyCost = 1;
+    private int customCooldown = 1;
+    private int customMaxUsePerBattle = 0;
+    private int customTargetType = (int)AITargetType.Hostile;
+    private int customCategory = (int)ChainCategory.Attack;
+    private int customBaseScore = 0;
+    private string customEditorLabel = "自定义";
 
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
 
-        // 绘制基础字段
         EditorGUILayout.PropertyField(serializedObject.FindProperty("energyPerTurn"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("strategy"));
 
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("效果链", EditorStyles.boldLabel);
 
-        // 获取 entries 列表属性
         var entries = serializedObject.FindProperty("entries");
-
-        // 遍历绘制每个条目
         for (int i = 0; i < entries.arraySize; i++)
         {
             var entry = entries.GetArrayElementAtIndex(i);
             DrawEntry(entry, i, entries);
         }
 
-        // 添加新条目的按钮
         if (GUILayout.Button("+ 添加条目"))
         {
             AddNewEntry(entries);
@@ -41,17 +44,10 @@ public class AIDeckEditor : Editor
         serializedObject.ApplyModifiedProperties();
     }
 
-    /// <summary>
-    /// 绘制单个条目（带折叠框）
-    /// </summary>
-    /// <param name="entry">条目的 SerializedProperty</param>
-    /// <param name="index">条目索引</param>
-    /// <param name="entries">整个 entries 列表属性，用于删除操作</param>
     private void DrawEntry(SerializedProperty entry, int index, SerializedProperty entries)
     {
         EditorGUILayout.BeginVertical("box");
 
-        // 获取编辑器标签（用于友好显示名称）
         var editorLabelProp = entry.FindPropertyRelative("editorLabel");
         string displayName;
         if (editorLabelProp != null && !string.IsNullOrEmpty(editorLabelProp.stringValue))
@@ -59,19 +55,15 @@ public class AIDeckEditor : Editor
         else
             displayName = $"条目 {index}";
 
-        // 折叠标题栏
         entry.isExpanded = EditorGUILayout.Foldout(entry.isExpanded, displayName, true);
 
-        // 如果折叠打开，则显示详细字段
         if (entry.isExpanded)
         {
             EditorGUI.indentLevel++;
 
-            // 效果链字段（不可被预设覆盖）
             var chainProp = entry.FindPropertyRelative("chain");
             EditorGUILayout.PropertyField(chainProp, new GUIContent("效果链"));
 
-            // 其他数值字段
             EditorGUILayout.PropertyField(entry.FindPropertyRelative("energyCost"), new GUIContent("消耗能量"));
             EditorGUILayout.PropertyField(entry.FindPropertyRelative("cooldown"), new GUIContent("冷却"));
             EditorGUILayout.PropertyField(entry.FindPropertyRelative("maxUsePerBattle"), new GUIContent("最大次数"));
@@ -79,17 +71,22 @@ public class AIDeckEditor : Editor
             EditorGUILayout.PropertyField(entry.FindPropertyRelative("category"), new GUIContent("链类型"));
             EditorGUILayout.PropertyField(entry.FindPropertyRelative("baseScore"), new GUIContent("基础分"));
 
-            // 预设选择区域（下拉列表 + 应用按钮）
             DrawPresetUI(entry);
 
-            // 删除按钮（带确认对话框）
-            if (GUILayout.Button("删除此条目", GUILayout.Width(100)))
+            // 操作按钮行：删除 + 保存自定义预设
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("删除此条目", GUILayout.Width(90)))
             {
                 if (EditorUtility.DisplayDialog("删除条目", "确定删除该条目吗？", "删除", "取消"))
                 {
                     entries.DeleteArrayElementAtIndex(index);
                 }
             }
+            if (GUILayout.Button("保存为自定义预设", GUILayout.Width(120)))
+            {
+                SaveAsCustomPreset(entry);
+            }
+            EditorGUILayout.EndHorizontal();
 
             EditorGUI.indentLevel--;
         }
@@ -97,76 +94,109 @@ public class AIDeckEditor : Editor
         EditorGUILayout.EndVertical();
     }
 
-    /// <summary>
-    /// 绘制预设 UI：下拉列表 + 应用按钮
-    /// </summary>
-    /// <param name="entry">当前条目的 SerializedProperty</param>
     private void DrawPresetUI(SerializedProperty entry)
     {
         EditorGUILayout.BeginHorizontal();
-
         GUILayout.Label("预设", GUILayout.Width(40));
 
-        // 预设名称数组，顺序必须与 PresetType 枚举保持一致
-        string[] presetNames = { "普通攻击", "特殊攻击", "友方增幅", "敌方减益", "空预设1", "空预设2" };
+        string[] presetNames = { "普通攻击", "特殊攻击", "友方增幅", "敌方减益", "友方治疗", "自定义" };
         selectedPresetIndex = EditorGUILayout.Popup(selectedPresetIndex, presetNames);
 
-        // 应用按钮
         if (GUILayout.Button("应用", GUILayout.Width(50)))
         {
-            // 应用对应的预设，参数为枚举值（直接用索引转换）
             ApplyPreset(entry, (PresetType)selectedPresetIndex);
-
-            // 刷新 Inspector 显示
             Repaint();
         }
-
         EditorGUILayout.EndHorizontal();
     }
 
-    /// <summary>
-    /// 添加新条目，并设置合理的默认值
-    /// </summary>
-    /// <param name="entries">entries 列表属性</param>
     private void AddNewEntry(SerializedProperty entries)
     {
         entries.arraySize++;
         var newEntry = entries.GetArrayElementAtIndex(entries.arraySize - 1);
 
-        // 设置默认值（注意：不设置 chain，避免覆盖用户已有配置）
+        // 设置基础默认值
         newEntry.FindPropertyRelative("energyCost").intValue = 1;
-        newEntry.FindPropertyRelative("cooldown").intValue = 1;     // 回合制，默认冷却 1 回合
-        newEntry.FindPropertyRelative("maxUsePerBattle").intValue = 0; // 0 表示不限次数
+        newEntry.FindPropertyRelative("cooldown").intValue = 1;
+        newEntry.FindPropertyRelative("maxUsePerBattle").intValue = 0;
         newEntry.FindPropertyRelative("targetType").enumValueIndex = (int)AITargetType.Hostile;
         newEntry.FindPropertyRelative("category").enumValueIndex = (int)ChainCategory.Attack;
         newEntry.FindPropertyRelative("baseScore").intValue = 10;
 
-        // 清空编辑器标签（新条目无预设名称）
+        // 清空编辑器标签
         var editorLabelProp = newEntry.FindPropertyRelative("editorLabel");
         if (editorLabelProp != null) editorLabelProp.stringValue = "";
+
+        // ★ 关键：创建一个全新的 EffectChain 实例（空 steps），避免与任何现有条目共享
+        var chainProp = newEntry.FindPropertyRelative("chain");
+        var newChain = new EffectChain();
+        newChain.steps = new System.Collections.Generic.List<ChainStep>();
+        AssignSerializableObjectToProperty(chainProp, newChain);
     }
 
     /// <summary>
-    /// 预设类型枚举（顺序必须与 UI 下拉列表一致）
+    /// 将当前条目的配置（除了 chain）保存为自定义预设
     /// </summary>
+    private void SaveAsCustomPreset(SerializedProperty entry)
+    {
+        customEnergyCost = entry.FindPropertyRelative("energyCost").intValue;
+        customCooldown = entry.FindPropertyRelative("cooldown").intValue;
+        customMaxUsePerBattle = entry.FindPropertyRelative("maxUsePerBattle").intValue;
+        customTargetType = entry.FindPropertyRelative("targetType").enumValueIndex;
+        customCategory = entry.FindPropertyRelative("category").enumValueIndex;
+        customBaseScore = entry.FindPropertyRelative("baseScore").intValue;
+
+        var labelProp = entry.FindPropertyRelative("editorLabel");
+        if (labelProp != null && !string.IsNullOrEmpty(labelProp.stringValue))
+            customEditorLabel = labelProp.stringValue;
+        else
+            customEditorLabel = "自定义";
+
+        EditorUtility.DisplayDialog("自定义预设", $"已保存当前配置为自定义预设。\n标签：{customEditorLabel}", "确定");
+    }
+
+    /// <summary>
+    /// 将任意可序列化对象赋值给 SerializedProperty（支持 [SerializeReference] 或普通可序列化类）
+    /// 注意：如果字段未标记 [SerializeReference]，此方法可能无法正常工作。
+    /// 建议将 AIChainEntry 中的 public EffectChain chain; 改为 [SerializeReference] public EffectChain chain;
+    /// </summary>
+    private void AssignSerializableObjectToProperty(SerializedProperty prop, object value)
+    {
+        // 方法1：使用 managedReferenceValue（需要字段标记 [SerializeReference]）
+        // 如果 prop 的 propertyType 是 ManagedReference，则可以直接赋值
+        if (prop.propertyType == SerializedPropertyType.ManagedReference)
+        {
+            prop.managedReferenceValue = value;
+            return;
+        }
+
+        // 方法2：降级方案 – 通过 JSON 再写入（可靠性较低，但适用于没有 [SerializeReference] 的普通对象）
+        // 注意：此方法不能用于数组元素等复杂情况，仅用于保底。
+        var json = JsonUtility.ToJson(value);
+        var tempObj = ScriptableObject.CreateInstance<SerializationHelper>();
+        tempObj.jsonData = json;
+        var tempSerialized = new SerializedObject(tempObj);
+        var tempProp = tempSerialized.FindProperty("jsonData");
+        // 将 JSON 字符串写入目标属性（需要目标字段是 string 类型，显然不通用）
+        // 因此不推荐使用。最好在 AIChainEntry 中为 chain 添加 [SerializeReference]。
+        Debug.LogWarning("AssignSerializableObjectToProperty 降级方案未实现，请为 chain 字段添加 [SerializeReference] 属性。");
+    }
+
+    // 辅助类，仅用于临时存储 JSON（不是最终方案的一部分）
+    private class SerializationHelper : ScriptableObject { public string jsonData; }
+
     private enum PresetType
     {
-        NormalAttack,   // 普通攻击
-        SpecialAttack,  // 特殊攻击（强力）
-        AllyBuff,       // 友方增幅
-        EnemyDebuff,    // 敌方减益
-        Empty1,         // 空预设1（保留）
-        Empty2          // 空预设2（保留）
+        NormalAttack,
+        SpecialAttack,
+        AllyBuff,
+        EnemyDebuff,
+        Heal,
+        Custom
     }
 
-    /// <summary>
-    /// 根据预设类型修改条目的各项数值（不修改 chain），并设置编辑器显示名称
-    /// </summary>
-    /// <param name="entry">目标条目的 SerializedProperty</param>
-    /// <param name="preset">预设类型</param>
     private void ApplyPreset(SerializedProperty entry, PresetType preset)
     {
-        // 获取需要修改的属性
         var energyCost = entry.FindPropertyRelative("energyCost");
         var cooldown = entry.FindPropertyRelative("cooldown");
         var maxUse = entry.FindPropertyRelative("maxUsePerBattle");
@@ -186,7 +216,6 @@ public class AIDeckEditor : Editor
                 baseScore.intValue = 0;
                 if (editorLabelProp != null) editorLabelProp.stringValue = "普通攻击";
                 break;
-
             case PresetType.SpecialAttack:
                 energyCost.intValue = 3;
                 cooldown.intValue = 1;
@@ -196,7 +225,6 @@ public class AIDeckEditor : Editor
                 baseScore.intValue = 5;
                 if (editorLabelProp != null) editorLabelProp.stringValue = "特殊攻击";
                 break;
-
             case PresetType.AllyBuff:
                 energyCost.intValue = 2;
                 cooldown.intValue = 1;
@@ -206,7 +234,6 @@ public class AIDeckEditor : Editor
                 baseScore.intValue = 5;
                 if (editorLabelProp != null) editorLabelProp.stringValue = "友方增幅";
                 break;
-
             case PresetType.EnemyDebuff:
                 energyCost.intValue = 2;
                 cooldown.intValue = 1;
@@ -216,15 +243,27 @@ public class AIDeckEditor : Editor
                 baseScore.intValue = 5;
                 if (editorLabelProp != null) editorLabelProp.stringValue = "敌方减益";
                 break;
-
-            case PresetType.Empty1:
-            case PresetType.Empty2:
-                // 空预设：不做任何修改，仅弹出提示
-                EditorUtility.DisplayDialog("空预设", "该预设未定义行为，请手动调整各字段。", "确定");
-                return; // 直接返回，不修改字段
+            case PresetType.Heal:
+                energyCost.intValue = 2;
+                cooldown.intValue = 2;
+                maxUse.intValue = 0;
+                targetType.enumValueIndex = (int)AITargetType.Ally_Self;
+                category.enumValueIndex = (int)ChainCategory.Heal;
+                baseScore.intValue = 0;
+                if (editorLabelProp != null) editorLabelProp.stringValue = "友方治疗";
+                break;
+            case PresetType.Custom:
+                // 应用自定义预设
+                energyCost.intValue = customEnergyCost;
+                cooldown.intValue = customCooldown;
+                maxUse.intValue = customMaxUsePerBattle;
+                targetType.enumValueIndex = customTargetType;
+                category.enumValueIndex = customCategory;
+                baseScore.intValue = customBaseScore;
+                if (editorLabelProp != null) editorLabelProp.stringValue = customEditorLabel;
+                return;
         }
 
-        // 应用修改到 SerializedObject
         serializedObject.ApplyModifiedProperties();
     }
 }

@@ -46,7 +46,7 @@ public class EffectManager : MonoBehaviour
                     var targets = ss.selector.GetTargets(ctx);
                     if (targets == null || targets.Count == 0) continue;
 
-                    ctx.executor = ss.selector.changesExecutor ? ctx.executed : ctx.executor;
+                    ctx.executor = ss.selector.chooseExecutor ? ctx.executed : ctx.executor;
                     ctx.executed = targets[0];
                 }
                 else if (step is ConditionStep cs)

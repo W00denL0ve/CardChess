@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: 1atk_phy
   m_EditorClassIdentifier: 
   effectName: "\u666E\u901A\u653B\u51FB"
-  icon: {fileID: 21300000, guid: 8c2ee107694fd4031a3b2c9777330341, type: 3}
+  icon: {fileID: 21300000, guid: 407eea88d946d4a51b3454a22f7739ec, type: 3}
   multiplier:
     attack: 1
     intelligence: 0

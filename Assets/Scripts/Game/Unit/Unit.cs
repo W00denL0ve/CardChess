@@ -34,7 +34,7 @@ public class Unit : MonoBehaviour
     public bool IsAlive { get; private set; }
 
     // 修饰器系统
-    public ModifierManager modifierManager { get; private set; }
+    public ModifierManager modifierManager = new();
 
     // 属性
     [SerializeField]
@@ -148,7 +148,7 @@ public class Unit : MonoBehaviour
         var appearance = GetComponent<UnitAppearance>();
         if (appearance != null)
         {
-            if (snap || path == null || path.Count <= 1)
+            if (snap || path == null)
                 yield return appearance.PlayTeleportAnimation(GridToWorld(destination));
             else
                 yield return appearance.PlayWalkAnimation(path);

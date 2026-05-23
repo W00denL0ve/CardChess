@@ -27,11 +27,7 @@ public class UnitSelectorBySource : TargetSelector
     public override List<ITarget> GetTargets(EffectContext context)
     {
         var lm = LevelManager.Instance;
-        Unit execUnit;
-        if (changesExecutor)
-            execUnit = context.GetExecutedUnit();      // 如果选择器会改变执行者，则使用新执行者
-        else
-            execUnit = context.GetExecutorUnit();      // 否则使用原执行者
+        Unit execUnit = context.GetExecutorUnit();      // 执行者
 
         if (lm == null || execUnit == null || !execUnit.IsAlive)
             return new List<ITarget>();

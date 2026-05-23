@@ -22,21 +22,14 @@ MonoBehaviour:
   yOffset: 0
   zOffset: -0.1
   xRotation: 45
-  initialAttributes:
-  - type: 0
-    value: 40
-  - type: 1
-    value: 40
-  - type: 2
-    value: 6
-  - type: 3
-    value: 0
-  - type: 5
-    value: 2
-  - type: 6
-    value: 0
-  - type: 7
-    value: 3
-  - type: 8
-    value: 0
+  initialValue:
+    currentHealth: 40
+    maxHealth: 40
+    attack: 8
+    intelligence: 2
+    physicalDefense: 2
+    magicDefense: 0
+    movePointLimit: 3
+    movePoints: 0
+    hasMoved: 0
   innateBuffs: []

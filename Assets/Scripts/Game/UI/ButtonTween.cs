@@ -46,6 +46,7 @@ public class ButtonTween : MonoBehaviour,
     {
         if (!IsInteractable()) return;
         DoScale(originalScale * hoverScale);
+        AudioManager.Instance.PlaySound("ButtonHover");
     }
 
     public void OnPointerExit(PointerEventData e)
@@ -64,11 +65,19 @@ public class ButtonTween : MonoBehaviour,
     {
         if (!IsInteractable()) return;
         if (IsPointerOverButton(e))
+        {
             DoScale(originalScale * hoverScale);
+            AudioManager.Instance.PlaySound("ButtonClick");
+        }
         else
             DoScale(originalScale);
     }
 
+    /// <summary>
+    /// 判断指针是否仍在按钮上（用于 PointerUp 时决定回到 Hover 状态还是正常状态）
+    /// </summary>
+    /// <param name="e"></param>
+    /// <returns></returns>
     private bool IsPointerOverButton(PointerEventData e)
     {
         Camera cam = e.pressEventCamera; 

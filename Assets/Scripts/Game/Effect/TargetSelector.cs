@@ -8,8 +8,10 @@ public abstract class TargetSelector : ScriptableObject
 {
     public string selectorName;
 
-    /// <summary>为 true 时 executor←old executed；为 false 时 executor 不变</summary>
-    public bool changesExecutor = true;
+    [Tooltip("选择的对象是否变为执行者")]
+    public bool chooseExecutor = false;
+    [Tooltip("选择的对象是否变为被执行者")]
+    public bool chooseExecuted = true;
 
     public abstract List<ITarget> GetTargets(EffectContext context);
 

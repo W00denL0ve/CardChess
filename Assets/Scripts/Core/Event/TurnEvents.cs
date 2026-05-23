@@ -14,4 +14,9 @@ public class PhaseChangedEvent : GameEvent
 public class TurnStartedEvent : GameEvent
 {
     public int turnNumber;
+
+    public TurnStartedEvent(int turnNumber)
+    {
+        this.turnNumber = turnNumber;
+    }
 }

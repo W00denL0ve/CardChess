@@ -36,7 +36,7 @@ public class HandUI : MonoBehaviour
     [SerializeField] private float arcPeak = 30f;
     [SerializeField] private float marginBase = 0.25f;
     [SerializeField] private float marginShrinkPerCard = 0.04f;
-    [SerializeField] private float hoverHeight = 50f;
+    [SerializeField] private float hoverHeight = 70f;
     [SerializeField] private float hoverScale = 1.15f;
     [SerializeField] private float pushDistance = 40f;
     [SerializeField] private float layoutAnimDuration = 0.2f;
@@ -203,6 +203,7 @@ public class HandUI : MonoBehaviour
         if (drawPileCardLeftDisplay == null) yield break;
         float val = from;
         Tween t = DOTween.To(() => val, x => { val = x; drawPileCardLeftDisplay.text = Mathf.RoundToInt(val).ToString(); }, to, duration);
+        AudioManager.Instance.PlaySound("cardShuffle");
         yield return t.WaitForCompletion();
     }
 
@@ -250,6 +251,7 @@ public class HandUI : MonoBehaviour
         if (!hoverEnabled) return;
         if (index < 0 || index >= activeCards.Count) return;
         hoveredIndex = index;
+        AudioManager.Instance.PlaySound("cardFlip");
         AnimateLayout();
     }
 
@@ -528,6 +530,9 @@ public class HandUI : MonoBehaviour
         var images = cv.GetComponentsInChildren<UnityEngine.UI.Image>(true);
         foreach (var img in images) img.raycastTarget = false;
         RefreshLayout();
+
+        // 视觉听觉效果
+        AudioManager.Instance.PlaySound("cardPlay");
         StartCoroutine(AnimateCardToPending(cv));
     }
 

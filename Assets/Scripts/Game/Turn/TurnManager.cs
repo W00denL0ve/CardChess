@@ -157,7 +157,8 @@ class StartState : ITurnState
     public void Enter()
     {
         int turn = TurnManager.Instance.currentTurn;
-        Logger.Log($"Entering Start Phase (Round {turn})");
+        // Logger.Log($"Entering Start Phase (Round {turn})");
+        GameEventChannel.Dispatch(new TurnStartedEvent(turn));
 
         // 执行当前回合的预设行动
         var actions = TurnManager.Instance.CurrentRoundActions;

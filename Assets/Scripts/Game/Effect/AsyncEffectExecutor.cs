@@ -187,8 +187,14 @@ public class AsyncEffectExecutor : MonoBehaviour
         yield return ResolveSelector(step.selector, context, (t) => selectedTarget = t);
         if (selectedTarget != null)
         {
-            context.executor = step.selector.changesExecutor ? context.executed : context.executor;
-            context.executed = selectedTarget;
+            if (step.selector.chooseExecutor) // 如果选择器选执行者，改变执行者。
+            {
+                context.executor = selectedTarget;
+            }
+            if (step.selector.chooseExecuted) // 如果选择器选择被执行者，改变被执行者。
+            {
+                context.executed = selectedTarget;
+            }
         }
         else
         {

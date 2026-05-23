@@ -381,6 +381,10 @@ MonoBehaviour:
     prefab: {fileID: 1220601289526093688, guid: 0e4c0cb433b5f4e4fbdd5aa2ea197564, type: 3}
   - panelName: map
     prefab: {fileID: 2441518529154147696, guid: 75e49282a9152e44ab8907dafd6d7690, type: 3}
+  - panelName: settings
+    prefab: {fileID: 4208648122285006166, guid: 24714122ae71bea469b1d5dfde4543e9, type: 3}
+  - panelName: win
+    prefab: {fileID: 8878716537800542026, guid: 24203ffcb11430344848a01781da1d3b, type: 3}
   backgroundMask: {fileID: 0}
   maskAlpha: 0.5
   Mask: {fileID: 2327737297593057104, guid: e3107f06779fe684590efc27b80c956b, type: 3}
@@ -516,6 +520,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83aa4102d7275814a907e11315bdd4ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  musicPath: Audio/Music
+  soundPath: Audio/Sound
+  soundSourceCount: 4
+  loopSoundSourceCount: 2
 --- !u!1 &9079105875148250280
 GameObject:
   m_ObjectHideFlags: 0

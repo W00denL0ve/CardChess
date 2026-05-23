@@ -43,6 +43,8 @@ public class GameManager : MonoBehaviour
         if (evt.isVictory)
         {
             Logger.Log($"[GameManager] 🏆 关卡胜利！");
+            AudioManager.Instance.PlaySound("win");
+            UIManager.Instance.Show("win");
             // todo
         }
         else

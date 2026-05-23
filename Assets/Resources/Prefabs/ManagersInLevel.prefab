@@ -456,7 +456,7 @@ MonoBehaviour:
   arcPeak: 20
   marginBase: 0.2
   marginShrinkPerCard: 0.02
-  hoverHeight: 20
+  hoverHeight: 40
   hoverScale: 1.5
   pushDistance: 40
   layoutAnimDuration: 0.2

@@ -171,6 +171,7 @@ public class UnitAppearance : MonoBehaviour
     public void SetIdle()
     {
         if (animator == null) return;
+        if (animator.GetCurrentAnimatorStateInfo(0).IsName("idle")) return; // 已经在待机动画了
         animator.SetTrigger(triggerIdle);
     }
 

@@ -20,23 +20,16 @@ MonoBehaviour:
   unitPrefab: {fileID: 6974378412044888541, guid: 58786e05c73447d41922274a956d6c4f, type: 3}
   aiDeck: {fileID: 0}
   yOffset: 0
-  zOffset: -0.3
+  zOffset: -0.2
   xRotation: 45
-  initialAttributes:
-  - type: 0
-    value: 50
-  - type: 1
-    value: 50
-  - type: 2
-    value: 12
-  - type: 3
-    value: 5
-  - type: 5
-    value: 0
-  - type: 6
-    value: 0
-  - type: 7
-    value: 4
-  - type: 8
-    value: 0
+  initialValue:
+    currentHealth: 50
+    maxHealth: 50
+    attack: 12
+    intelligence: 2
+    physicalDefense: 2
+    magicDefense: 0
+    movePointLimit: 4
+    movePoints: 0
+    hasMoved: 0
   innateBuffs: []

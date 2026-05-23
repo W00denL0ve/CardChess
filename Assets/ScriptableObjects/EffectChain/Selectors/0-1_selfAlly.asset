@@ -12,10 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a07c8a5f85da124419ed7fb322793ea2, type: 3}
   m_Name: 0-1_selfAlly
   m_EditorClassIdentifier: 
-  selectorName: 
-  changesExecutor: 1
+  selectorName: "\u9009\u62E9\u81EA\u8EAB\u62161\u683C\u5185\u53CB\u65B9"
+  chooseExecutor: 0
+  chooseExecuted: 1
   minRange: 0
-  maxRange: 0
-  factions: 0
-  occupations: 0
+  maxRange: 1
+  factions: 9
+  occupations: -1
   IDFilter: 

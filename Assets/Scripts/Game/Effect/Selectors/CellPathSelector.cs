@@ -22,7 +22,7 @@ public class CellPathSelector : TargetSelector
 
     public override List<ITarget> GetTargets(EffectContext context)
     {
-        Unit exec = context.GetExecutedUnit();
+        Unit exec = context.GetExecutorUnit();
         if (exec == null) return new List<ITarget>();
 
         int steps = range >= 0 ? range : exec.baseValue.movePoints;

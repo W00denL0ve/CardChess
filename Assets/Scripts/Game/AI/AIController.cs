@@ -20,7 +20,7 @@ public class AIController : MonoBehaviour
 
     [Header("AI 参数")]
     public float delayBetweenUnits = 0.5f;     // 每个敌人行动间的延迟
-    public float delayAfterAIAction = 0.05f;    // 每个行动（链）后的延迟
+    public float delayAfterAIAction = 2f;    // 每个行动（链）后的延迟
 
     // 每个敌人运行时获取其deck
     private Dictionary<Unit, AIDeck> decks = new();
@@ -36,20 +36,20 @@ public class AIController : MonoBehaviour
     private static readonly float[,,] WEIGHTS = new float[,,]
     {
         // Aggressive
-        { { 0.2f, 0.2f, 0.8f, 0.5f, 0.2f }, // Attack
-          { 0.3f, 0.5f, 1.0f, 0.4f, 0.3f }, // Heal
-          { 0.5f, 0.6f, 0.3f, 0.3f, 0.4f }, // Buff
-          { 0.8f, 0.3f, 0.6f, 0.5f, 0.3f }}, // Debuff
+        { { 0.2f, 0.2f, 0.8f, 0.5f, -1f }, // Attack
+          { 0.0f, 0.1f, 0.3f, 0.4f, -1f }, // Heal
+          { 0.5f, 0.6f, 0.3f, 0.3f, -1f }, // Buff
+          { 0.8f, 0.3f, 0.6f, 0.5f, -1f }}, // Debuff
         // Balanced
-        { { 0.6f, 0.5f, 0.6f, 0.7f, 0.5f },
-          { 0.5f, 0.7f, 0.8f, 0.6f, 0.5f },
-          { 0.6f, 0.7f, 0.4f, 0.5f, 0.5f },
-          { 0.7f, 0.5f, 0.5f, 0.6f, 0.5f }},
+        { { 0.6f, 0.5f, 0.6f, 0.7f, -1f },
+          { 0.1f, 0.3f, 0.5f, 0.6f, -1f },
+          { 0.6f, 0.7f, 0.4f, 0.5f, -1f },
+          { 0.7f, 0.5f, 0.5f, 0.6f, -1f }},
         // Defensive
-        { { 1.0f, 1.0f, 0.3f, 0.6f, 0.8f },
-          { 0.6f, 0.9f, 0.6f, 0.7f, 0.6f },
-          { 0.7f, 0.8f, 0.3f, 0.6f, 0.6f },
-          { 0.5f, 0.7f, 0.4f, 0.6f, 0.7f }}
+        { { 1.0f, 1.0f, 0.3f, 0.6f, -1f },
+          { 0.3f, 0.5f, 0.7f, 0.7f, -1f },
+          { 0.7f, 0.8f, 0.3f, 0.6f, -1f },
+          { 0.5f, 0.7f, 0.4f, 0.6f, -1f }}
     };
 
     private static readonly Dictionary<AIStrategy, float> escapeWeight = new Dictionary<AIStrategy, float>()
@@ -127,6 +127,7 @@ public class AIController : MonoBehaviour
                     });
                     if (!result) // 任意链都无法执行，退出循环
                         break;
+                    continue;
                 }
 
                 // 移动还没有进入冷却
@@ -395,7 +396,7 @@ public class AIController : MonoBehaviour
         // 能量消耗率：消耗/maxEnergy
         float energyNorm   = (float)entry.energyCost / Mathf.Max(deck.energyPerTurn, 1);
         // 冷却惩罚：值越大说明还需等待越久，负向减分
-        float cooldownPenalty = -(cooldowns[self].TryGetValue(entryIndex, out int cd) ? cd : 0);
+        float cooldownPenalty = cooldowns[self].TryGetValue(entryIndex, out int cd) ? cd : 0;
 
         // 加权求和
         float score = 0;
@@ -403,8 +404,8 @@ public class AIController : MonoBehaviour
         score += distNorm           * WEIGHTS[s, c, 0] * 1f;
         score += selfHpNorm         * WEIGHTS[s, c, 1] * 1f;
         score += targetHpNorm       * WEIGHTS[s, c, 2] * 1f;
-        score += energyNorm         * WEIGHTS[s, c, 3] * 5f;
-        score += cooldownPenalty    * WEIGHTS[s, c, 4] * 2f;
+        score += energyNorm         * WEIGHTS[s, c, 3] * 1f;
+        score += cooldownPenalty    * WEIGHTS[s, c, 4] * 1f;
 
         return score;
     }
@@ -429,7 +430,7 @@ public class AIController : MonoBehaviour
             yield break;
         }
 
-        Log($"执行链");
+        Log($"条目{index}:执行链");
         var ctx = new EffectContext
         {
             executor = new UnitTarget(unit),
@@ -441,8 +442,8 @@ public class AIController : MonoBehaviour
 
         if (!ctx.chainBroken)
         {
-            MarkUsed(unit, index);
             success = true;
+            MarkUsed(unit, index);
             Log($"执行成功");
         }
         else
@@ -521,30 +522,52 @@ public class AIController : MonoBehaviour
     public ITarget PickTarget(List<ITarget> candidates, Unit self)
     {
         Logger.Log($"[AI] PickTarget: {candidates.Count} 个候选");
-        // CellTarget → 选最佳格子
+        // CellTarget → 选离最近敌人最近的格子
         if (candidates.Count > 0 && candidates[0] is CellTarget)
         {
-            return PickBestCell(candidates, self, null);
+            return PickBestCell(candidates, self);
         }
 
-        // UnitTarget → 选最近目标
-        Unit nearest = null;
-        float minDist = float.MaxValue;
+        // UnitTarget → 选血量最低的
+        Unit lowest = null;
+        float minHp = float.MaxValue;
         foreach (var t in candidates)
         {
             Unit u = (t as UnitTarget)?.unit;
             if (u == null || !u.IsAlive) continue;
-            float dist = Vector2Int.Distance(self.GridPosition, u.GridPosition);
-            if (dist < minDist) { minDist = dist; nearest = u; }
+            if (u.HpPercent < minHp) { minHp = u.HpPercent; lowest = u; }
         }
-        return nearest != null ? new UnitTarget(nearest) : candidates.FirstOrDefault();
+        return lowest != null ? new UnitTarget(lowest) : candidates.FirstOrDefault();
     }
 
-    /// <summary>从候选格子中选最佳移动位置</summary>
-    private ITarget PickBestCell(List<ITarget> candidates, Unit self, Vector2Int? targetPos = null)
+    /// <summary>从候选格子中选离最近敌人最近的格子</summary>
+    private ITarget PickBestCell(List<ITarget> candidates, Unit self)
     {
         if (candidates.Count == 0) return null;
-        return candidates[0];
+
+        // 找到最近的非友军单位
+        Unit nearestEnemy = null;
+        float minDist = float.MaxValue;
+        foreach (var u in LevelManager.Instance?.AllUnits ?? new List<Unit>())
+        {
+            if (u == self || !u.IsAlive) continue;
+            if (u.Faction == self.Faction) continue;
+            float d = Vector2Int.Distance(self.GridPosition, u.GridPosition);
+            if (d < minDist) { minDist = d; nearestEnemy = u; }
+        }
+        if (nearestEnemy == null) return candidates[0];
+
+        // 在候选中选离最近敌人最近的格子
+        ITarget best = candidates[0];
+        float bestDist = float.MaxValue;
+        foreach (var t in candidates)
+        {
+            var pos = t.GetCellPosition();
+            if (pos == null) continue;
+            float d = Vector2Int.Distance(pos.Value, nearestEnemy.GridPosition);
+            if (d < bestDist) { bestDist = d; best = t; }
+        }
+        return best;
     }
 
     // ====================================================================
