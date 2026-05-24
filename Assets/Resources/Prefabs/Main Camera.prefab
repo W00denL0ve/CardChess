@@ -68,7 +68,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 60
+  field of view: 20
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -106,16 +106,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af2975feac8cfdb4fae1ef5bd748aaf7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  xRotation: 60
+  xRotation: 45
   keyboardPanSpeed: 5
   dragPanSpeed: 0.5
   mouseButtonForDrag: 0
-  zoomSpeed: 2
-  minDistance: 4
-  maxDistance: 7
-  initialDistance: 5
-  extraMargin: 2
-  initialZOffset: 3
+  zoomSpeed: 4
+  minDistance: 9
+  maxDistance: 15
+  initialDistance: 12
+  extraMargin: 0
+  initialZOffset: 5
 --- !u!1001 &3861478881830663590
 PrefabInstance:
   m_ObjectHideFlags: 0
