@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 [Serializable]
 public struct Multiplier
@@ -32,18 +33,50 @@ public struct Multiplier
 }
 
 /// <summary>
+/// 攻击位置, 定义在DamageEffect文件下，Unit提供查询方式，Effect负责计算伤害
+/// </summary>
+public enum AttackPosition
+{
+    Front,
+    Side,
+    Back
+}
+
+/// <summary>
+/// 公共工具类，提供去重获取修饰器的方法
+/// </summary>
+public static class ModifierHelper
+{
+    /// <summary>
+    /// 去重获取修饰器
+    /// </summary>
+    /// <param name="currentModifiers">当前修饰器</param>
+    /// <param name="newModifiers">新修饰器</param>
+    public static void GetUniqueModifiers(ref List<Modifier> currentModifiers, List<Modifier> newModifiers)
+    {
+        foreach (var m in newModifiers)
+        {
+            if (!currentModifiers.Contains(m))
+                currentModifiers.Add(m);
+        }
+    }
+}
+
+
+/// <summary>
 /// 伤害效果 - 对 context.executed 单位造成伤害
 /// 异步时序：OnExecute 计算 → PlayAnimation 播放攻击/受击 → OnComplete 扣血
 /// </summary>
 [CreateAssetMenu(fileName = "DamageEffect", menuName = "CardChess/EffectChain/Effects/Damage")]
 public class DamageEffect : Effect, IAnimatedEffect
 {
-    [Header("倍率依据")]
+    [Header("基础倍率")]
     public Multiplier multiplier;
 
-    [Header("卡牌修饰器")]
+    [Header("修饰器")]
     public List<Modifier> modifiers = new();
 
+    [Header("伤害类型")]
     public DamageType damageType = DamageType.Physical;
 
     private int _finalDamage;
@@ -72,6 +105,9 @@ public class DamageEffect : Effect, IAnimatedEffect
         {
             // 获取施方所有物理伤害修饰器
             modifiers_or = executor.modifierManager.GetModifiers(ModifierField.Physic);
+            // 获取卡牌所有物理伤害修饰器
+            modifiers_or.AddRange(modifiers.Where(m => m.field == ModifierField.Physic));
+
             // 获取受方所有物理防御修饰器
             modifiers_ed = executed.modifierManager.GetModifiers(ModifierField.PhysicalDefense);
 
@@ -82,14 +118,30 @@ public class DamageEffect : Effect, IAnimatedEffect
         {
             // 获取施方所有魔法伤害修饰器
             modifiers_or = executor.modifierManager.GetModifiers(ModifierField.Magic);
+            // 获取卡牌所有魔法伤害修饰器
+            modifiers_or.AddRange(modifiers.Where(m => m.field == ModifierField.Magic));
+
             // 获取受方所有魔法防御修饰器
             modifiers_ed = executor.modifierManager.GetModifiers(ModifierField.MagicDefense);
 
             // 获取受方魔法防御基础值
             defenseBase = executed.baseValue.magicDefense;
         }
-        // 加入卡牌修饰器
-        modifiers_or.AddRange(modifiers);
+
+        // 从施方获取攻击方位
+        AttackPosition attackPosition = executor.GetAttackPositionFromTarget(executed);
+
+        // 若为背刺，获取所有背刺伤害修饰器
+        if (attackPosition == AttackPosition.Back)
+        {
+            // 获取施方所有背刺伤害修饰器
+            var modifiers_back = executor.modifierManager.GetModifiers(ModifierField.BackAttack);
+            // 去重增加
+            ModifierHelper.GetUniqueModifiers(ref modifiers_or, modifiers_back);
+            // 获取卡牌所有背刺伤害修饰器
+            modifiers_or.AddRange(modifiers.Where(m => m.field.HasFlag(ModifierField.BackAttack)));
+        }
+        
         // 注入公式
         _finalDamage = AttributeCulculator.CulculateFinalValue(damageBase, modifiers_or, defenseBase, modifiers_ed);
     }
@@ -104,7 +156,7 @@ public class DamageEffect : Effect, IAnimatedEffect
 
         if (executorApp != null)
         {
-            executorApp.FaceTo(executed.GridPosition);
+            executorApp.AppearanceFaceTo(executed.GridPosition);
             executorApp.SetAnimationFrameAction(() => ExecuteOnAnimationFrame(executor, executed, context));
             yield return executorApp.PlayAttack(damageType);
         }
@@ -116,7 +168,7 @@ public class DamageEffect : Effect, IAnimatedEffect
         var executedApp = executed.Appearance;
         if (executedApp != null)
         {
-            executedApp.FaceTo(executor.GridPosition); // 更改朝向
+            executedApp.AppearanceFaceTo(executor.GridPosition); // 更改朝向
             executedApp.StartCoroutine(executedApp.PlayHitReaction()); // 播放受击动画
         }
         AudioManager.Instance.PlaySound(damageType == DamageType.Physical ? "hitPhysical" : "hitMagic"); // 播放伤害音效

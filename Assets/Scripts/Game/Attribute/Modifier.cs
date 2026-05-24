@@ -21,8 +21,9 @@ public enum ModifierField
     MagicDefense = 1 << 1,          // 魔法抗性
     Physic = 1 << 2,          // 物理攻击
     Magic = 1 << 3,           // 魔法攻击
-    Heal = 1 << 4,            // 治疗量
-    All = 1 << 5 - 1
+    BackAttack = 1 << 4,      // 背刺
+    Heal = 1 << 5,            // 治疗量
+    All = 1 << 6 - 1
 }
 
 [System.Serializable]

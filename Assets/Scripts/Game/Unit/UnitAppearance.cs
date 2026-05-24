@@ -122,7 +122,8 @@ public class UnitAppearance : MonoBehaviour
         for (int i = 0; i < path.Count - 1; i++)
         {
             if (unit != null) RefreshSortingOrder(); // 每走一步刷新排序，确保 Y 越大（越靠上）排序值越小
-            FaceTo(path[i + 1]);
+            AppearanceFaceTo(path[i + 1]);
+            
             Vector3 from = GridToWorld(path[i]);
             Vector3 to = GridToWorld(path[i + 1]);
 
@@ -298,7 +299,7 @@ public class UnitAppearance : MonoBehaviour
     // ====================================================================
 
     /// <summary>面向目标方向（通过翻转 X 缩放）</summary>
-    public void FaceTo(Vector2Int targetPos)
+    public void AppearanceFaceTo(Vector2Int targetPos)
     {
         if (animator == null) return;
         Vector2Int diff = targetPos - unit.GridPosition;

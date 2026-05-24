@@ -61,7 +61,7 @@ public class HealEffect : Effect, IAnimatedEffect
 
         if (atkApp != null)
         {
-            atkApp.FaceTo(target.GridPosition);                        // 决定朝向
+            atkApp.AppearanceFaceTo(target.GridPosition);                        // 决定朝向
             atkApp.SetAnimationFrameAction(() =>ExecuteOnAnimationFrame(attacker, target, context));
             yield return atkApp.PlayCast();
         }

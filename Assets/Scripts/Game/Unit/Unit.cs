@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public enum Faction { Player, Enemy, Neutral }
@@ -19,6 +21,9 @@ public struct UnitBaseValue
     public int movePoints;
     public int hasMoved;
 }
+
+// 朝向枚举
+public enum FacingDirection { Up, Down, Left, Right }
 
 public class Unit : MonoBehaviour
 {
@@ -52,6 +57,9 @@ public class Unit : MonoBehaviour
     // 网格位置（由 GridManager 设置）
     public Vector2Int GridPosition { get; internal set; }
 
+    // 当前朝向
+    public FacingDirection FacingDirection { get; internal set; }
+
     // 防御查询
     public int GetDefenseFor(DamageType type) => type == DamageType.Physical ? baseValue.physicalDefense : baseValue.magicDefense;
 
@@ -79,6 +87,10 @@ public class Unit : MonoBehaviour
         occupation = config.occupation;
         Faction = overrideFaction ?? config.defaultFaction;
         GridPosition = gridPos;
+
+        // 随机初始朝向
+        FacingDirection = (FacingDirection)UnityEngine.Random.Range(0, 4);
+
         IsAlive = true;
         baseValue = config.initialValue;
         BuffContainer = new BuffContainer(this);
@@ -89,7 +101,50 @@ public class Unit : MonoBehaviour
         Appearance?.UpdateHealthBar();
     }
 
-    // 伤害（由效果系统调用，finalDamage 已扣除类型防御）
+    /// <summary>更新朝向(注意与Appearance的FaceTo不同，这里使是数据层)</summary>
+    private void UpdateFacingDirection(Vector2Int diff)
+    {
+        if (diff.x > 0) FacingDirection = FacingDirection.Right;
+        else if (diff.x < 0) FacingDirection = FacingDirection.Left;
+        else if (diff.y > 0) FacingDirection = FacingDirection.Up;
+        else if (diff.y < 0) FacingDirection = FacingDirection.Down;
+    }
+
+    /// <summary>
+    /// 方位判定方法，根据给定的Unit，依据其朝向、自身位置、目标位置计算出方位，允许Buff修改判定
+    /// </summary>
+    public AttackPosition GetAttackPositionFromTarget(Unit executed)
+    {
+        // 先计算出攻单位相对位置
+        Vector2Int diff = GridPosition - executed.GridPosition;
+        int x = diff.x, y = diff.y;
+        // 先计算出攻击方位
+        AttackPosition attackPosition = executed.FacingDirection switch
+        {
+            // 被攻击者面朝上
+            FacingDirection.Up => (y + Math.Abs(x) < 0) ? AttackPosition.Back : // 后攻击
+                                  (y >= Math.Abs(x) ? AttackPosition.Front : AttackPosition.Side),
+            // 被攻击者面朝下
+            FacingDirection.Down => y > Math.Abs(x) ? AttackPosition.Back : // 后攻击
+                                    (y + Math.Abs(x) <= 0 ? AttackPosition.Front : AttackPosition.Side),
+            // 被攻击者面朝左
+            FacingDirection.Left => x > Math.Abs(y) ? AttackPosition.Back : // 后攻击
+                                    (x + Math.Abs(y) <= 0 ? AttackPosition.Front : AttackPosition.Side),
+            // 被攻击者面朝右
+            FacingDirection.Right => (x + Math.Abs(y) < 0) ? AttackPosition.Back : // 后攻击
+                                      (x >= Math.Abs(y) ? AttackPosition.Front : AttackPosition.Side),
+            _ => AttackPosition.Front
+        };
+
+        // 使用 BuffContainer 封装的前置回调，允许 Buff 修改攻击方位
+        attackPosition = BuffContainer.OnBeforeAttackPosition(attackPosition);
+        // 同样访问受击者的 BuffContainer 封装的前置回调
+        attackPosition = executed.BuffContainer.OnBeforeHitPosition(attackPosition);
+
+        return attackPosition;
+    }
+
+    /// <summary> 伤害（由效果系统调用，finalDamage 已扣除类型防御）</summary>
     public void TakeDamage(int finalDamage, EffectContext context = null)
     {
         if (!IsAlive || finalDamage <= 0) return;
@@ -157,6 +212,12 @@ public class Unit : MonoBehaviour
         if (path != null)
         {
             baseValue.hasMoved += Mathf.Clamp(path.Count - 1, 0, int.MaxValue);
+        }
+
+        // 取路径最后两个值更新朝向(数据层)
+        if (path != null && path.Count > 1)
+        {
+            UpdateFacingDirection(path[^1] - path[^2]);
         }
 
         // 数据层：瞬移

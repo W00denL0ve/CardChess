@@ -2,6 +2,16 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+/// <summary>攻击位置修正器</summary>
+public interface IAttackPositionModifier
+{
+    /// <summary>作为攻击者修正攻击方位</summary>
+    AttackPosition ModifyAttackPosition(AttackPosition currentPosition);
+
+    /// <summary>作为受击者修正受击方位</summary>
+    AttackPosition ModifyHitPosition(AttackPosition currentPosition);
+}
+
 public class BuffContainer
 {
     private Unit host;
@@ -59,6 +69,24 @@ public class BuffContainer
     {
         foreach (var b in buffs.ToList())
             b.BuffData.OnUnitMove(b, from, to);
+    }
+
+    /// <summary>作为攻击者判断攻击方位前回调</summary>
+    public AttackPosition OnBeforeAttackPosition(AttackPosition position)
+    {
+        foreach (var b in buffs.ToList())
+        if (b.BuffData is IAttackPositionModifier mod)
+            position = mod.ModifyAttackPosition(position);
+        return position;
+    }
+
+    /// <summary>作为受击者判断受击方位前回调</summary>
+    public AttackPosition OnBeforeHitPosition(AttackPosition position)
+    {
+        foreach (var b in buffs.ToList())
+        if (b.BuffData is IAttackPositionModifier mod)
+            position = mod.ModifyHitPosition(position);
+        return position;
     }
 
     // ========== 原有：回合流程 ==========

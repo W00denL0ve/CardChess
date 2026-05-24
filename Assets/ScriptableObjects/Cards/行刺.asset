@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: "\u884C\u523A"
   artwork: {fileID: 21300000, guid: 3a7ae1f6f8d8efb4486d813bef74031c, type: 3}
-  description: "\u7ED9\u4E88\u4E00\u4E2A\u6211\u65B9\u89D2\u82725\u884C\u52A8\u529B<br>\u9020\u62100.6x<color=yellow>\u529B\u91CF</color>+\u672C\u56DE\u5408\u79FB\u52A8\u6B65\u6570\u7684<color=yellow>\u7269\u7406\u4F24\u5BB3</color><br>\u4FDD\u7559"
+  description: "\u7ED9\u4E88\u4E00\u4E2A\u6211\u65B9\u89D2\u82725\u884C\u52A8\u529B<br>\u9020\u62100.6x<color=yellow>\u529B\u91CF</color>+\u672C\u56DE\u5408\u79FB\u52A8\u6B65\u6570\u7684<color=yellow>\u7269\u7406\u4F24\u5BB3</color><br><color=#227700>\u80CC\u523A</color>
+    1.3x\u6700\u7EC8\u4F24\u5BB3"
   destination: 0
   Cost: 2
-  retain: 1
+  retain: 0
   colorPreset: 0
   cardColor: {r: 1, g: 1, b: 1, a: 1}
   chains:
