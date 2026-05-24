@@ -53,16 +53,17 @@ public class HealEffect : Effect, IAnimatedEffect
 
     public IEnumerator PlayAnimation(EffectContext context)
     {
-        Unit attacker = context.GetExecutorUnit();
-        Unit target = context.GetExecutedUnit();
-        if (target == null || attacker == null) yield break;
+        Unit executor = context.GetExecutorUnit();
+        Unit executed = context.GetExecutedUnit();
+        if (executed == null || executor == null) yield break;
 
-        var atkApp = attacker.Appearance;
+        // 更新施法者朝向
+        executor.UpdateFacingDirection(executed.GridPosition - executor.GridPosition);
 
+        var atkApp = executor.Appearance;
         if (atkApp != null)
         {
-            atkApp.AppearanceFaceTo(target.GridPosition);                        // 决定朝向
-            atkApp.SetAnimationFrameAction(() =>ExecuteOnAnimationFrame(attacker, target, context));
+            atkApp.SetAnimationFrameAction(() =>ExecuteOnAnimationFrame(executor, executed, context));
             yield return atkApp.PlayCast();
         }
     }
@@ -76,7 +77,7 @@ public class HealEffect : Effect, IAnimatedEffect
         {
             executedApp.StartCoroutine(executedApp.PlayHeal()); // 播放受治疗动画
         }
-        AudioManager.Instance.PlaySound("heal"); // 播放治疗音效
+        AudioManager.Instance.PlaySound(AudioName.healSound); // 播放治疗音效
         FloatingNumberManager.Instance.ShowNumber(executed.GridPosition, _finalHeal, FloatingNumberType.Healing); // 显示浮动数字
     }
 

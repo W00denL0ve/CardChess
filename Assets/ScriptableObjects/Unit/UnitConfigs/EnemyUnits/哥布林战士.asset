@@ -20,8 +20,8 @@ MonoBehaviour:
   unitPrefab: {fileID: 5941873601601623723, guid: 7e91f42df0f611742b6e4581bb457468, type: 3}
   aiDeck: {fileID: 11400000, guid: 591673910644f8e44bdeb344f1ef8c5e, type: 2}
   yOffset: 0
-  zOffset: -0.1
-  xRotation: 45
+  zOffset: 0
+  xRotation: 0
   initialValue:
     currentHealth: 40
     maxHealth: 40

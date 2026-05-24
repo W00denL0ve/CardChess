@@ -34,7 +34,7 @@ public class Bootstrapper : MonoBehaviour
 
         // 执行初始化
         Initializer.Initialize();
-        AudioManager.Instance.PlayMusic("Theme", true); // 播放主菜单音乐
+        AudioManager.Instance.PlayMusic(AudioName.theme, true); // 播放主菜单音乐
         DOTween.SetTweensCapacity(500, 50);
         UIManager.Instance.ShowLoadingScreen("正在加载游戏资源"); // 显示加载界面
 

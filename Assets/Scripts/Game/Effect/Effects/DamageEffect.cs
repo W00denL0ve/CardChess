@@ -33,16 +33,6 @@ public struct Multiplier
 }
 
 /// <summary>
-/// 攻击位置, 定义在DamageEffect文件下，Unit提供查询方式，Effect负责计算伤害
-/// </summary>
-public enum AttackPosition
-{
-    Front,
-    Side,
-    Back
-}
-
-/// <summary>
 /// 公共工具类，提供去重获取修饰器的方法
 /// </summary>
 public static class ModifierHelper
@@ -152,11 +142,13 @@ public class DamageEffect : Effect, IAnimatedEffect
         Unit executed = context.GetExecutedUnit();
         if (executed == null || executor == null) yield break;
 
-        var executorApp = executor.Appearance;
+        // 更新攻击者朝向
+        executor.UpdateFacingDirection(executed.GridPosition - executor.GridPosition);
 
+
+        var executorApp = executor.Appearance;
         if (executorApp != null)
         {
-            executorApp.AppearanceFaceTo(executed.GridPosition);
             executorApp.SetAnimationFrameAction(() => ExecuteOnAnimationFrame(executor, executed, context));
             yield return executorApp.PlayAttack(damageType);
         }
@@ -165,13 +157,15 @@ public class DamageEffect : Effect, IAnimatedEffect
     public void ExecuteOnAnimationFrame(Unit executor, Unit executed, EffectContext context)
     {
         executed.TakeDamage(_finalDamage, context); // 扣血
+
+        // 受击者朝向不再更新
+
         var executedApp = executed.Appearance;
         if (executedApp != null)
         {
-            executedApp.AppearanceFaceTo(executor.GridPosition); // 更改朝向
             executedApp.StartCoroutine(executedApp.PlayHitReaction()); // 播放受击动画
         }
-        AudioManager.Instance.PlaySound(damageType == DamageType.Physical ? "hitPhysical" : "hitMagic"); // 播放伤害音效
+        AudioManager.Instance.PlaySound(damageType == DamageType.Physical ? AudioName.physicalHitSound : AudioName.magicalHitSound); // 播放伤害音效
 
         FloatingNumberType FLType = damageType == DamageType.Physical ? FloatingNumberType.Physical : FloatingNumberType.Magical;
         FloatingNumberManager.Instance.ShowNumber(executed.GridPosition, _finalDamage, FLType); // 显示浮字

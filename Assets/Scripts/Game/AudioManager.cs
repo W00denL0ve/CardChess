@@ -2,6 +2,31 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
+/// <summary>
+/// 定义音频名称
+/// </summary>
+public static class AudioName
+{
+    public const string theme = "Theme";
+    
+    public const string buttonClickSound = "buttonClick";
+    public const string buttonHoverSound = "buttonHover";
+
+    public const string cardFlipSound = "cardFlip";
+    public const string cardPlaySound = "cardPlay";
+    public const string cardShuffleSound = "cardShuffle";
+
+    public const string walkSound = "walk";
+    public const string healSound = "heal";
+    public const string physicalHitSound = "hitPhysical";
+    public const string magicalHitSound = "hitMagical";
+
+    public const string warningSound = "warning";
+
+    public const string winSound = "win";
+    public const string loseSound = "lose";
+}
+
 public class AudioManager : MonoBehaviour
 {
     public static AudioManager Instance { get; private set; }

@@ -43,13 +43,14 @@ public class GameManager : MonoBehaviour
         if (evt.isVictory)
         {
             Logger.Log($"[GameManager] 🏆 关卡胜利！");
-            AudioManager.Instance.PlaySound("win");
+            AudioManager.Instance.PlaySound(AudioName.winSound);
             UIManager.Instance.Show("win");
             // todo
         }
         else
         {
             Logger.Log($"[GameManager] 💀 关卡失败！");
+            AudioManager.Instance.PlaySound(AudioName.loseSound);
             // todo
         }
         CameraController.Instance.FocusOnTarget(lastDead.transform, 2f);

@@ -144,12 +144,7 @@ public class TurnManager : MonoBehaviour
         Logger.Log("切换到" + newPhase + "阶段");
         currentState.Enter();
 
-        GameEventChannel.Dispatch(new PhaseChangedEvent
-        {
-            turnNumber = currentTurn,
-            oldPhase = oldState?.phaseName ?? TurnPhase.End,
-            newPhase = newPhase
-        });
+        GameEventChannel.Dispatch(new TurnPhaseChangedEvent(currentTurn, oldState.phaseName, currentState.phaseName));
     }
 }
 
@@ -251,7 +246,8 @@ class PlayerPlayState : ITurnState
         // 检查能量是否足够
         if (!ResourceManager.Instance.SpendEnergy(card.Cost))
         {
-            Logger.Log($"[PlayerPlay] 能量不足，无法打出 {card.cardName}（需要 {card.Cost}，当前 {ResourceManager.Instance.Energy}）");
+            HandUI.Instance.EnergyWarning(); // 视觉
+            AudioManager.Instance.PlaySound(AudioName.warningSound);
             return;
         }
 

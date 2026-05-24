@@ -27,13 +27,13 @@ public class VictoryChecker : MonoBehaviour
     private void OnEnable()
     {
         GameEventChannel.Register<UnitDeathEvent>(OnUnitDeath);
-        GameEventChannel.Register<PhaseChangedEvent>(OnPhaseChanged);
+        GameEventChannel.Register<TurnPhaseChangedEvent>(OnPhaseChanged);
     }
 
     private void OnDisable()
     {
         GameEventChannel.Unregister<UnitDeathEvent>(OnUnitDeath);
-        GameEventChannel.Unregister<PhaseChangedEvent>(OnPhaseChanged);
+        GameEventChannel.Unregister<TurnPhaseChangedEvent>(OnPhaseChanged);
     }
 
     /// <summary>由 LevelManager 在关卡初始化时调用</summary>
@@ -52,7 +52,7 @@ public class VictoryChecker : MonoBehaviour
             CheckWin();
     }
 
-    private void OnPhaseChanged(PhaseChangedEvent evt)
+    private void OnPhaseChanged(TurnPhaseChangedEvent evt)
     {
         // 敌方回合结束时检查（此时已走过 Enemy→End 的切换）
         if (evt.newPhase == TurnPhase.End)

@@ -123,7 +123,7 @@ public class HandUI : MonoBehaviour
         // 订阅事件
         GameEventChannel.Register<CardDrawnEvent>(OnCardDrawn);
         GameEventChannel.Register<CardPlayedEvent>(OnCardPlayed);
-        GameEventChannel.Register<PhaseChangedEvent>(OnPhaseChanged);
+        GameEventChannel.Register<TurnPhaseChangedEvent>(OnPhaseChanged);
         GameEventChannel.Register<ResourceChangedEvent>(OnResourceChanged);
 
         // 结束回合按钮
@@ -135,7 +135,7 @@ public class HandUI : MonoBehaviour
     {
         GameEventChannel.Unregister<CardDrawnEvent>(OnCardDrawn);
         GameEventChannel.Unregister<CardPlayedEvent>(OnCardPlayed);
-        GameEventChannel.Unregister<PhaseChangedEvent>(OnPhaseChanged);
+        GameEventChannel.Unregister<TurnPhaseChangedEvent>(OnPhaseChanged);
         GameEventChannel.Unregister<ResourceChangedEvent>(OnResourceChanged);
 
         if (endTurnButton != null)
@@ -203,13 +203,13 @@ public class HandUI : MonoBehaviour
         if (drawPileCardLeftDisplay == null) yield break;
         float val = from;
         Tween t = DOTween.To(() => val, x => { val = x; drawPileCardLeftDisplay.text = Mathf.RoundToInt(val).ToString(); }, to, duration);
-        AudioManager.Instance.PlaySound("cardShuffle");
+        AudioManager.Instance.PlaySound(AudioName.cardShuffleSound);
         yield return t.WaitForCompletion();
     }
 
     // ═══ 悬停 ═══
 
-    private void OnPhaseChanged(PhaseChangedEvent evt)
+    private void OnPhaseChanged(TurnPhaseChangedEvent evt)
     {
         hoverEnabled = evt.newPhase == TurnPhase.PlayerPlay;
         if (!hoverEnabled && hoveredIndex >= 0)
@@ -217,6 +217,8 @@ public class HandUI : MonoBehaviour
             hoveredIndex = -1;
             AnimateLayout();
         }
+
+        endTurnButton.interactable = evt.newPhase == TurnPhase.PlayerPlay;
     }
 
     private void OnResourceChanged(ResourceChangedEvent evt)
@@ -246,12 +248,35 @@ public class HandUI : MonoBehaviour
         }
     }
 
+    public void EnergyWarning()
+    {
+        if (energyDisplayTMP == null) return;
+        // 实现一个短暂的数字变红并放大的脉冲效果
+        DOTween.Kill(energyDisplayTMP);
+
+        Color originalColor = energyDisplayTMP.color;
+        Vector3 originalScale = energyDisplayTMP.transform.localScale;
+
+        // 第一阶段：变红 + 放大（0.15s）
+        energyDisplayTMP.DOColor(Color.red, 0.15f).SetTarget(energyDisplayTMP);
+        energyDisplayTMP.transform.DOScale(originalScale * 1.3f, 0.15f)
+            .SetTarget(energyDisplayTMP)
+            .SetEase(Ease.OutQuad);
+
+        // 第二阶段：恢复原色 + 恢复大小（0.3s）
+        energyDisplayTMP.DOColor(originalColor, 0.3f).SetTarget(energyDisplayTMP).SetDelay(0.15f);
+        energyDisplayTMP.transform.DOScale(originalScale, 0.3f)
+            .SetTarget(energyDisplayTMP)
+            .SetEase(Ease.OutQuad)
+            .SetDelay(0.15f);
+    }
+
     public void OnCardHovered(int index)
     {
         if (!hoverEnabled) return;
         if (index < 0 || index >= activeCards.Count) return;
         hoveredIndex = index;
-        AudioManager.Instance.PlaySound("cardFlip");
+        AudioManager.Instance.PlaySound(AudioName.cardFlipSound);
         AnimateLayout();
     }
 
@@ -532,7 +557,7 @@ public class HandUI : MonoBehaviour
         RefreshLayout();
 
         // 视觉听觉效果
-        AudioManager.Instance.PlaySound("cardPlay");
+        AudioManager.Instance.PlaySound(AudioName.cardPlaySound);
         StartCoroutine(AnimateCardToPending(cv));
     }
 

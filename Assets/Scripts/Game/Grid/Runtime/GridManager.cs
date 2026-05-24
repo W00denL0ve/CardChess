@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 /// <summary>
@@ -180,6 +181,28 @@ public class GridManager : MonoBehaviour
     private static readonly int[] dx = { 0, 1, 0, -1 };
     private static readonly int[] dy = { 1, 0, -1, 0 };
 
+    /// <summary>根据上一步方向，返回 4 个方向的遍历顺序：同向优先 > 垂直次之 > 反向最后</summary>
+    private static List<int> GetDirectionOrder(Vector2Int from, Vector2Int to)
+    {
+        Vector2Int dir = to - from;
+
+        var scored = new (int index, int score)[4];
+        for (int i = 0; i < 4; i++)
+        {
+            int score;
+            if (dx[i] == dir.x && dy[i] == dir.y)
+                score = 2;  // 同向
+            else if (dx[i] == -dir.x && dy[i] == -dir.y)
+                score = 0;  // 反向
+            else
+                score = 1;  // 垂直
+            scored[i] = (i, score);
+        }
+
+        Array.Sort(scored, (a, b) => b.score.CompareTo(a.score));
+        return scored.Select(s => s.index).ToList();
+    }
+
     /// <summary>
     /// 寻路（BFS，曼哈顿距离）
     /// </summary>
@@ -220,7 +243,12 @@ public class GridManager : MonoBehaviour
                 return path;
             }
 
-            for (int i = 0; i < 4; i++)
+            // 方向感知遍历：同向优先，使路径更直
+            var order = (cur != start)
+                ? GetDirectionOrder(parent[cur], cur)
+                : new List<int> { 0, 1, 2, 3 };
+
+            foreach (int i in order)
             {
                 int nx = cur.x + dx[i], ny = cur.y + dy[i];
                 var next = new Vector2Int(nx, ny);

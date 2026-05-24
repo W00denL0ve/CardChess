@@ -13,15 +13,15 @@ public class SurviveRoundsCondition : VictoryCondition
     public override void Initialize()
     {
         currentRounds = 0;
-        GameEventChannel.Register<PhaseChangedEvent>(OnPhaseChanged);
+        GameEventChannel.Register<TurnPhaseChangedEvent>(OnPhaseChanged);
     }
 
     public override void Cleanup()
     {
-        GameEventChannel.Unregister<PhaseChangedEvent>(OnPhaseChanged);
+        GameEventChannel.Unregister<TurnPhaseChangedEvent>(OnPhaseChanged);
     }
 
-    private void OnPhaseChanged(PhaseChangedEvent evt)
+    private void OnPhaseChanged(TurnPhaseChangedEvent evt)
     {
         if (evt.newPhase == TurnPhase.End)
             currentRounds++;

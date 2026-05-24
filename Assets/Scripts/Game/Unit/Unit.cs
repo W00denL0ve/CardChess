@@ -5,8 +5,6 @@ using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public enum Faction { Player, Enemy, Neutral }
-
 // 基础属性
 [Serializable]
 public struct UnitBaseValue
@@ -97,17 +95,32 @@ public class Unit : MonoBehaviour
         foreach (var buff in config.innateBuffs)
             BuffContainer.ApplyBuff(buff, new UnitTarget(this));
 
+        // 表现层初始化
         Appearance = GetComponent<UnitAppearance>();
         Appearance?.UpdateHealthBar();
+        Appearance?.SyncFacingDirection(FacingDirection);
     }
 
-    /// <summary>更新朝向(注意与Appearance的FaceTo不同，这里使是数据层)</summary>
-    private void UpdateFacingDirection(Vector2Int diff)
+    /// <summary>更新朝向, 根据新坐标 - 旧坐标</summary>
+    /// <param name="diff">新坐标 - 旧坐标</param>
+    public void UpdateFacingDirection(Vector2Int diff)
     {
-        if (diff.x > 0) FacingDirection = FacingDirection.Right;
-        else if (diff.x < 0) FacingDirection = FacingDirection.Left;
-        else if (diff.y > 0) FacingDirection = FacingDirection.Up;
-        else if (diff.y < 0) FacingDirection = FacingDirection.Down;
+        if (diff == Vector2Int.zero) return;
+
+        if (Mathf.Abs(diff.x) > Mathf.Abs(diff.y))
+            // 水平优势 → 左/右
+            FacingDirection = diff.x > 0 ? FacingDirection.Right : FacingDirection.Left;
+        else if (Mathf.Abs(diff.y) > Mathf.Abs(diff.x))
+            // 垂直优势 → 上/下
+            FacingDirection = diff.y > 0 ? FacingDirection.Up : FacingDirection.Down;
+        else
+            // 绝对值相等 → 保持原有轴向
+            if (FacingDirection == FacingDirection.Left || FacingDirection == FacingDirection.Right)
+                FacingDirection = diff.x > 0 ? FacingDirection.Right : FacingDirection.Left;
+            else
+                FacingDirection = diff.y > 0 ? FacingDirection.Up : FacingDirection.Down;
+
+        Appearance?.SyncFacingDirection(FacingDirection);
     }
 
     /// <summary>
@@ -189,43 +202,53 @@ public class Unit : MonoBehaviour
 
 
     /// <summary>
-    /// 异步移动到目标格子 — 表现层逐格走路，数据层瞬移
-    /// 完成后自动派发 UnitMovedEvent，GridManager 响应更新格子占用
+    /// 移动到目标格子 — 数据驱动，每步先更新数据再驱动表现
+    /// 经过格子触发 UnitStepOffEvent / UnitStepOntoEvent
+    /// 到达后触发 UnitMovedEvent
     /// </summary>
-    /// <param name="destination">目标格子坐标</param>
-    /// <param name="path">完整路径（包含起点和终点），用于视觉动画</param>
-    /// <param name="snap">true=瞬移（播放瞬移动画），false=逐格走路</param>
     public IEnumerator MoveTo(Vector2Int destination, List<Vector2Int> path, bool snap = false)
     {
         if (!IsAlive) yield break;
 
-        // 表现层：播放移动动画
-        if (Appearance != null)
+        // ── 瞬移 ──
+        if (snap || path == null || path.Count < 2)
         {
-            if (snap || path == null)
+            Vector2Int fromPos = GridPosition;
+            GridPosition = destination;
+            if (Appearance != null)
                 yield return Appearance.PlayTeleportAnimation(GridToWorld(destination));
-            else
-                yield return Appearance.PlayWalkAnimation(path);
+            GameEventChannel.Dispatch(new UnitMovedEvent(this, fromPos, destination));
+            yield break;
         }
 
-        // 设置本回合已行动步数
-        if (path != null)
+        // ── 逐格移动 ──
+        Vector2Int startPos = GridPosition;
+
+        for (int i = 0; i < path.Count - 1; i++)
         {
-            baseValue.hasMoved += Mathf.Clamp(path.Count - 1, 0, int.MaxValue);
+            Vector2Int fromPos = path[i];
+            Vector2Int toPos = path[i + 1];
+            bool isLastStep = i == path.Count - 2;
+
+            // 数据层：更新位置 + 朝向
+            GridPosition = toPos;
+            UpdateFacingDirection(toPos - fromPos);
+
+            // 音效
+            AudioManager.Instance.PlayLoopSound(AudioName.walkSound);
+
+            // 表现层：单格动画
+            if (Appearance != null)
+                yield return Appearance.AnimateStep(fromPos, toPos);
+
+            // 累计步数
+            baseValue.hasMoved++;
         }
 
-        // 取路径最后两个值更新朝向(数据层)
-        if (path != null && path.Count > 1)
-        {
-            UpdateFacingDirection(path[^1] - path[^2]);
-        }
-
-        // 数据层：瞬移
-        Vector2Int from = GridPosition;
-        GridPosition = destination;
-        // 移动后刷新 Y 轴排序
-        if (Appearance != null) Appearance.RefreshSortingOrder();
-        GameEventChannel.Dispatch(new UnitMovedEvent(this, from, destination));
+        // 移动完成
+        Appearance?.RefreshSortingOrder();
+        GameEventChannel.Dispatch(new UnitMovedEvent(this, startPos, destination));
+        AudioManager.Instance.StopLoopSound();
     }
 
     private Vector3 GridToWorld(Vector2Int gridPos)

@@ -46,7 +46,7 @@ public class ButtonTween : MonoBehaviour,
     {
         if (!IsInteractable()) return;
         DoScale(originalScale * hoverScale);
-        AudioManager.Instance.PlaySound("ButtonHover");
+        AudioManager.Instance.PlaySound(AudioName.buttonHoverSound);
     }
 
     public void OnPointerExit(PointerEventData e)
@@ -67,7 +67,7 @@ public class ButtonTween : MonoBehaviour,
         if (IsPointerOverButton(e))
         {
             DoScale(originalScale * hoverScale);
-            AudioManager.Instance.PlaySound("ButtonClick");
+            AudioManager.Instance.PlaySound(AudioName.buttonClickSound);
         }
         else
             DoScale(originalScale);

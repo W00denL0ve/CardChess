@@ -1,11 +1,18 @@
 /// <summary>
-/// 阶段变化事件（包括了开始和结束）
+/// 阶段变化事件,包含旧阶段和新阶段
 /// </summary>
-public class PhaseChangedEvent : GameEvent
+public class TurnPhaseChangedEvent : GameEvent
 {
     public int turnNumber;
     public TurnPhase oldPhase;
     public TurnPhase newPhase;
+
+    public TurnPhaseChangedEvent(int turnNumber, TurnPhase oldPhase, TurnPhase newPhase)
+    {
+        this.turnNumber = turnNumber;
+        this.oldPhase = oldPhase;
+        this.newPhase = newPhase;
+    }
 }
 
 /// <summary>

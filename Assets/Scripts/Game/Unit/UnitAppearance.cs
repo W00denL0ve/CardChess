@@ -21,6 +21,9 @@ public class UnitAppearance : MonoBehaviour
     [SerializeField] private Slider healthBar;
     [SerializeField] private TextMeshProUGUI healthText;
 
+    [Header("方向指示器")]
+    [SerializeField] private Transform directionIndicator;
+
     private Image[] images;
     private SpriteRenderer[] sprites;
     private TextMeshProUGUI[] texts;
@@ -111,32 +114,31 @@ public class UnitAppearance : MonoBehaviour
     //  公开协程 — 由效果链的 PlayAnimation 调用
     // ====================================================================
 
-    /// <summary>沿路径逐格走动（Walk 动画循环，不等待）</summary>
-    public IEnumerator PlayWalkAnimation(List<Vector2Int> path)
+    /// <summary>单格移动动画（数据层已更新，表现层跟随插值）</summary>
+    /// <param name="from">起点格子</param>
+    /// <param name="to">目标格子</param>
+    /// <param name="speed">移动速度（格/秒）</param>
+    public IEnumerator AnimateStep(Vector2Int from, Vector2Int to, float speed = 2f)
     {
-        if (path == null || path.Count < 2) yield break;
-
         if (animator != null) animator.SetTrigger(triggerWalk);
 
-        float stepDuration = 1f / moveSpeed;
-        for (int i = 0; i < path.Count - 1; i++)
-        {
-            if (unit != null) RefreshSortingOrder(); // 每走一步刷新排序，确保 Y 越大（越靠上）排序值越小
-            AppearanceFaceTo(path[i + 1]);
-            
-            Vector3 from = GridToWorld(path[i]);
-            Vector3 to = GridToWorld(path[i + 1]);
+        if (speed <= 0) speed = moveSpeed;
+        float stepDuration = 1f / speed;
 
-            float elapsed = 0f;
-            while (elapsed < stepDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = moveCurve.Evaluate(elapsed / stepDuration);
-                transform.position = Vector3.Lerp(from, to, t);
-                yield return null;
-            }
-            transform.position = to;
+        RefreshSortingOrder();
+
+        Vector3 fromWorld = GridToWorld(from);
+        Vector3 toWorld = GridToWorld(to);
+
+        float elapsed = 0f;
+        while (elapsed < stepDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = moveCurve.Evaluate(elapsed / stepDuration);
+            transform.position = Vector3.Lerp(fromWorld, toWorld, t);
+            yield return null;
         }
+        transform.position = toWorld;
     }
 
     /// <summary>瞬移</summary>
@@ -295,22 +297,44 @@ public class UnitAppearance : MonoBehaviour
     }
 
     // ====================================================================
-    //  方向
+    //  方向（表现层跟随数据层）
     // ====================================================================
 
-    /// <summary>面向目标方向（通过翻转 X 缩放）</summary>
-    public void AppearanceFaceTo(Vector2Int targetPos)
+    /// <summary>
+    /// 根据数据层 FacingDirection 同步视觉效果
+    /// </summary>
+    [Header("转向动画")]
+    [SerializeField] private float turnDuration = 0.15f;
+
+    public void SyncFacingDirection(FacingDirection dir)
     {
         if (animator == null) return;
-        Vector2Int diff = targetPos - unit.GridPosition;
-        if (diff.x == 0) 
+
+        // 计算目标 X 缩放
+        float targetScaleX = Mathf.Abs(animator.transform.localScale.x);
+        Quaternion targetIndicatorRot = Quaternion.identity;
+
+        switch (dir)
         {
-            // TODO:补充方向箭头
-            return;
+            case FacingDirection.Left:
+                targetScaleX = -Mathf.Abs(animator.transform.localScale.x);
+                targetIndicatorRot = Quaternion.Euler(90, 0, 180);
+                break;
+            case FacingDirection.Right:
+                targetIndicatorRot = Quaternion.Euler(90, 0, 0);
+                break;
+            case FacingDirection.Up:
+                targetIndicatorRot = Quaternion.Euler(90, 0, 90);
+                break;
+            case FacingDirection.Down:
+                targetIndicatorRot = Quaternion.Euler(90, 0, -90);
+                break;
         }
-        Vector3 scale = animator.transform.localScale;
-        scale.x = Mathf.Abs(scale.x) * (diff.x > 0 ? 1 : -1);
-        animator.transform.localScale = scale;
+
+        // 平滑过渡
+        animator.transform.DOScaleX(targetScaleX, turnDuration).SetEase(Ease.OutQuad);
+        if (directionIndicator != null)
+            directionIndicator.DOLocalRotateQuaternion(targetIndicatorRot, turnDuration).SetEase(Ease.OutQuad);
     }
 
     // ====================================================================
