@@ -140,8 +140,7 @@ public class AIController : MonoBehaviour
                     Vector2Int dest = truncated.Last();
 
                     yield return unit.MoveTo(dest, truncated);
-                    var appearance = unit.GetComponent<UnitAppearance>();
-                    if (appearance != null) appearance.SetIdle();
+                    if (unit.Appearance != null) unit.Appearance.SetIdle();
                     Log($"移动到 ({dest.x},{dest.y})");
 
                     // 设置移动冷却（冷却 1 回合，本回合内不再移动）

@@ -70,6 +70,12 @@ public class TurnManager : MonoBehaviour
     private void OnLevelEntered(LevelEnteredEvent evt)
     {
         Logger.Log($"[TurnManager] 关卡进入，开始第一回合");
+        StartCoroutine(StartTurnRoutine());
+    }
+
+    private IEnumerator StartTurnRoutine()
+    {
+        yield return new WaitForSeconds(1.5f); // 等待短暂时间，确保UI动画播放完毕
         StartTurn();
     }
 

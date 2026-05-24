@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public enum Faction { Player, Enemy, Neutral }
 
@@ -40,11 +39,11 @@ public class Unit : MonoBehaviour
     [SerializeField]
     public UnitBaseValue baseValue;
 
+    // 外观组件
+    public UnitAppearance Appearance { get; private set; }
+
     // Buff 容器
     public BuffContainer BuffContainer { get; private set; }
-
-    [Header("血条")]
-    [SerializeField] private Slider healthBar;
 
     /// <summary>血量百分比 0~1</summary>
     public float HpPercent => baseValue.maxHealth > 0 ? (float)baseValue.currentHealth / baseValue.maxHealth : 0f;
@@ -59,6 +58,11 @@ public class Unit : MonoBehaviour
     private void Start()
     {
         GameEventChannel.Register<TurnStartedEvent>(OnTurnStarted);
+    }
+
+    private void OnDestroy()
+    {
+        GameEventChannel.Unregister<TurnStartedEvent>(OnTurnStarted);
     }
 
     public void OnTurnStarted(TurnStartedEvent evt)
@@ -81,7 +85,8 @@ public class Unit : MonoBehaviour
         foreach (var buff in config.innateBuffs)
             BuffContainer.ApplyBuff(buff, new UnitTarget(this));
 
-        UpdateHealthBar();
+        Appearance = GetComponent<UnitAppearance>();
+        Appearance?.UpdateHealthBar();
     }
 
     // 伤害（由效果系统调用，finalDamage 已扣除类型防御）
@@ -108,7 +113,8 @@ public class Unit : MonoBehaviour
             BuffContainer.OnAfterDamageTaken(finalDamage, context);
         }
 
-        UpdateHealthBar();
+        // 视觉效果
+        Appearance?.UpdateHealthBar();
     }
 
     /// <summary>
@@ -123,13 +129,7 @@ public class Unit : MonoBehaviour
         int newHealth = Mathf.Clamp(oldHealth + amount, 0, baseValue.maxHealth);
         baseValue.currentHealth = newHealth;
         GameEventChannel.Dispatch(new UnitHealthChangedEvent(this, oldHealth, newHealth, baseValue.maxHealth));
-        UpdateHealthBar();
-    }
-
-    private void UpdateHealthBar()
-    {
-        if (healthBar != null)
-            healthBar.value = HpPercent;
+        Appearance?.UpdateHealthBar();
     }
 
 
@@ -145,13 +145,12 @@ public class Unit : MonoBehaviour
         if (!IsAlive) yield break;
 
         // 表现层：播放移动动画
-        var appearance = GetComponent<UnitAppearance>();
-        if (appearance != null)
+        if (Appearance != null)
         {
             if (snap || path == null)
-                yield return appearance.PlayTeleportAnimation(GridToWorld(destination));
+                yield return Appearance.PlayTeleportAnimation(GridToWorld(destination));
             else
-                yield return appearance.PlayWalkAnimation(path);
+                yield return Appearance.PlayWalkAnimation(path);
         }
 
         // 设置本回合已行动步数
@@ -164,7 +163,7 @@ public class Unit : MonoBehaviour
         Vector2Int from = GridPosition;
         GridPosition = destination;
         // 移动后刷新 Y 轴排序
-        if (appearance != null) appearance.RefreshSortingOrder();
+        if (Appearance != null) Appearance.RefreshSortingOrder();
         GameEventChannel.Dispatch(new UnitMovedEvent(this, from, destination));
     }
 

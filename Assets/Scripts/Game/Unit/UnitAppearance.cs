@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using TMPro;
+using Unity.VisualScripting;
 
 /// <summary>
 /// 单位外观表现组件 — 动画、位移、视觉反馈
@@ -14,6 +16,14 @@ public class UnitAppearance : MonoBehaviour
     [Header("移动动画参数")]
     public float moveSpeed = 2f;
     public AnimationCurve moveCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+
+    [Header("血量显示")]
+    [SerializeField] private Slider healthBar;
+    [SerializeField] private TextMeshProUGUI healthText;
+
+    private Image[] images;
+    private SpriteRenderer[] sprites;
+    private TextMeshProUGUI[] texts;
 
     [Header("Animator Trigger 名称")]
     public string triggerWalk = "Walk";
@@ -38,19 +48,41 @@ public class UnitAppearance : MonoBehaviour
 
     void Start()
     {
+        // 获取显示组件（sprite、image、text 等）
+        images = GetComponentsInChildren<Image>(true);
+        sprites = GetComponentsInChildren<SpriteRenderer>(true);
+        texts = GetComponentsInChildren<TextMeshProUGUI>(true);
+
         // 初始排序：Y 越大（越靠上）排序值越小，画在后面
         RefreshSortingOrder();
+
+        // 播放生成动画
+        PlaySpawnAnimation();
     }
 
     void OnEnable()
     {
-        GameEventChannel.Register<
-        UnitDeathEvent>(OnDeath);
+        GameEventChannel.Register<UnitDeathEvent>(OnDeath);
     }
 
     void OnDisable()
     {
         GameEventChannel.Unregister<UnitDeathEvent>(OnDeath);
+    }
+
+    /// <summary>更新血量显示</summary>
+    public void UpdateHealthBar()
+    {
+        int currentHp = unit.baseValue.currentHealth;
+        int maxHp = unit.baseValue.maxHealth;
+        // 血量百分比
+        float hpPercent = (float)currentHp / Mathf.Max(maxHp, 1f);
+        if (healthBar != null)
+            healthBar.value = hpPercent;
+        
+        // 更新数字显示
+        if (healthText != null)
+            healthText.text = $"{currentHp}/{maxHp}";
     }
 
     /// <summary>根据网格 Y 刷新所有 SpriteRenderer 的排序顺序</summary>
@@ -89,6 +121,7 @@ public class UnitAppearance : MonoBehaviour
         float stepDuration = 1f / moveSpeed;
         for (int i = 0; i < path.Count - 1; i++)
         {
+            if (unit != null) RefreshSortingOrder(); // 每走一步刷新排序，确保 Y 越大（越靠上）排序值越小
             FaceTo(path[i + 1]);
             Vector3 from = GridToWorld(path[i]);
             Vector3 to = GridToWorld(path[i + 1]);
@@ -114,10 +147,10 @@ public class UnitAppearance : MonoBehaviour
     }
 
     /// <summary>播放攻击动画，等待整个 Clip 播完</summary>
-    public IEnumerator PlayAttack()
+    public IEnumerator PlayAttack(DamageType damageType)
     {
         if (animator == null) yield break;
-        animator.SetTrigger(triggerAttack);
+        animator.SetTrigger(damageType == DamageType.Physical ? triggerAttack : triggerCast);
         yield return WaitForCurrentClip();
     }
 
@@ -145,6 +178,20 @@ public class UnitAppearance : MonoBehaviour
         yield return WaitForCurrentClip();
     }
 
+    /// <summary>播放生成动画，使用DOTween</summary>
+    public void PlaySpawnAnimation()
+    {
+        // 初始 alpha = 0
+        foreach (var img in images) { var c = img.color; c.a = 0f; img.color = c; }
+        foreach (var sr in sprites) { var c = sr.color; c.a = 0f; sr.color = c; }
+        foreach (var text in texts) { var c = text.color; c.a = 0f; text.color = c; }
+
+        // TODO:duration 可配成 Inspector 字段
+        foreach (var img in images) img.DOFade(1f, 0.5f);
+        foreach (var sr in sprites) sr.DOFade(1f, 0.5f);
+        foreach (var text in texts) text.DOFade(1f, 0.5f);
+    }
+
     /// <summary>播放死亡动画，同时渐隐所有子物体，完成后销毁</summary>
     public IEnumerator PlayDeathAnimation()
     {
@@ -153,10 +200,9 @@ public class UnitAppearance : MonoBehaviour
 
         // 同时渐隐所有子物体的 Image 和 SpriteRenderer
         float fadeDuration = 1.0f;
-        var images = GetComponentsInChildren<Image>(true);
         foreach (var img in images) img.DOFade(0f, fadeDuration);
-        var sprites = GetComponentsInChildren<SpriteRenderer>(true);
         foreach (var sr in sprites) sr.DOFade(0f, fadeDuration);
+        foreach (var text in texts) text.DOFade(0f, fadeDuration);
 
         // 等待死亡动画播完（渐隐同时进行）
         float startTime = Time.time;
@@ -256,8 +302,11 @@ public class UnitAppearance : MonoBehaviour
     {
         if (animator == null) return;
         Vector2Int diff = targetPos - unit.GridPosition;
-        if (diff.x == 0) return;
-
+        if (diff.x == 0) 
+        {
+            // TODO:补充方向箭头
+            return;
+        }
         Vector3 scale = animator.transform.localScale;
         scale.x = Mathf.Abs(scale.x) * (diff.x > 0 ? 1 : -1);
         animator.transform.localScale = scale;

@@ -17,7 +17,7 @@ MonoBehaviour:
   occupation: 0
   defaultFaction: 0
   icon: {fileID: 0}
-  unitPrefab: {fileID: 6974378412044888541, guid: 58786e05c73447d41922274a956d6c4f, type: 3}
+  unitPrefab: {fileID: 713643308289552368, guid: 10e961924b0ba3340b1923d0fbe5c5b4, type: 3}
   aiDeck: {fileID: 0}
   yOffset: 0
   zOffset: -0.2

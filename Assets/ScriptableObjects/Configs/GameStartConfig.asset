@@ -17,11 +17,9 @@ MonoBehaviour:
   initialCards:
   - {fileID: 11400000, guid: 3eab97737f09bee4aa5ff0eb4510d93e, type: 2}
   - {fileID: 11400000, guid: 3eab97737f09bee4aa5ff0eb4510d93e, type: 2}
-  - {fileID: 11400000, guid: 3eab97737f09bee4aa5ff0eb4510d93e, type: 2}
-  - {fileID: 11400000, guid: 07e561c661f6abe49b46f237b6e4d0c9, type: 2}
   - {fileID: 11400000, guid: 07e561c661f6abe49b46f237b6e4d0c9, type: 2}
   - {fileID: 11400000, guid: 07e561c661f6abe49b46f237b6e4d0c9, type: 2}
   - {fileID: 11400000, guid: fd5b8f96701d01b469da2b69efa229cc, type: 2}
-  - {fileID: 11400000, guid: fd5b8f96701d01b469da2b69efa229cc, type: 2}
   - {fileID: 11400000, guid: 684cd636ba43f4140bf255f2501e77ce, type: 2}
   - {fileID: 11400000, guid: 684cd636ba43f4140bf255f2501e77ce, type: 2}
+  - {fileID: 11400000, guid: c4a4b721566a104479531d82ed8569fa, type: 2}

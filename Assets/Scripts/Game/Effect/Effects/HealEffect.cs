@@ -57,7 +57,7 @@ public class HealEffect : Effect, IAnimatedEffect
         Unit target = context.GetExecutedUnit();
         if (target == null || attacker == null) yield break;
 
-        var atkApp = attacker.GetComponent<UnitAppearance>();
+        var atkApp = attacker.Appearance;
 
         if (atkApp != null)
         {
@@ -71,12 +71,13 @@ public class HealEffect : Effect, IAnimatedEffect
     public void ExecuteOnAnimationFrame(Unit executor, Unit executed, EffectContext context)
     {
         executed.Heal(_finalHeal, context); // 治疗
-        var executedApp = executed.GetComponent<UnitAppearance>();
+        var executedApp = executed.Appearance;
         if (executedApp != null)
         {
             executedApp.StartCoroutine(executedApp.PlayHeal()); // 播放受治疗动画
         }
         AudioManager.Instance.PlaySound("heal"); // 播放治疗音效
+        FloatingNumberManager.Instance.ShowNumber(executed.GridPosition, _finalHeal, FloatingNumberType.Healing); // 显示浮动数字
     }
 
     public override void OnComplete(EffectContext context)

@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0acd29ce000acef42a53ef4641f42a76, type: 3}
+  m_Name: "\u4EE3\u507F"
+  m_EditorClassIdentifier: 
+  cardName: "\u4EE3\u507F"
+  artwork: {fileID: 21300000, guid: c3a5c00aceebbca4ca5e8407cb5c9d3e, type: 3}
+  description: "\u9009\u62E9\u4E00\u4E2A\u6211\u65B9\u6218\u58EB, \u5931\u53BB20%\u5F53\u524D<color=yellow>\u751F\u547D\u503C</color>,
+    \u518D\u5BF91\u683C\u5185\u76841\u4E2A\u654C\u4EBA\u9020\u62100.5x\u5F53\u524D<color=green>\u751F\u547D\u503C</color>\u7684<color=yellow>\u7269\u7406\u4F24\u5BB3</color>"
+  destination: 0
+  Cost: 1
+  retain: 0
+  colorPreset: 1
+  cardColor: {r: 0.9, g: 0.2, b: 0.2, a: 1}
+  chains:
+  - steps:
+    - rid: 8418122144385335296
+    - rid: 8418122144385335297
+    - rid: 8418122144385335299
+    - rid: 8418122144385335301
+  references:
+    version: 2
+    RefIds:
+    - rid: 8418122144385335296
+      type: {class: SelectorStep, ns: , asm: Assembly-CSharp}
+      data:
+        selector: {fileID: 11400000, guid: 59592a06098a7374c9dc8520d0edbdc5, type: 2}
+    - rid: 8418122144385335297
+      type: {class: SelectorStep, ns: , asm: Assembly-CSharp}
+      data:
+        selector: {fileID: 11400000, guid: 041bfec5c754223479d4b2fdf834b66e, type: 2}
+    - rid: 8418122144385335299
+      type: {class: EffectStep, ns: , asm: Assembly-CSharp}
+      data:
+        effect: {fileID: 11400000, guid: e3c515420fe0fcf44addf84dd9bb5017, type: 2}
+    - rid: 8418122144385335301
+      type: {class: EffectStep, ns: , asm: Assembly-CSharp}
+      data:
+        effect: {fileID: 11400000, guid: 8d931ff659f204f48bf4a2006a23e0f9, type: 2}

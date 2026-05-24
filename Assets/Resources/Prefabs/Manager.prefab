@@ -58,6 +58,55 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a685b3015abe7be4591ce878d7aac1a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1696502464968097320
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2884026305494655918}
+  - component: {fileID: 5413634764877082960}
+  m_Layer: 0
+  m_Name: FloatingNumberManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2884026305494655918
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1696502464968097320}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2247853772759051482}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5413634764877082960
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1696502464968097320}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9e705d36e15ae548b6a46639aa92c4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  floatingNumberPrefab: {fileID: 3457828050269350400, guid: 5d52e1f251d3a3544a0e000c26e6a7d2, type: 3}
+  poolSize: 10
+  fixedOffset: {x: 0, y: 0.5, z: 0}
+  stackOffsetY: 0.4
+  mergeWindow: 0.5
 --- !u!1 &2264543989396086256
 GameObject:
   m_ObjectHideFlags: 0
@@ -322,6 +371,7 @@ Transform:
   - {fileID: 4731893944941454525}
   - {fileID: 3556408991429197821}
   - {fileID: 2309057165219169078}
+  - {fileID: 2884026305494655918}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5875597779710003868
@@ -522,8 +572,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   musicPath: Audio/Music
   soundPath: Audio/Sound
-  soundSourceCount: 4
-  loopSoundSourceCount: 2
+  soundSourceCount: 8
+  loopSoundSourceCount: 3
 --- !u!1 &9079105875148250280
 GameObject:
   m_ObjectHideFlags: 0

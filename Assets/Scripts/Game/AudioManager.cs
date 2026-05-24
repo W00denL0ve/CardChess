@@ -56,7 +56,10 @@ public class AudioManager : MonoBehaviour
             soundSources.Add(CreateSource(false));
         for (int i = 0; i < loopSoundSourceCount; i++)
             loopSoundSources.Add(CreateSource(true));
+    }
 
+    private void Start()
+    {
         // 首次启动写入默认值
         var save = SaveManager.Instance;
         if (save != null && !save.GetBool(HasLaunchedKey))
@@ -135,7 +138,7 @@ public class AudioManager : MonoBehaviour
     //  音乐播放
     // ====================================================================
 
-    public void PlayMusic(string musicName, bool fade = false)
+    public void PlayMusic(string musicName, bool fade = true)
     {
         if (string.IsNullOrEmpty(musicName)) return;
 

@@ -27,7 +27,7 @@ MonoBehaviour:
     maxHealth: 40
     attack: 8
     intelligence: 2
-    physicalDefense: 2
+    physicalDefense: 0
     magicDefense: 0
     movePointLimit: 3
     movePoints: 0

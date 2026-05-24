@@ -9,19 +9,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d7f1155fd3b24674aa12aceed3690732, type: 3}
-  m_Name: 0.6atk1move_phy
+  m_Script: {fileID: 11500000, guid: 3b523f5d4e853df4c98b8a87fa6d9afd, type: 3}
+  m_Name: 0.2cHp
   m_EditorClassIdentifier: 
-  effectName: "\u9020\u62100.6x\u529B\u91CF+1x\u56DE\u5408\u884C\u52A8\u6B65\u6570\u7684\u7269\u7406\u4F24\u5BB3"
-  icon: {fileID: 21300000, guid: 407eea88d946d4a51b3454a22f7739ec, type: 3}
+  effectName: "\u5BF9\u81EA\u8EAB\u9020\u62100.2\u500D\u5F53\u524D\u751F\u547D\u503C\u7684\u4F24\u5BB3"
+  icon: {fileID: 21300000, guid: c3a5c00aceebbca4ca5e8407cb5c9d3e, type: 3}
   multiplier:
-    attack: 0.6
+    attack: 0
     intelligence: 0
-    currentHealth: 0
+    currentHealth: 0.2
     lossHealth: 0
     maxHealth: 0
-    hasMoved: 1
+    hasMoved: 0
     physicalDefense: 0
     magicDefense: 0
-  modifiers: []
-  damageType: 0

@@ -100,25 +100,29 @@ public class DamageEffect : Effect, IAnimatedEffect
         Unit executed = context.GetExecutedUnit();
         if (executed == null || executor == null) yield break;
 
-        var executorApp = executor.GetComponent<UnitAppearance>();
+        var executorApp = executor.Appearance;
 
         if (executorApp != null)
         {
             executorApp.FaceTo(executed.GridPosition);
             executorApp.SetAnimationFrameAction(() => ExecuteOnAnimationFrame(executor, executed, context));
-            yield return executorApp.PlayAttack();
+            yield return executorApp.PlayAttack(damageType);
         }
     }
 
     public void ExecuteOnAnimationFrame(Unit executor, Unit executed, EffectContext context)
     {
         executed.TakeDamage(_finalDamage, context); // 扣血
-        var executedApp = executed.GetComponent<UnitAppearance>();
+        var executedApp = executed.Appearance;
         if (executedApp != null)
         {
             executedApp.FaceTo(executor.GridPosition); // 更改朝向
             executedApp.StartCoroutine(executedApp.PlayHitReaction()); // 播放受击动画
         }
+        AudioManager.Instance.PlaySound(damageType == DamageType.Physical ? "hitPhysical" : "hitMagic"); // 播放伤害音效
+
+        FloatingNumberType FLType = damageType == DamageType.Physical ? FloatingNumberType.Physical : FloatingNumberType.Magical;
+        FloatingNumberManager.Instance.ShowNumber(executed.GridPosition, _finalDamage, FLType); // 显示浮字
     }
 
     public override void OnComplete(EffectContext context)

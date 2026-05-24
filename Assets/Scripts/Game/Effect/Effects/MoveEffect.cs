@@ -44,9 +44,8 @@ public class MoveEffect : Effect, IAnimatedEffect
         yield return unit.MoveTo(targetCell.Value, path);
 
         // 移动完成 → 回到待机
-        var appearance = unit.GetComponent<UnitAppearance>();
-        if (appearance != null)
-            appearance.SetIdle();
+        if (unit.Appearance != null)
+            unit.Appearance.SetIdle();
     }
 
     public void ExecuteOnAnimationFrame(Unit er, Unit ed, EffectContext context)

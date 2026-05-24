@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 一个临时的地图UI，后续做好了肉鸽系统后替换
+/// TODO: 一个临时的地图UI，后续做好了肉鸽系统后替换 
 /// </summary>
 public class MapUITemp : MonoBehaviour
 {
