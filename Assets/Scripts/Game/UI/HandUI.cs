@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 /// <summary>
 /// 手牌区域管理器 — 池化管理 CardVisualizer，数据与表现分离
@@ -41,10 +42,6 @@ public class HandUI : MonoBehaviour
     [SerializeField] private float pushDistance = 40f;
     [SerializeField] private float layoutAnimDuration = 0.2f;
     [Header("交互")]
-    [SerializeField, Tooltip("左")] private float raycastPadLeft = 0f;
-    [SerializeField, Tooltip("下")] private float raycastPadBottom = 0f;
-    [SerializeField, Tooltip("右")] private float raycastPadRight = 0f;
-    [SerializeField, Tooltip("上")] private float raycastPadTop = 0f;
     private Queue<CardVisualizer> pool = new();
     private List<CardVisualizer> activeCards = new();
     private Dictionary<CardData, System.Action> pendingArrivalCallbacks = new();
@@ -59,6 +56,9 @@ public class HandUI : MonoBehaviour
     private int hoveredIndex = -1;
     private bool hoverEnabled = false;
     private CardVisualizer _clickedCard;
+
+    private float lastHoverTime;
+    private const float HoverCooldown = .1f;
 
     void Awake()
     {
@@ -277,6 +277,9 @@ public class HandUI : MonoBehaviour
     {
         if (!hoverEnabled) return;
         if (index < 0 || index >= activeCards.Count) return;
+
+        // 为卡牌设置取消悬停冷却时间
+        lastHoverTime = Time.unscaledTime;
         hoveredIndex = index;
         AudioManager.Instance.PlaySound(AudioName.cardFlipSound);
         AnimateLayout();
@@ -285,6 +288,7 @@ public class HandUI : MonoBehaviour
     public void OnCardUnhovered()
     {
         if (hoveredIndex < 0) return;
+        if (Time.unscaledTime - lastHoverTime < HoverCooldown) return;
         hoveredIndex = -1;
         AnimateLayout();
     }
@@ -480,27 +484,18 @@ public class HandUI : MonoBehaviour
 
     CardVisualizer GetFromPool()
     {
-        Vector4 pad = new Vector4(raycastPadLeft, raycastPadBottom, raycastPadRight, raycastPadTop);
         if (pool.Count > 0)
         {
             var cv = pool.Dequeue();
             cv.transform.SetParent(handContainer, false);
-            // 重置交互状态（可能被 Pending 时禁用了）
-            var images = cv.GetComponentsInChildren<UnityEngine.UI.Image>(true);
-            foreach (var img in images)
-            {
-                img.raycastTarget = true;
-                img.raycastPadding = pad;
-            }
+            // 重置交互状态（重写，只需父物体）
+            cv.GetComponent<Image>().raycastTarget = true;
             cv.SetGlowEnabled(false);
             cv.gameObject.SetActive(true);
             return cv;
         }
         var go = Instantiate(cardPrefab, handContainer);
-        var newCv = go.GetComponent<CardVisualizer>();
-        var newImages = go.GetComponentsInChildren<UnityEngine.UI.Image>(true);
-        foreach (var img in newImages) img.raycastPadding = pad;
-        return newCv;
+        return go.GetComponent<CardVisualizer>();
     }
 
     void OnEndTurnClicked()
@@ -509,12 +504,12 @@ public class HandUI : MonoBehaviour
     }
 
     /// <summary>在预制体层级中按名称查找按钮（递归）</summary>
-    private UnityEngine.UI.Button FindButton(Transform root, string name)
+    private Button FindButton(Transform root, string name)
     {
         if (root == null || string.IsNullOrEmpty(name)) return null;
 
         // 先检查当前节点
-        var btn = root.GetComponent<UnityEngine.UI.Button>();
+        var btn = root.GetComponent<Button>();
         if (btn != null && root.name == name) return btn;
 
         // 递归子节点
@@ -554,8 +549,8 @@ public class HandUI : MonoBehaviour
         // 从手牌移除
         activeCards.Remove(cv);
         cv.SetHandIndex(-1);
-        var images = cv.GetComponentsInChildren<UnityEngine.UI.Image>(true);
-        foreach (var img in images) img.raycastTarget = false;
+        var image = cv.GetComponent<Image>();
+        image.raycastTarget = false;
         RefreshLayout();
 
         // 视觉听觉效果
@@ -631,8 +626,8 @@ public class HandUI : MonoBehaviour
         {
             // 回到手牌：重新加入布局
             cv.transform.SetParent(handContainer, true);
-            var images = cv.GetComponentsInChildren<UnityEngine.UI.Image>(true);
-            foreach (var img in images) img.raycastTarget = true;
+            var img = cv.GetComponent<Image>();
+            img.raycastTarget = true;
             activeCards.Add(cv);
             RefreshLayout();
             RefreshCardCostColors();
