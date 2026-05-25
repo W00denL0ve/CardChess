@@ -48,7 +48,7 @@ public class HealEffect : Effect, IAnimatedEffect
         // 增加卡牌修饰器
         modifiers_or.AddRange(modifiers);
 
-        _finalHeal = AttributeCulculator.CulculateFinalValue(healBase, modifiers_or);
+        _finalHeal = AttributeCalculator.CalculateFinalValue(healBase, modifiers_or);
     }
 
     public IEnumerator PlayAnimation(EffectContext context)

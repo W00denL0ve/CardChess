@@ -3,7 +3,7 @@ using System.Collections.Generic;
 /// <summary>
 /// 静态工具类，实现对一个属性值的所有修饰器计算
 /// </summary>
-public static class AttributeCulculator
+public static class AttributeCalculator
 {
     /// <summary>
     /// 工具方法：计算经过修饰器修饰的最终值
@@ -13,7 +13,7 @@ public static class AttributeCulculator
     /// <param name="base_ed">受方基础值</param>
     /// <param name="modifier_ed">调用者传入正确的受方修饰器</param>
     /// <returns></returns>
-    public static int CulculateFinalValue(float base_or, List<Modifier> modifier_or, float base_ed = 0, List<Modifier> modifier_ed = null)
+    public static int CalculateFinalValue(float base_or, List<Modifier> modifier_or, float base_ed = 0, List<Modifier> modifier_ed = null)
     {
         float addSum1 = base_or;
         float addSum2 = base_ed;

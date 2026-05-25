@@ -133,7 +133,7 @@ public class DamageEffect : Effect, IAnimatedEffect
         }
         
         // 注入公式
-        _finalDamage = AttributeCulculator.CulculateFinalValue(damageBase, modifiers_or, defenseBase, modifiers_ed);
+        _finalDamage = AttributeCalculator.CalculateFinalValue(damageBase, modifiers_or, defenseBase, modifiers_ed);
     }
 
     public IEnumerator PlayAnimation(EffectContext context)
