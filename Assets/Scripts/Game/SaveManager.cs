@@ -16,6 +16,9 @@ public class SettingsData
     public int ScreenHeight = 1080;
     public bool Fullscreen = false;
     public int TargetFrameRate = 60;
+    public int KeyboardPanSpeed = 3;
+    public int DragPanSpeed = 3;
+    public int ZoomSpeed = 3;
     // 未来新增的设置项只需在此添加一行即可
 }
 public static class DemoPath
@@ -220,7 +223,10 @@ public class SaveManager : MonoBehaviour
             ScreenWidth = GetInt(nameof(SettingsData.ScreenWidth), 1920),
             ScreenHeight = GetInt(nameof(SettingsData.ScreenHeight), 1080),
             Fullscreen = GetBool(nameof(SettingsData.Fullscreen), false),
-            TargetFrameRate = GetInt(nameof(SettingsData.TargetFrameRate), 60)
+            TargetFrameRate = GetInt(nameof(SettingsData.TargetFrameRate), 60),
+            KeyboardPanSpeed = GetInt(nameof(SettingsData.KeyboardPanSpeed), 3),
+            DragPanSpeed = GetInt(nameof(SettingsData.DragPanSpeed), 3),
+            ZoomSpeed = GetInt(nameof(SettingsData.ZoomSpeed), 3)
         };
     }
 

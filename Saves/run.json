@@ -2,7 +2,7 @@
     "runState": {
         "version": 1,
         "globalStageIndex": 1,
-        "randomSeed": -1627702732,
+        "randomSeed": 735852158,
         "roster": [
             {
                 "assetAddress": "Warrior",
@@ -15,14 +15,9 @@
         "maxEnergy": 3,
         "gold": 0,
         "deckCardIds": [
-            "移动",
-            "移动",
-            "普通攻击",
-            "普通攻击",
             "行刺",
-            "小血瓶",
-            "小血瓶",
-            "代偿"
+            "行刺",
+            "行刺"
         ]
     }
 }

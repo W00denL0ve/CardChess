@@ -4,6 +4,7 @@ public abstract class Buff : ScriptableObject
 {
     public string buffId;
     public Sprite icon;
+    public string description;
 
     /// <summary>
     /// <0 永久

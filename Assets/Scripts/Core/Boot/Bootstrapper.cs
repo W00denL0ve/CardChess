@@ -80,6 +80,9 @@ public class Bootstrapper : MonoBehaviour
             AudioManager.Instance.SetMasterVolume(settings.MasterVolume);
             AudioManager.Instance.SetMusicVolume(settings.MusicVolume);
             AudioManager.Instance.SetSoundVolume(settings.SfxVolume);
+            CameraController.Instance?.SetKeyboardPanSpeed(settings.KeyboardPanSpeed);
+            CameraController.Instance?.SetDragPanSpeed(settings.DragPanSpeed);
+            CameraController.Instance?.SetZoomSpeed(settings.ZoomSpeed);
             QualitySettings.SetQualityLevel(settings.QualityLevel);
             Screen.SetResolution(settings.ScreenWidth, settings.ScreenHeight, settings.Fullscreen);
             Application.targetFrameRate = settings.TargetFrameRate;

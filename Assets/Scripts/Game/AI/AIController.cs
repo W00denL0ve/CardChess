@@ -416,18 +416,23 @@ public class AIController : MonoBehaviour
     {
         bool success = false;
         int curEnergy = remainingEnergy[unit];
+
+        // 提前检查是否可用
+        // 能量
         if (decks[unit].entries[index].energyCost > curEnergy) 
         { 
             Log("能量不足，无法执行");
             OnComplete?.Invoke(success);
             yield break;
         }
+        // 冷却
         if (cooldowns[unit].TryGetValue(index, out int cd) && cd > 0)
         {
             Log("冷却中，无法执行");
             OnComplete?.Invoke(success);
             yield break;
         }
+        // 次数检查已在算分与执行所有步骤时进行
 
         Log($"条目{index}:执行链");
         var ctx = new EffectContext

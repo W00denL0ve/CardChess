@@ -53,6 +53,8 @@ public class HandUI : MonoBehaviour
     private UnityEngine.UI.Button discardDeckButton;
     private TextMeshProUGUI drawPileCardLeftDisplay;
     private TextMeshProUGUI energyDisplayTMP;
+    private Color originalColor;
+    private Vector3 originalScale;
     private Transform canvasTransform;
     private int hoveredIndex = -1;
     private bool hoverEnabled = false;
@@ -102,6 +104,8 @@ public class HandUI : MonoBehaviour
             if (energyBtn != null)
             {
                 energyDisplayTMP = energyBtn.transform.GetComponentInChildren<TextMeshProUGUI>();
+                originalColor = energyDisplayTMP.color;
+                originalScale = energyDisplayTMP.transform.localScale;
                 energyDisplayTMP.text = ResourceManager.Instance?.Energy.ToString() ?? "0";
             }
         }
@@ -251,11 +255,9 @@ public class HandUI : MonoBehaviour
     public void EnergyWarning()
     {
         if (energyDisplayTMP == null) return;
+
         // 实现一个短暂的数字变红并放大的脉冲效果
         DOTween.Kill(energyDisplayTMP);
-
-        Color originalColor = energyDisplayTMP.color;
-        Vector3 originalScale = energyDisplayTMP.transform.localScale;
 
         // 第一阶段：变红 + 放大（0.15s）
         energyDisplayTMP.DOColor(Color.red, 0.15f).SetTarget(energyDisplayTMP);

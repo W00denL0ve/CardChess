@@ -247,7 +247,7 @@ public class AsyncEffectExecutor : MonoBehaviour
         var candidates = selector.GetTargets(context);
         if (candidates == null || candidates.Count == 0)
         {
-            Logger.LogWarning($"[AsyncEffect] {selector.name} 返回空目标列表");
+            Logger.Log($"[AsyncEffect] {selector.name} 返回空目标列表");
             onSelected(null);
             yield break;
         }

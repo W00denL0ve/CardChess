@@ -28,6 +28,11 @@ public class UnitAppearance : MonoBehaviour
     private SpriteRenderer[] sprites;
     private TextMeshProUGUI[] texts;
 
+    // 各组件初始 Alpha（用于生成/死亡动画的目标值）
+    private float[] imageAlphas;
+    private float[] spriteAlphas;
+    private float[] textAlphas;
+
     [Header("Animator Trigger 名称")]
     public string triggerWalk = "Walk";
     public string triggerIdle = "Idle";
@@ -55,6 +60,11 @@ public class UnitAppearance : MonoBehaviour
         images = GetComponentsInChildren<Image>(true);
         sprites = GetComponentsInChildren<SpriteRenderer>(true);
         texts = GetComponentsInChildren<TextMeshProUGUI>(true);
+
+        // 缓存各组件初始 Alpha（生成动画以此为终点，死亡动画以此为起点）
+        imageAlphas = Array.ConvertAll(images, img => img.color.a);
+        spriteAlphas = Array.ConvertAll(sprites, sr => sr.color.a);
+        textAlphas = Array.ConvertAll(texts, text => text.color.a);
 
         // 初始排序：Y 越大（越靠上）排序值越小，画在后面
         RefreshSortingOrder();
@@ -181,18 +191,21 @@ public class UnitAppearance : MonoBehaviour
         yield return WaitForCurrentClip();
     }
 
+    [Header("生成/死亡动画")]
+    [SerializeField] private float spawnDuration = 0.5f;
+    [SerializeField] private float deathFadeDuration = 1.0f;
+
     /// <summary>播放生成动画，使用DOTween</summary>
     public void PlaySpawnAnimation()
     {
-        // 初始 alpha = 0
-        foreach (var img in images) { var c = img.color; c.a = 0f; img.color = c; }
-        foreach (var sr in sprites) { var c = sr.color; c.a = 0f; sr.color = c; }
-        foreach (var text in texts) { var c = text.color; c.a = 0f; text.color = c; }
+        // 从 alpha = 0 渐变到各自初始值
+        for (int i = 0; i < images.Length; i++) { var c = images[i].color; c.a = 0f; images[i].color = c; }
+        for (int i = 0; i < sprites.Length; i++) { var c = sprites[i].color; c.a = 0f; sprites[i].color = c; }
+        for (int i = 0; i < texts.Length; i++) { var c = texts[i].color; c.a = 0f; texts[i].color = c; }
 
-        // TODO:duration 可配成 Inspector 字段
-        foreach (var img in images) img.DOFade(1f, 0.5f);
-        foreach (var sr in sprites) sr.DOFade(1f, 0.5f);
-        foreach (var text in texts) text.DOFade(1f, 0.5f);
+        for (int i = 0; i < images.Length; i++) images[i].DOFade(imageAlphas[i], spawnDuration);
+        for (int i = 0; i < sprites.Length; i++) sprites[i].DOFade(spriteAlphas[i], spawnDuration);
+        for (int i = 0; i < texts.Length; i++) texts[i].DOFade(textAlphas[i], spawnDuration);
     }
 
     /// <summary>播放死亡动画，同时渐隐所有子物体，完成后销毁</summary>
@@ -201,19 +214,18 @@ public class UnitAppearance : MonoBehaviour
         if (animator == null) yield break;
         animator.SetTrigger(triggerDead);
 
-        // 同时渐隐所有子物体的 Image 和 SpriteRenderer
-        float fadeDuration = 1.0f;
-        foreach (var img in images) img.DOFade(0f, fadeDuration);
-        foreach (var sr in sprites) sr.DOFade(0f, fadeDuration);
-        foreach (var text in texts) text.DOFade(0f, fadeDuration);
+        // 从当前 Alpha 渐隐到 0
+        foreach (var img in images) img.DOFade(0f, deathFadeDuration);
+        foreach (var sr in sprites) sr.DOFade(0f, deathFadeDuration);
+        foreach (var text in texts) text.DOFade(0f, deathFadeDuration);
 
         // 等待死亡动画播完（渐隐同时进行）
         float startTime = Time.time;
         yield return WaitForCurrentClip();
         // 确保渐隐至少播完
         float elapsed = Time.time - startTime;
-        if (elapsed < fadeDuration)
-            yield return new WaitForSeconds(fadeDuration - elapsed);
+        if (elapsed < deathFadeDuration)
+            yield return new WaitForSeconds(deathFadeDuration - elapsed);
     }
 
     /// <summary>回到待机动画</summary>
@@ -311,16 +323,17 @@ public class UnitAppearance : MonoBehaviour
         if (animator == null) return;
 
         // 计算目标 X 缩放
-        float targetScaleX = Mathf.Abs(animator.transform.localScale.x);
+        float targetScaleX = animator.transform.localScale.x;
         Quaternion targetIndicatorRot = Quaternion.identity;
 
         switch (dir)
         {
             case FacingDirection.Left:
-                targetScaleX = -Mathf.Abs(animator.transform.localScale.x);
+                targetScaleX = -Mathf.Abs(targetScaleX);
                 targetIndicatorRot = Quaternion.Euler(90, 0, 180);
                 break;
             case FacingDirection.Right:
+                targetScaleX = Mathf.Abs(targetScaleX);
                 targetIndicatorRot = Quaternion.Euler(90, 0, 0);
                 break;
             case FacingDirection.Up:

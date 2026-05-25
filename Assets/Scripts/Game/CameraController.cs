@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 /// <summary>
@@ -18,17 +19,17 @@ public class CameraController : MonoBehaviour
     public static CameraController Instance { get; private set; }
 
     [Header("相机姿态")]
-    public float xRotation = 60f;
+    public float xRotation = 45f;
 
     [Header("平移")]
-    public float keyboardPanSpeed = 10f;
-    public float dragPanSpeed = 0.5f;
+    [SerializeField] private int keyboardPanSpeed = 3;
+    [SerializeField] private int dragPanSpeed = 3;
     public int mouseButtonForDrag = 1;   // 0=左键 1=右键 2=中键
 
     [Header("缩放")]
-    public float zoomSpeed = 20f;
-    public float minDistance = 3f;
-    public float maxDistance = 10f;
+    [SerializeField] private int zoomSpeed = 3;
+    public float minDistance = 10f;
+    public float maxDistance = 20f;
     public float initialDistance = 15f;
 
     [Header("边界留白")]
@@ -60,6 +61,46 @@ public class CameraController : MonoBehaviour
     // 鼠标拖动状态
     private Vector2 lastMousePos;
     private bool isDragging;
+
+    // PlayerPrefs 键名
+    private const string KeyboardPanSpeedKey = "KeyboardPanSpeed";
+    private const string DragPanSpeedKey = "DragPanSpeed";
+    private const string ZoomSpeedKey = "ZoomSpeed";
+    private const string HasLaunchedCameraKey = "HasLaunchedCamera";
+
+    private const int DefaultKeyboardPanSpeed = 3;
+    private const int DefaultDragPanSpeed = 3;
+    private const int DefaultZoomSpeed = 3;
+
+    // ====================================================================
+    //  公开属性（供 UI 读取）
+    // ====================================================================
+
+    public int KeyboardPanSpeed => keyboardPanSpeed;
+    public int DragPanSpeed => dragPanSpeed;
+    public int ZoomSpeed => zoomSpeed;
+
+    // ====================================================================
+    //  公开设置方法（供 UI 调用，自动持久化）
+    // ====================================================================
+
+    public void SetKeyboardPanSpeed(int value)
+    {
+        keyboardPanSpeed = Mathf.Clamp(value, 1, 5);
+        SaveManager.Instance?.SetInt(KeyboardPanSpeedKey, keyboardPanSpeed);
+    }
+
+    public void SetDragPanSpeed(int value)
+    {
+        dragPanSpeed = Mathf.Clamp(value, 1, 5);
+        SaveManager.Instance?.SetInt(DragPanSpeedKey, dragPanSpeed);
+    }
+
+    public void SetZoomSpeed(int value)
+    {
+        zoomSpeed = Mathf.Clamp(value, 1, 5);
+        SaveManager.Instance?.SetInt(ZoomSpeedKey, zoomSpeed);
+    }
 
     void Awake()
     {
@@ -102,7 +143,23 @@ public class CameraController : MonoBehaviour
         }
     }
 
-    void Start() { }
+    void Start()
+    {
+        // 首次启动写入默认值
+        var save = SaveManager.Instance;
+        if (save != null && !save.GetBool(HasLaunchedCameraKey))
+        {
+            save.SetInt(KeyboardPanSpeedKey, DefaultKeyboardPanSpeed);
+            save.SetInt(DragPanSpeedKey, DefaultDragPanSpeed);
+            save.SetInt(ZoomSpeedKey, DefaultZoomSpeed);
+            save.SetBool(HasLaunchedCameraKey, true);
+        }
+
+        // 读取已保存的值
+        keyboardPanSpeed = save?.GetInt(KeyboardPanSpeedKey, DefaultKeyboardPanSpeed) ?? DefaultKeyboardPanSpeed;
+        dragPanSpeed = save?.GetInt(DragPanSpeedKey, DefaultDragPanSpeed) ?? DefaultDragPanSpeed;
+        zoomSpeed = save?.GetInt(ZoomSpeedKey, DefaultZoomSpeed) ?? DefaultZoomSpeed;
+    }
 
     /// <summary>每次加载新场景时清理场上的多余相机</summary>
     private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, LoadSceneMode mode)
@@ -162,11 +219,18 @@ public class CameraController : MonoBehaviour
     private void HandleKeyboardPan()
     {
         if (!playerControl) return;
-        float h = Input.GetAxisRaw("Horizontal");
-        float v = Input.GetAxisRaw("Vertical");
+        var keyboard = Keyboard.current;
+        if (keyboard == null) return;
+
+        float h = 0f;
+        if (keyboard.dKey.isPressed) h += 1f;
+        if (keyboard.aKey.isPressed) h -= 1f;
+        float v = 0f;
+        if (keyboard.wKey.isPressed) v += 1f;
+        if (keyboard.sKey.isPressed) v -= 1f;
         if (Mathf.Approximately(h, 0f) && Mathf.Approximately(v, 0f)) return;
 
-        Vector2 move = new Vector2(h, v).normalized * keyboardPanSpeed * Time.deltaTime;
+        Vector2 move = new Vector2(h, v).normalized * 3 * keyboardPanSpeed * Time.deltaTime;
         MoveTarget(move);
     }
 
@@ -177,20 +241,31 @@ public class CameraController : MonoBehaviour
     private void HandleMouseDrag()
     {
         if (!playerControl) { isDragging = false; return; }
-        if (Input.GetMouseButtonDown(mouseButtonForDrag))
+
+        var mouse = Mouse.current;
+        if (mouse == null) return;
+
+        var dragButton = mouseButtonForDrag switch
+        {
+            0 => mouse.leftButton,
+            2 => mouse.middleButton,
+            _ => mouse.rightButton,
+        };
+
+        if (dragButton.wasPressedThisFrame)
         {
             isDragging = true;
-            lastMousePos = Input.mousePosition;
+            lastMousePos = mouse.position.ReadValue();
         }
-        else if (Input.GetMouseButtonUp(mouseButtonForDrag))
+        else if (dragButton.wasReleasedThisFrame)
         {
             isDragging = false;
         }
 
         if (!isDragging) return;
 
-        Vector2 currentMousePos = Input.mousePosition;
-        Vector2 delta = (currentMousePos - lastMousePos) * dragPanSpeed * Time.deltaTime;
+        Vector2 currentMousePos = mouse.position.ReadValue();
+        Vector2 delta = (currentMousePos - lastMousePos) * dragPanSpeed * currentDistance/minDistance * Time.deltaTime * 0.1f;
 
         // 屏幕空间移动 → 世界空间 XZ（反转）
         MoveTarget(new Vector2(-delta.x, -delta.y));
@@ -213,11 +288,14 @@ public class CameraController : MonoBehaviour
 
     private void HandleZoom()
     {
-        if(!playerControl) return;
-        float scroll = Input.GetAxis("Mouse ScrollWheel");
+        if (!playerControl) return;
+        var mouse = Mouse.current;
+        if (mouse == null) return;
+
+        float scroll = mouse.scroll.ReadValue().y;
         if (Mathf.Approximately(scroll, 0f)) return;
 
-        currentDistance -= scroll * zoomSpeed;
+        currentDistance -= scroll * 0.005f * zoomSpeed;
         currentDistance = Mathf.Clamp(currentDistance, minDistance, maxDistance);
 
         ApplyCameraTransform();
@@ -254,7 +332,7 @@ public class CameraController : MonoBehaviour
 
         targetPoint = new Vector2(
             (gridMin.x + gridMax.x) * 0.5f,
-            (gridMin.y + gridMax.y) * 0.5f - initialZOffset
+            (gridMin.y + gridMax.y) * 0.5f + initialZOffset
         );
 
         ApplyCameraTransform();

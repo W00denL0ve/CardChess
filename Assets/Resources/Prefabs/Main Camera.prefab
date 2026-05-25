@@ -108,14 +108,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   xRotation: 45
   keyboardPanSpeed: 5
-  dragPanSpeed: 0.5
-  mouseButtonForDrag: 0
-  zoomSpeed: 4
-  minDistance: 9
-  maxDistance: 15
-  initialDistance: 12
+  dragPanSpeed: 1
+  mouseButtonForDrag: 1
+  zoomSpeed: 1
+  minDistance: 10
+  maxDistance: 20
+  initialDistance: 15
   extraMargin: 0
-  initialZOffset: 5
+  initialZOffset: 0
 --- !u!1001 &3861478881830663590
 PrefabInstance:
   m_ObjectHideFlags: 0
