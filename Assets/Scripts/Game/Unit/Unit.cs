@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using GLTFast.Schema;
 using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -23,14 +24,18 @@ public struct UnitBaseValue
 // 朝向枚举
 public enum FacingDirection { Up, Down, Left, Right }
 
-public class Unit : MonoBehaviour
+public class Unit : MonoBehaviour, ILongPressTarget
 {
     // 配置
     [SerializeField] private string unitId;
+    [SerializeField] private string unitName;
+    [SerializeField] private Sprite icon;
     [SerializeField] private Occupation occupation;
 
     // 运行时身份
     public string UnitId => unitId;
+    public string UnitName => unitName;
+    public Sprite Icon => icon;
     public Occupation Occupation => occupation;
     public Faction Faction { get; private set; }
     public bool IsAlive { get; private set; }
@@ -50,6 +55,7 @@ public class Unit : MonoBehaviour
 
     /// <summary>血量百分比 0~1</summary>
     public float HpPercent => baseValue.maxHealth > 0 ? (float)baseValue.currentHealth / baseValue.maxHealth : 0f;
+    
     public UnitConfig Config { get; private set; }
 
     // 网格位置（由 GridManager 设置）
@@ -71,6 +77,8 @@ public class Unit : MonoBehaviour
         GameEventChannel.Unregister<TurnStartedEvent>(OnTurnStarted);
     }
 
+    public Vector3 GetScreenPosition() => UnityEngine.Camera.main?.WorldToScreenPoint(transform.position) ?? Vector3.zero;
+
     public void OnTurnStarted(TurnStartedEvent evt)
     {
         baseValue.hasMoved = 0;
@@ -82,6 +90,8 @@ public class Unit : MonoBehaviour
     {
         Config = config;
         unitId = config.unitId;
+        unitName = config.unitName;
+        icon = config.icon;
         occupation = config.occupation;
         Faction = overrideFaction ?? config.defaultFaction;
         GridPosition = gridPos;

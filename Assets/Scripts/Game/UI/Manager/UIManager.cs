@@ -1,6 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
+
+/// <summary>
+/// 面板层级类型
+/// </summary>
+public enum PanelType { HUD, Panel, Overlay }
 
 /// <summary>
 /// 全局 UI 管理器，负责面板的显示、隐藏、层级和遮罩。
@@ -10,6 +16,9 @@ public class UIManager : MonoBehaviour
 {
     public static UIManager Instance { get; private set; }
 
+    /// <summary>暴露主 Canvas 供外部组件使用</summary>
+    public Canvas MainCanvas => mainCanvas;
+
     [Header("主画布")]
     [SerializeField] private Canvas mainCanvas;
 
@@ -17,14 +26,21 @@ public class UIManager : MonoBehaviour
     [SerializeField] private List<PanelEntry> panelPrefabs = new List<PanelEntry>();
 
     [Header("背景遮罩")]
-    [SerializeField] private Image backgroundMask; // 半透明背景遮罩，用于弹窗
-    [SerializeField] private float maskAlpha = 0.5f;
+    [SerializeField] private GameObject backgroundMaskPrefab; // 背景遮罩预制体
+
+    private Image maskImage; // 运行时实例化的背景遮罩 Image 组件
 
     [Header("转场遮罩")]
     [SerializeField] private GameObject Mask; // 初始化时实例化并隐藏
     
     private MaskRadiusAnimator maskRadiusAnimator; // 转场用的镂空遮罩动画组件
     private Coroutine panelSwitchCoroutine;        // 防止多个 DelayedPanelSwitch 竞态
+
+    // 层级容器（运行时动态创建）
+    private Transform backgroundLayer;
+    private Transform panelLayer;
+    private Transform overlayLayer;
+    private Transform systemLayer;
 
     // 面板实例字典（按名称索引）
     private Dictionary<string, GameObject> panels = new Dictionary<string, GameObject>();
@@ -45,26 +61,49 @@ public class UIManager : MonoBehaviour
         // 设置为跨场景保留
         DontDestroyOnLoad(mainCanvas.gameObject);
 
-        // 确保遮罩初始隐藏
-        if (backgroundMask != null)
-            backgroundMask.gameObject.SetActive(false);
+        // 动态创建层级容器（从下到上）
+        backgroundLayer = CreateLayer("BackgroundLayer");
+        panelLayer = CreateLayer("PanelLayer");
+        overlayLayer = CreateLayer("OverlayLayer");
+        systemLayer = CreateLayer("SystemLayer");
 
-        // 预实例化所有面板并隐藏
+        // 实例化背景遮罩（放在 OverlayLayer）
+        if (backgroundMaskPrefab != null)
+        {
+            GameObject maskObj = Instantiate(backgroundMaskPrefab, overlayLayer);
+            maskObj.name = "BackgroundMask";
+            maskObj.SetActive(false);
+            maskObj.transform.SetAsFirstSibling(); // 遮罩在 OverlayLayer 最底层
+
+            maskImage = maskObj.GetComponent<Image>();
+            if (maskImage != null)
+            {
+                maskImage.raycastTarget = true;
+                var maskBtn = maskObj.GetComponent<Button>();
+                if (maskBtn == null) maskBtn = maskObj.AddComponent<Button>();
+                maskBtn.onClick.RemoveAllListeners();
+                maskBtn.onClick.AddListener(HideTopPanel);
+                maskBtn.navigation = new Navigation { mode = Navigation.Mode.None };
+            }
+        }
+
+        // 预实例化所有面板并隐藏（按 PanelType 路由到对应层级）
         foreach (var entry in panelPrefabs)
         {
             if (entry.prefab != null)
             {
-                GameObject instance = Instantiate(entry.prefab, mainCanvas.transform);
+                Transform parent = GetLayer(entry.panelType);
+                GameObject instance = Instantiate(entry.prefab, parent);
                 instance.name = entry.panelName;
                 instance.SetActive(false);
                 panels[entry.panelName] = instance;
             }
         }
 
-        // 实例化并初始化转场遮罩
+        // 实例化并初始化转场遮罩（放在 SystemLayer）
         if (Mask != null)
         {
-            Mask = Instantiate(Mask, mainCanvas.transform);
+            Mask = Instantiate(Mask, systemLayer);
             Mask.name = "Mask";
             Mask.SetActive(false);
             maskRadiusAnimator = Mask.GetComponent<MaskRadiusAnimator>();
@@ -101,7 +140,7 @@ public class UIManager : MonoBehaviour
     /// <summary>
     /// 显示指定名称的面板。若已显示则不重复创建。
     /// </summary>
-    public void Show(string panelName, bool showMask = false)
+    public void Show(string panelName, bool showMask = false, bool fadeIn = false,object data = null)
     {
         if (!panels.ContainsKey(panelName))
         {
@@ -113,25 +152,46 @@ public class UIManager : MonoBehaviour
         if (panel.activeSelf) return;
 
         panel.SetActive(true);
-        if (panelName != "HUD") // HUD保持在最底层
+
+        if (fadeIn)
         {
-            panel.transform.SetSiblingIndex(Mask.transform.GetSiblingIndex() - 1); // 放在转场遮罩下一层
+            var images = panel.GetComponentsInChildren<Image>(true);
+            foreach (var image in images)
+            {
+                Color color = image.color;
+                float originalAlpha = color.a;
+                color.a = 0f;
+                image.color = color;
+                image.DOFade(originalAlpha, 0.3f);
+            }
         }
+
+        if (data != null) // 将数据传递给面板
+        {
+            var receiver = panel.GetComponent<IPanelDataReceiver>();
+            if (receiver != null)
+                receiver.OnReceiveData(data);
+            else
+                Logger.LogWarning($"UIManager: 面板 {panelName} 不支持数据传递。");
+        }
+
+        // 在所在层级容器中置顶（层间顺序由容器本身保证）
+        panel.transform.SetAsLastSibling();
         panelStack.Push(panel);
 
-        if (showMask && backgroundMask != null)
+        // 显示遮罩（与面板在同一 OverlayLayer，遮罩在下面）
+        if (showMask && maskImage != null)
         {
-            backgroundMask.gameObject.SetActive(true);
-            SetMaskAlpha(maskAlpha);
-            // 遮罩放在面板下层，其余内容上层
-            backgroundMask.transform.SetSiblingIndex(panel.transform.GetSiblingIndex() - 1);
+            maskImage.gameObject.SetActive(true);
+            maskImage.transform.SetAsLastSibling();
+            panel.transform.SetAsLastSibling(); // 面板在遮罩之上
         }
     }
 
     /// <summary>
     /// 隐藏指定面板。
     /// </summary>
-    public void Hide(string panelName, bool autoHideMask = true)
+    public void Hide(string panelName, bool autoHideMask = true, bool fadeOut = false)
     {
         if (!panels.ContainsKey(panelName)) return;
 
@@ -143,7 +203,7 @@ public class UIManager : MonoBehaviour
             panelStack.Pop();
 
         // 检查是否需要隐藏遮罩
-        if (autoHideMask && backgroundMask != null && ShouldHideMask())
+        if (autoHideMask && maskImage != null && ShouldHideMask())
             HideMask();
     }
 
@@ -241,26 +301,42 @@ public class UIManager : MonoBehaviour
     // ---------- 遮罩辅助方法 ----------
     private void HideMask()
     {
-        if (backgroundMask != null)
-            backgroundMask.gameObject.SetActive(false);
+        if (maskImage != null)
+            maskImage.gameObject.SetActive(false);
     }
 
     private bool ShouldHideMask()
     {
+        // 只检查 OverlayLayer 中的面板是否有仍激活的
         foreach (var panel in panels.Values)
         {
-            if (panel.activeSelf) return false;
+            if (panel.transform.parent == overlayLayer && panel.activeSelf)
+                return false;
         }
         return true;
     }
 
-    private void SetMaskAlpha(float alpha)
+    // ---------- 层级容器辅助 ----------
+    private Transform CreateLayer(string name)
     {
-        if (backgroundMask != null)
+        GameObject go = new GameObject(name, typeof(RectTransform));
+        go.transform.SetParent(mainCanvas.transform, false);
+        RectTransform rect = go.GetComponent<RectTransform>();
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+        return go.transform;
+    }
+
+    private Transform GetLayer(PanelType type)
+    {
+        switch (type)
         {
-            Color c = backgroundMask.color;
-            c.a = alpha;
-            backgroundMask.color = c;
+            case PanelType.HUD:     return backgroundLayer;
+            case PanelType.Panel:   return panelLayer;
+            case PanelType.Overlay: return overlayLayer;
+            default:                return panelLayer;
         }
     }
 
@@ -274,4 +350,5 @@ public class PanelEntry
 {
     public string panelName;      // 面板标识符
     public GameObject prefab;     // 面板预制体
+    public PanelType panelType = PanelType.Panel;  // 所属层级
 }

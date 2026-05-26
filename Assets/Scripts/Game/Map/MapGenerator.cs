@@ -26,7 +26,7 @@ public class MapGenerator : MonoBehaviour
     /// <param name="seed"></param>
     public void GenerateMap(int seed)
     {
-        //todo
+        //TODO
     }
 }
 

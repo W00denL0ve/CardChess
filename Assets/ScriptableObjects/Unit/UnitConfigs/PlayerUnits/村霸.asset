@@ -16,7 +16,7 @@ MonoBehaviour:
   unitName: "\u6751\u9738"
   occupation: 0
   defaultFaction: 0
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 2281300144201594697975d0371c2f2f, type: 3}
   unitPrefab: {fileID: 713643308289552368, guid: 10e961924b0ba3340b1923d0fbe5c5b4, type: 3}
   aiDeck: {fileID: 0}
   yOffset: 0

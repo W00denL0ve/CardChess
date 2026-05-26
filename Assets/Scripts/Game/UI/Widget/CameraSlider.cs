@@ -26,7 +26,7 @@ public class CameraSlider : MonoBehaviour
         slider = GetComponent<Slider>();
         if (slider == null)
         {
-            Debug.LogError($"[CameraSlider] 物体 {gameObject.name} 缺少 Slider 组件，已禁用脚本。", this);
+            Logger.LogError($"[CameraSlider] 物体 {gameObject.name} 缺少 Slider 组件，已禁用脚本。");
             enabled = false;
             return;
         }
@@ -54,7 +54,7 @@ public class CameraSlider : MonoBehaviour
     {
         if (CameraController.Instance == null)
         {
-            Debug.LogWarning("[CameraSlider] CameraController 未就绪，无法刷新值。");
+            Logger.Log("[CameraSlider] CameraController 未就绪，无法刷新值。");
             return;
         }
 
@@ -81,7 +81,7 @@ public class CameraSlider : MonoBehaviour
 
         if (CameraController.Instance == null)
         {
-            Debug.LogWarning("[CameraSlider] CameraController 未就绪，无法修改值。");
+            Logger.LogWarning("[CameraSlider] CameraController 未就绪，无法修改值。");
             return;
         }
 

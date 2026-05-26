@@ -384,6 +384,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4896580791630047354}
   - component: {fileID: 7502176898355385617}
+  - component: {fileID: 5277498066433522781}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -423,21 +424,44 @@ MonoBehaviour:
   panelPrefabs:
   - panelName: HUD
     prefab: {fileID: 2823024514206007742, guid: 085a24a527f6b5e40941dcfe56bad7f0, type: 3}
+    panelType: 0
   - panelName: title
     prefab: {fileID: 6707100479629806193, guid: 7d565df7208720e4a9fe82c3592b65c0, type: 3}
+    panelType: 1
   - panelName: pauseMenu
     prefab: {fileID: 4689742050234512625, guid: ca80beb728e97a54596c26a1eeed2f44, type: 3}
+    panelType: 1
   - panelName: loading
     prefab: {fileID: 1220601289526093688, guid: 0e4c0cb433b5f4e4fbdd5aa2ea197564, type: 3}
+    panelType: 1
   - panelName: map
     prefab: {fileID: 2441518529154147696, guid: 75e49282a9152e44ab8907dafd6d7690, type: 3}
+    panelType: 1
   - panelName: settings
     prefab: {fileID: 4208648122285006166, guid: 24714122ae71bea469b1d5dfde4543e9, type: 3}
+    panelType: 1
+  - panelName: UnitInfoPanel
+    prefab: {fileID: 5066478743646451059, guid: 27e387d2386aa8a47a2091bc0c2d8bf1, type: 3}
+    panelType: 2
   - panelName: win
     prefab: {fileID: 8878716537800542026, guid: 24203ffcb11430344848a01781da1d3b, type: 3}
-  backgroundMask: {fileID: 0}
-  maskAlpha: 0.5
+    panelType: 2
+  backgroundMaskPrefab: {fileID: 2341070686164017462, guid: 4e87cd9216ffe9141b45f70a94bc8777, type: 3}
   Mask: {fileID: 2327737297593057104, guid: e3107f06779fe684590efc27b80c956b, type: 3}
+--- !u!114 &5277498066433522781
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5875597779710003868}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08d06a7b6e190b54291cebc7bf9b8f9b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ringSliderPrefab: {fileID: 4455017560997777968, guid: 256f5e0f5cec84b4eb5b462e46b427db, type: 3}
+  screenOffset: {x: 0, y: 80}
 --- !u!1 &6033736974178568163
 GameObject:
   m_ObjectHideFlags: 0
@@ -584,6 +608,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3556408991429197821}
   - component: {fileID: 996303906591329167}
+  - component: {fileID: 8070563414086444210}
   m_Layer: 0
   m_Name: InputManager
   m_TagString: Untagged
@@ -624,3 +649,18 @@ MonoBehaviour:
   unitLayerMask:
     serializedVersion: 2
     m_Bits: 128
+--- !u!114 &8070563414086444210
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9079105875148250280}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11ec3b6d3ea4d9444a90a5d4c6ce6a64, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  unitInfoPanelName: UnitInfoPanel
+  showMask: 1
+  fadeIn: 1

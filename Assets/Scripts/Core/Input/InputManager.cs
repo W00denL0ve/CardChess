@@ -26,6 +26,12 @@ public class InputManager : MonoBehaviour
     [SerializeField] private LayerMask cellLayerMask = 1 << 0;
     [SerializeField] private LayerMask unitLayerMask = 1 << 0;
 
+    private float longPressThreshold = 0.3f;                      // 运行时从 Input Action 读取
+    private InputAction longPressAction;                          // LongPress 动作引用
+    private float pressStartTime = 0f;
+    private ILongPressTarget pendingLongPressTarget = null;                     // 按下时检测到的可长按目标
+    private bool longPressPerformed = false;                      // 是否已达阈值（防重复派发）
+
     // New Input System
     private GameInput gameInput;
 
@@ -53,6 +59,9 @@ public class InputManager : MonoBehaviour
     {
         mainCamera = Camera.main;
         Logger.Log($"获取到相机{mainCamera.name}");
+
+        // 从 Input Action 的 Hold 交互一次读取阈值，与配置保持同步
+        ReadLongPressThreshold();
     }
 
     private void OnEnable()
@@ -65,6 +74,9 @@ public class InputManager : MonoBehaviour
             gameInput.Gameplay.DoubleClick.performed += OnDoubleClickPerformed;
             gameInput.Gameplay.ContextMenu.performed += OnContextMenuPerformed;
             gameInput.Gameplay.Escape.performed += OnEscapePerformed;
+            gameInput.Gameplay.Press.started += OnLongPressStarted;
+            gameInput.Gameplay.Press.canceled += OnLongPressCanceled;
+            gameInput.Gameplay.Press.performed += OnLongPressPerformed;
         }
     }
 
@@ -76,8 +88,22 @@ public class InputManager : MonoBehaviour
             gameInput.Gameplay.DoubleClick.performed -= OnDoubleClickPerformed;
             gameInput.Gameplay.ContextMenu.performed -= OnContextMenuPerformed;
             gameInput.Gameplay.Escape.performed -= OnEscapePerformed;
+            gameInput.Gameplay.Press.started -= OnLongPressStarted;
+            gameInput.Gameplay.Press.canceled -= OnLongPressCanceled;
+            gameInput.Gameplay.Press.performed -= OnLongPressPerformed;
             gameInput.Disable();
         }
+    }
+
+    private void Update()
+    {
+        if (pendingLongPressTarget == null) return;
+
+        float progress = Mathf.Clamp01(
+            (Time.time - pressStartTime) / longPressThreshold);
+
+        GameEventChannel.Dispatch(new LongPressUpdateEvent(
+            pendingLongPressTarget, progress));
     }
 
     private void OnDestroy()
@@ -170,6 +196,74 @@ public class InputManager : MonoBehaviour
         return null;
     }
 
+    // 按下瞬间
+    private void OnLongPressStarted(InputAction.CallbackContext context)
+    {
+        pressStartTime = Time.time;
+        pendingLongPressTarget = GetLongPressTargetUnderMouse();
+
+        if (pendingLongPressTarget != null)
+            GameEventChannel.Dispatch(new LongPressStartedEvent(pendingLongPressTarget));
+    }
+
+    // 松开瞬间
+    // Hold 交互：未达到阈值时松开 → canceled；已达到阈值后松开 → canceled（需区分）
+    private void OnLongPressCanceled(InputAction.CallbackContext context)
+    {
+        // 仅当长按尚未完成时才派发取消事件
+        if (pendingLongPressTarget != null && !longPressPerformed)
+        {
+            GameEventChannel.Dispatch(new LongPressCancelledEvent(pendingLongPressTarget));
+        }
+
+        pendingLongPressTarget = null;
+        longPressPerformed = false;
+    }
+
+    // 长按完成（Hold 交互达到阈值后自动触发）
+    private void OnLongPressPerformed(InputAction.CallbackContext context)
+    {
+        if (pendingLongPressTarget != null)
+        {
+            longPressPerformed = true;
+            GameEventChannel.Dispatch(new LongPressPerformedEvent(pendingLongPressTarget));
+            pendingLongPressTarget = null;
+        }
+    }
+
+    // ---------- 长按阈值读取 ----------
+    private void ReadLongPressThreshold()
+    {
+        // interactions 定义在 action 级别，非 binding 级别
+        string interactions = gameInput.Gameplay.Press.interactions;
+        if (string.IsNullOrEmpty(interactions) || !interactions.StartsWith("Hold"))
+        {
+            Logger.LogWarning($"InputManager: 未找到 Hold 交互参数，使用默认值 {longPressThreshold}s");
+            return;
+        }
+
+        // 解析 "Hold(duration=5)" 格式
+        int idx = interactions.IndexOf("duration");
+        if (idx < 0) return;
+
+        string param = interactions.Substring(idx + 8);
+        if (param.Length > 0 && (param[0] == ':' || param[0] == '='))
+            param = param.Substring(1);
+        int end = param.IndexOfAny(new[] { ')', ',' });
+        if (end > 0) param = param.Substring(0, end);
+
+        if (float.TryParse(param,
+            System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out float duration))
+        {
+            longPressThreshold = duration;
+            Logger.Log($"InputManager: 读取长按阈值 = {duration}s");
+        }
+    }
+
+    // ---------- 鼠标检测 ----------
+
     /// <summary>
     /// 获取鼠标下的单位（使用 unitLayerMask 层过滤）
     /// </summary>
@@ -184,6 +278,22 @@ public class InputManager : MonoBehaviour
             if (unit != null && unit.IsAlive)
                 return unit;
         }
+        return null;
+    }
+
+    /// <summary>
+    /// 获取鼠标下可长按的目标（实现 ILongPressTarget 的对象）
+    /// 目前检测顺序：Unit → 可拓展其他类型
+    /// </summary>
+    ILongPressTarget GetLongPressTargetUnderMouse()
+    {
+        // 优先检测单位
+        Unit unit = GetUnitUnderMouse();
+        if (unit != null) return unit;
+
+        // 未来可在此添加其他 ILongPressTarget 的检测
+        // 例如：Cell、Card 等
+
         return null;
     }
 
