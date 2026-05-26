@@ -35,7 +35,7 @@ MonoBehaviour:
     - rid: 8418122131295698953
       type: {class: SelectorStep, ns: , asm: Assembly-CSharp}
       data:
-        selector: {fileID: 11400000, guid: 59592a06098a7374c9dc8520d0edbdc5, type: 2}
+        selector: {fileID: 11400000, guid: 619104db628e9a849a87f7a351f29be3, type: 2}
     - rid: 8418122131295698955
       type: {class: EffectStep, ns: , asm: Assembly-CSharp}
       data:

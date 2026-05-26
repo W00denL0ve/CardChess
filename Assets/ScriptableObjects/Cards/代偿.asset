@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: "\u4EE3\u507F"
   artwork: {fileID: 21300000, guid: c3a5c00aceebbca4ca5e8407cb5c9d3e, type: 3}
-  description: "\u9009\u62E9\u4E00\u4E2A\u6211\u65B9\u6218\u58EB, \u5931\u53BB20%\u5F53\u524D<color=yellow>\u751F\u547D\u503C</color>,
+  description: "\u9009\u62E9\u4E00\u4E2A\u6211\u65B9\u6218\u58EB, \u5931\u53BB20%\u5F53\u524D<color=green>\u751F\u547D\u503C</color>,
     \u518D\u5BF91\u683C\u5185\u76841\u4E2A\u654C\u4EBA\u9020\u62100.5x\u5F53\u524D<color=green>\u751F\u547D\u503C</color>\u7684<color=yellow>\u7269\u7406\u4F24\u5BB3</color>"
   destination: 0
   Cost: 1
