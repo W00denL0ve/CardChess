@@ -27,3 +27,16 @@ public class TurnStartedEvent : GameEvent
         this.turnNumber = turnNumber;
     }
 }
+
+/// <summary>
+/// 回合结束事件
+/// </summary>
+public class TurnEndedEvent : GameEvent
+{
+    public int turnNumber;
+
+    public TurnEndedEvent(int turnNumber)
+    {
+        this.turnNumber = turnNumber;
+    }
+}

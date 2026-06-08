@@ -1,18 +1,17 @@
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "DefenseStanceBuff", menuName = "CardChess/Buffs/DefenseStance")]
-public class DefenseStanceBuff : Buff
+public class DefenseStanceBuff : Buff, IOnApplyBuff, IOnRemoveBuff
 {
     public float damageReduction = 0.8f;
 
-    public override void OnApply(BuffInstance instance)
+    public void OnApply(BuffInstance instance)
     {
-        var mod = new Modifier(this, damageReduction, ModifierType.FinalMultiply, ModifierField.PhysicalDefense);
-        
+        instance.AddModifier(damageReduction, ModifierType.FinalMultiply, ModifierField.PhysicalDefense);
     }
 
-    public override void OnRemove(BuffInstance instance)
+    public void OnRemove(BuffInstance instance)
     {
-        // Modifiers are cleaned up by BuffInstance.Cleanup()
+        instance.Cleanup();
     }
 }

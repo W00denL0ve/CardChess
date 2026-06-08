@@ -1,12 +1,12 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "PoisonBuff", menuName = "CardChess/Buffs/Poison")]
-public class PoisonBuff : Buff
+public class PoisonBuff : Buff, IOnTurnEnd
 {
-    public float damagePerTurn = 10f;
-
-    public override void OnTurnEnd(BuffInstance instance)
+    public void OnTurnEnd(BuffInstance instance)
     {
-        instance.Host.TakeDamage((int)damagePerTurn);
+        instance.Host.TakeDamage(instance.CurrentStacks);
+        instance.RemoveStack();
     }
 }

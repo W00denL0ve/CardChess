@@ -64,7 +64,17 @@ public class Unit : MonoBehaviour, ILongPressTarget
     // 当前朝向
     public FacingDirection FacingDirection { get; internal set; }
 
-    // 防御查询
+    // ========== 单位事件（供 BuffContainer、装备等系统订阅） ==========
+
+    /// <summary>受伤前事件（可修改伤害值）</summary>
+    public event System.Action<DamageModifyEvent> BeforeDamage;
+    /// <summary>受伤后事件</summary>
+    public event System.Action<DamageModifyEvent> AfterDamage;
+    /// <summary>移动后事件</summary>
+    public event System.Action<Vector2Int, Vector2Int> Moved; // from, to
+
+    // ========== 防御 ==========
+
     public int GetDefenseFor(DamageType type) => type == DamageType.Physical ? baseValue.physicalDefense : baseValue.magicDefense;
 
     private void Start()
@@ -74,6 +84,7 @@ public class Unit : MonoBehaviour, ILongPressTarget
 
     private void OnDestroy()
     {
+        BuffContainer?.Dispose();
         GameEventChannel.Unregister<TurnStartedEvent>(OnTurnStarted);
     }
 
@@ -82,6 +93,7 @@ public class Unit : MonoBehaviour, ILongPressTarget
     public void OnTurnStarted(TurnStartedEvent evt)
     {
         baseValue.hasMoved = 0;
+        BuffContainer?.OnTurnStarted();
     }
 
 
@@ -159,12 +171,11 @@ public class Unit : MonoBehaviour, ILongPressTarget
             _ => AttackPosition.Front
         };
 
-        // 使用 BuffContainer 封装的前置回调，允许 Buff 修改攻击方位
-        attackPosition = BuffContainer.OnBeforeAttackPosition(attackPosition);
-        // 同样访问受击者的 BuffContainer 封装的前置回调
-        attackPosition = executed.BuffContainer.OnBeforeHitPosition(attackPosition);
-
-        return attackPosition;
+        // 触发事件，允许 Buff 修改
+        var atkEvt = new AttackPosEvent { Position = attackPosition };
+        BuffContainer?.ModifyAttackPosition(atkEvt);
+        executed.BuffContainer?.ModifyHitPosition(atkEvt);
+        return atkEvt.Position;
     }
 
     /// <summary> 伤害（由效果系统调用，finalDamage 已扣除类型防御）</summary>
@@ -172,8 +183,10 @@ public class Unit : MonoBehaviour, ILongPressTarget
     {
         if (!IsAlive || finalDamage <= 0) return;
 
-        // 使用 BuffContainer 封装的前置回调，允许 Buff 修改伤害值
-        BuffContainer.OnBeforeDamageTaken(ref finalDamage, context);
+        // 触发受伤前事件（Buff 等订阅者可以修改伤害值）
+        var damageEvt = new DamageModifyEvent { Damage = finalDamage, Context = context };
+        BeforeDamage?.Invoke(damageEvt);
+        finalDamage = damageEvt.Damage;
 
         int oldHealth = baseValue.currentHealth;
         int newHealth = Mathf.Clamp(oldHealth - finalDamage, 0, baseValue.maxHealth);
@@ -187,8 +200,8 @@ public class Unit : MonoBehaviour, ILongPressTarget
         }
         else
         {
-            // 使用 BuffContainer 封装的后置回调
-            BuffContainer.OnAfterDamageTaken(finalDamage, context);
+            // 触发受伤后事件
+            AfterDamage?.Invoke(damageEvt);
         }
 
         // 视觉效果
@@ -258,6 +271,7 @@ public class Unit : MonoBehaviour, ILongPressTarget
         // 移动完成
         Appearance?.RefreshSortingOrder();
         GameEventChannel.Dispatch(new UnitMovedEvent(this, startPos, destination));
+        Moved?.Invoke(startPos, destination);
         AudioManager.Instance.StopLoopSound();
     }
 
