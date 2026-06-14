@@ -13,7 +13,7 @@
 
 ## 二、项目简介
 
-CardChess 是一款回合制卡牌战棋游戏。玩家在棋盘关卡中操控己方单位，通过打出手牌触发移动、攻击、治疗、Buff 等效果链，与敌方单位进行战斗。项目采用数据驱动的设计方式，将卡牌、单位、关卡、AI 行为、地形和胜利条件配置为 ScriptableObject 资产，运行时由管理器加载并驱动表现。
+CardChess 是一款回合制卡牌战棋游戏。玩家在棋盘关卡中操控己方单位，通过打出手牌触发移动、攻击、治疗、Buff 等效果链，与敌方单位进行战斗。项目采用ECS架构，将卡牌、单位、关卡、AI 行为、地形和胜利条件配置为 ScriptableObject 资产，运行时由管理器加载并驱动表现。
 
 游戏整体流程为：启动引导 -> 主菜单 -> 新游戏 -> 地图 -> 进入关卡 -> 回合战斗 -> 胜利/失败结算。关卡由 Tilemap 编辑器绘制，再通过编辑器工具提取为运行时使用的 `LevelData`、`LevelGridData` 和 `LevelTurnData`，从而实现编辑阶段和运行阶段的解耦。
 
@@ -191,7 +191,13 @@ LevelData
 
 `CardData` 是卡牌的核心数据。每张卡牌包含基础信息和 `List<EffectChain>`。`EffectChain` 内部通过 `[SerializeReference]` 保存多态步骤，支持灵活组合。
 
-效果执行上下文 `EffectContext` 会在步骤之间传递：
+#### 6.1 多态步骤与 Inspector 集成
+
+效果链的核心技术亮点是 **`[SerializeReference]` 驱动的多态序列化**。每个步骤（SelectorStep、ConditionStep、EffectStep）都是抽象基类 `ChainStep` 的子类，Inspector 中可以直接通过 "managed reference" 下拉菜单选择具体子类创建实例，无需为每个步骤类型创建独立的 ScriptableObject。`ChainStepDrawer`（自定义 PropertyDrawer）使用反射自动枚举所有 `ChainStep` 子类，新增步骤类型后无需修改编辑器代码即可自动出现。
+
+#### 6.2 链中断机制
+
+每条效果链在执行过程中维护一个 `EffectContext` 实例，在步骤之间传递状态：
 
 | 字段 | 说明 |
 |---|---|
@@ -202,13 +208,50 @@ LevelData
 | `aiSelector` | AI 模式下的自动目标选择函数 |
 | `chainBroken` | 条件失败或目标为空时中断链 |
 
-内置效果包括伤害、移动、交换位置、治疗、自伤、加 Buff、获得移动点等。带动画的效果实现 `IAnimatedEffect`，由 `AsyncEffectExecutor` 等待动画完成后继续执行下一步。
+`chainBroken` 是链中断的核心标志：
+- `SelectorStep` 未找到目标 → `chainBroken = true`，跳过本链后续步骤
+- `ConditionStep` 条件不满足 → `chainBroken = true`
+- 当前链中断**不影响下一条链**的执行，每条链拥有独立的 `EffectContext`
+
+#### 6.3 选择器与目标分离架构
+
+选择逻辑与目标数据通过 `TargetSelector` 和 `ITarget` 两个抽象层分离：
+
+```text
+TargetSelector（选择逻辑）                    ITarget（目标数据）
+├─ UnitSelector         ── 选出 →            ├─ UnitTarget
+├─ CellAreaSelector     ── 选出 →            ├─ CellTarget
+├─ CellPathSelector     ── 选出 →            └─ ...
+├─ AllEnemySelector
+└─ ...
+```
+
+`TargetSelector` 负责选择逻辑（筛选范围、条件过滤），返回 `List<ITarget>` 候选列表。`ITarget` 是统一接口，封装了不同目标类型（单位、格子等）的共性操作。选择器返回单个候选时 `AsyncEffectExecutor` 会自动确认，返回多个候选时交给 `PreviewManager` 等待玩家选择。
+
+#### 6.4 异步执行与动画同步
+
+带动画的效果实现 `IAnimatedEffect` 接口（提供 `PlayAnimation` 协程）。`AsyncEffectExecutor` 按以下流程执行：
+
+```text
+按卡牌顺序遍历 EffectChain
+  ├─ 创建 EffectContext
+  ├─ 执行 SelectorStep（获取候选目标）
+  ├─ 执行 ConditionStep（检查条件）
+  ├─ 执行 EffectStep（调用效果，若实现 IAnimatedEffect 则等待动画完成）
+  └─ 链完成 → 下一条链
+```
+
+`AsyncEffectExecutor` 使用 `AwaitCompletion` 等待 `IAnimatedEffect` 的动画协程结束后再继续执行下一步，确保视觉效果与逻辑顺序一致。
+
+#### 6.5 内置效果
+
+内置效果包括伤害、移动、交换位置、治疗、自伤、加 Buff、获得移动点等。`TestAnimatedDelayEffect` 为占位测试效果（待实现）。
 
 ### 7. 单位系统
 
 单位由 `UnitConfig` 生成，运行时由 `Unit` 表示逻辑状态，由 `UnitAppearance` 负责动画、朝向、血条和死亡表现。
 
-单位核心属性包括：
+#### 7.1 核心属性
 
 | 属性 | 说明 |
 |---|---|
@@ -218,7 +261,33 @@ LevelData
 | `movePointLimit` / `movePoints` | 移动力上限与当前移动力 |
 | `hasMoved` | 当前回合已移动步数 |
 
-单位可以拥有先天 Buff。Buff 通过 `BuffContainer` 管理，在伤害前后、回合开始结束、攻击方位判定等时机插入逻辑。
+#### 7.2 ModifierManager 修饰器系统
+
+`Unit` 持有 `ModifierManager` 实例，负责管理属性的运行时修正值。基础属性（attack、defense 等）与修饰器分离，修饰器可以叠加/移除而不影响基础值。伤害计算时，`DamageEffect` 从目标单位的 `ModifierManager` 读取物理/魔法防御修饰器参与减免计算。这套系统是实现 Buff 效果（如增加攻击力、降低防御）的底层基础，使属性修改与 Buff 生命周期解耦。
+
+#### 7.3 Buff 栈策略
+
+单位可以拥有先天 Buff 和运行时添加的 Buff。Buff 通过 `BuffContainer` 管理，实现了三种栈策略：
+
+| 策略 | 行为 | 适用场景 |
+|---|---|---|
+| `Refresh` | 刷新 Buff 的剩余持续回合数 | 同效果持续时间重置 |
+| `Overwrite` | 新 Buff 替换旧 Buff | 互斥 Buff（如变身为特定形态） |
+| `Separate` | 独立叠加，各自计算 duration | 可多层叠加的 Buff（如增伤层数） |
+
+`BuffContainer` 将 Buff 事件转发到 `Unit` 的核心生命周期钩子中（见下文），实现开闭原则——新增 Buff 效果不需要修改 `Unit` 核心逻辑。
+
+#### 7.4 事件驱动的生命周期钩子
+
+`Unit` 提供细粒度的事件钩子系统，供 Buff、修饰器和外部系统监听：
+
+| 事件钩子 | 触发时机 |
+|---|---|
+| `OnBeforeDamage` | 伤害计算前，可用于修改伤害值（增伤/减伤） |
+| `OnAfterDamage` | 伤害计算并应用后，可用于触发反伤、吸血等 |
+| `OnMoved` | 单位移动完成后，可用于触发移动后效果 |
+
+这些钩子通过 C# 事件（`event Action`）实现，`BuffContainer` 将 Buff 逻辑注入到这些钩子中，使 Buff 效果的扩展不需要修改 `Unit` 的代码。
 
 ### 8. AI 系统
 
@@ -256,6 +325,21 @@ AI 执行链时会向 `EffectContext` 注入 `aiSelector`，从候选目标中�
 
 手牌 UI 采用对象池管理卡牌视觉，支持抽牌动画、弃牌动画、费用颜色、能量数字滚动和 pending 区动画。
 
+#### 9.1 PreviewManager — PinBoard 目标选择机制
+
+当效果链的 `SelectorStep` 返回多个候选目标时，`PreviewManager` 接管交互，采用 **"先钉选（Pin），再确认"** 的选择模式：
+
+1. **高亮候选** — 系统高亮所有合法候选目标（单位或格子）
+2. **悬停预览** — 鼠标悬停在候选上时，显示路径预览和效果预估
+3. **钉选（Pin）** — 首次点击候选目标将其钉选（临时标记），但不立即确认
+4. **确认** — 再次点击已钉选的目标，或满足选择数量后自动确认
+5. **撤回** — 右键或 ESC 可撤回已固定的钉选，重新选择
+6. **路径显示** — 移动类选择器会在钉选后显示完整路径
+
+这种设计让玩家在确认前可以反复比较不同目标的利弊，降低误操作概率。当多个选择器链式执行时，`PreviewManager` 分阶段处理每个选择器的候选，按顺序逐步引导玩家完成全部选择。
+
+AI 模式下，`AIController` 向 `EffectContext` 注入 `aiSelector` 函数替代玩家交互，`AsyncEffectExecutor` 检测到 `aiSelector` 存在时会直接调用它从候选列表中自动选择，完全跳过 PreviewManager。
+
 ### 10. 资源与存档系统
 
 `ResourceManager` 管理能量、金币和牌库地址列表。`SaveManager` 负责 PlayerPrefs 设置和 JSON 存档。复杂运行状态集中在 `RunState` 中，包括玩家阵容、金币、能量上限、卡牌地址、全局关卡索引和随机种子。
@@ -264,14 +348,42 @@ AI 执行链时会向 `EffectContext` 注入 `aiSelector`，从候选目标中�
 
 ## 七、编辑器工具设计
 
-项目提供多种编辑器工具以降低内容制作成本：
+### 7.1 完整资产管线
+
+项目最核心的编辑器能力是从 Tilemap 场景到运行时 ScriptableObject 资产的**一键提取管线**。设计师在场景中绘制不同 Tilemap 层，然后通过 `Tools -> Extract LevelData From Scene` 触发提取：
+
+```text
+Tilemap 场景（设计师可视化编辑）
+│
+├─ Base 层（基础地形）
+├─ PlayerSpawn 层（玩家出生点）
+├─ Goal 层（目标点）
+├─ WinCondition 层（胜利条件标记）
+├─ UnitSpawn 层（敌方单位出生点）
+├─ CellChange 层（地形变化标记）
+└─ RoundX 层（第X回合预设行动）
+  │
+  └─ LevelDataMenuExtractor 一键提取
+       ├─ LevelGridData        ← 解析 Base / CellChange 层
+       ├─ LevelTurnData        ← 解析 RoundX 层为 TurnAction 列表
+       ├─ playerSpawnPositions ← 解析 PlayerSpawn 层
+       ├─ goalPositions        ← 解析 Goal 层
+       ├─ rootCondition        ← 解析 WinCondition 层为条件树
+       └─ 自动注册 Addressables
+            │
+            └─ 运行时 LevelManager 加载
+```
+
+`WinCondition` Tilemap 层上的标记会被 `LevelDataMenuExtractor` 自动解析为 `VictoryCondition` 组合树（支持嵌套 AND/OR）。`RoundX` 层的 Tile 会被解析为 `SpawnUnitAction`、`CellChangeAction` 或 `EffectApplyAction`，实现可视化编辑回合事件。
+
+### 7.2 工具列表
 
 | 工具 | 说明 |
 |---|---|
-| `LevelDataMenuExtractor` | 从 Tilemap 场景提取关卡数据 |
+| `LevelDataMenuExtractor` | 从 Tilemap 场景提取关卡数据，自动解析 WinCondition 和 RoundX 层 |
 | `CardDataEditor` | 卡牌颜色预设和卡牌数据编辑增强 |
-| `AIDeckEditor` | AI 行为链条目编辑和预设按钮 |
-| `ChainStepDrawer` | 效果链步骤的多态 Inspector 绘制 |
+| `AIDeckEditor` | AI 行为链条目编辑和预设按钮，支持保存/加载自定义预设 |
+| `ChainStepDrawer` | 效果链步骤的多态 Inspector 绘制，反射枚举所有子类 |
 | `ScriptableObjectIconDrawer` | ScriptableObject 图标显示 |
 | `SolidColorSpriteGeneratorWindow` | 生成纯色和圆角辉光精灵 |
 
@@ -306,6 +418,10 @@ AI 执行链时会向 `EffectContext` 注入 `aiSelector`，从候选目标中�
 | 新关卡 | Tilemap 绘制后提取 `LevelData` |
 | 新胜利条件 | 继承 `VictoryCondition`，必要时增加对应 Tile |
 | 新地形 | 扩展 `TerrainType` 与 `TerrainConfig` |
+| 新 Buff | 实现 `Buff` 子类，选择栈策略（Refresh/Overwrite/Separate），利用 `ModifierManager` 修改属性 |
+| 新修饰器 | 通过 `ModifierManager` 添加新的修饰字段，参与伤害或属性计算 |
+| 新 Target 类型 | 实现 `ITarget` 接口，配合对应的 `TargetSelector` |
+| 新回合预设行动 | 继承 `TurnAction`，在 `LevelDataMenuExtractor` 中增加对应的 Tile 解析 |
 | 难度曲线 | 配置 `RunConfig` 和 `SpawnGroup` 权重 |
 
 ## 十、当前不足与后续计划
@@ -315,6 +431,9 @@ AI 执行链时会向 `EffectContext` 注入 `aiSelector`，从候选目标中�
 3. `EffectApplyAction` 当前直接应用单个效果，后续可改为完整效果链。
 4. 单位跨关血量、经验、升级等长期成长数据已有 `RunState` 字段，但战斗结算逻辑仍需扩展。
 5. UI 中背包、图鉴等入口已有预留，功能内容可继续补充。
+6. 已知实现 Bug（需修复）：
+   - `DamageEffect` 中魔法防御修饰器从施法方（`executor`）获取，应从受击方（`executed`）获取，导致魔法伤害减免计算错误。
+   - `Unit.GetAttackPositionFromTarget()` 中的前/侧/背方位判定逻辑存在表达式错误，影响依赖攻击方位的 Buff（如背刺）的正确触发。
 
 ## 十一、总结
 

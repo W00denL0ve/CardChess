@@ -112,7 +112,7 @@ public class DamageEffect : Effect, IAnimatedEffect
             modifiers_or.AddRange(modifiers.Where(m => m.field == ModifierField.Magic));
 
             // 获取受方所有魔法防御修饰器
-            modifiers_ed = executor.modifierManager.GetModifiers(ModifierField.MagicDefense);
+            modifiers_ed = executed.modifierManager.GetModifiers(ModifierField.MagicDefense);
 
             // 获取受方魔法防御基础值
             defenseBase = executed.baseValue.magicDefense;
