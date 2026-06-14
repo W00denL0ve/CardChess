@@ -2,9 +2,18 @@ using UnityEngine;
 
 public enum BuffStackStrategy
 {
-    Refresh, // 叠加并刷新持续时间
-    Separate, // 独立计时计层
-    Overwrite // 覆盖计时计层
+    /// <summary>
+    /// 叠加并刷新持续时间(叠加)
+    /// </summary>
+    Refresh,
+    /// <summary>
+    /// 独立计时计层(独立)
+    /// </summary>
+    Separate,
+    /// <summary>
+    /// 覆盖计时计层(唯一)
+    /// </summary>
+    Overwrite
 }
 
 /// <summary>

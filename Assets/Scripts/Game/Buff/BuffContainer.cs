@@ -101,7 +101,7 @@ public class BuffContainer
 
     // ========== Buff 管理 ==========
 
-        public void ApplyBuff(Buff buffData, ITarget caster, int? overrideDuration = null)
+    public void ApplyBuff(Buff buffData, ITarget caster, int? overrideDuration = null)
     {
         var existing = buffs.FirstOrDefault(b => b.BuffData == buffData);
 
