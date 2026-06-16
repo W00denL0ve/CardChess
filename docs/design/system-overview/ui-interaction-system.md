@@ -1,6 +1,6 @@
 # UI 与交互系统 设计文档
 
-> 最后更新：2026-06-15 | 作者：WoodenLove
+> 最后更新：2026-06-16 | 作者：WoodenLove
 
 ## 一、子系统概述
 
@@ -120,30 +120,31 @@ end
 
 ### 4.1 PreviewManager 状态机
 
-```
-         ┌──────────┐
-         │   Idle   │
-         └────┬─────┘
-              │ 收到选择请求
-              ▼
-      ┌───────────────┐
-      │   Selecting    │ ←─── 右键/ESC ───┐
-      └───────┬───────┘                   │
-              │ 首次点击候选              │
-              ▼                           │
-      ┌───────────────┐                   │
-      │  Preselected  │───────────────────┘
-      └───────┬───────┘
-              │ 再次点击 / 满足数量
-              ▼
-      ┌───────────────┐
-      │   Confirmed   │
-      └───────┬───────┘
-              │ 回调 AsyncEffectExecutor
-              ▼
-         ┌──────────┐
-         │   Idle   │
-         └──────────┘
+```plantuml
+@startuml
+!theme plain
+skinparam defaultFontName Microsoft YaHei
+skinparam backgroundColor #FEFEFE
+skinparam state {
+  BorderColor #333333
+  BackgroundColor #F8F8F8
+}
+
+[*] --> Idle
+
+Idle --> Selecting : 收到选择请求
+
+state Selecting : 高亮候选目标
+Selecting --> Preselected : 首次点击候选
+Selecting -right-> Selecting : 右键/ESC 撤回
+
+state Preselected : 标记钉选
+Preselected --> Confirmed : 再次点击 / 满足数量
+Preselected --> Selecting : 右键/ESC 撤回
+
+state Confirmed : 选择完成
+Confirmed --> Idle : 回调 AsyncEffectExecutor
+@enduml
 ```
 
 ## 五、配置表详细规范

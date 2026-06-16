@@ -1,6 +1,6 @@
 # 卡牌系统 设计文档
 
-> 最后更新：2026-06-15 | 作者：WoodenLove
+> 最后更新：2026-06-16 | 作者：WoodenLove
 
 ## 一、子系统概述
 
@@ -121,14 +121,14 @@ repeat
     else (否)
       :chainBroken = true;
     endif
-  else (ConditionStep)
+  elseif (ConditionStep?) then (ConditionStep)
     :判断条件;
     if (条件满足?) then (是)
       :继续;
     else (否)
       :chainBroken = true;
     endif
-  else (EffectStep)
+  elseif (EffectStep?) then (EffectStep)
     :执行效果;
   endif
 repeat while (chainBroken == false 且 还有步骤?) is (是) not (否)

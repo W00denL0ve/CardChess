@@ -1,12 +1,13 @@
 # AI 系统 设计文档
 
-> 最后更新：2026-06-15 | 作者：WoodenLove
+> 最后更新：2026-06-16 | 作者：WoodenLove
 
 ## 一、子系统概述
 
 - **职责**：敌方回合的决策与行动执行，包括行为评分排序、自动目标选择、技能链执行
 - **不负责**：玩家输入处理、牌库管理、回合流程控制
 - **依赖模块**：效果链引擎（aiSelector 模式复用 EffectChain）、单位系统（操作目标）、回合管理（Enemy 阶段驱动）
+- **关键概念**：`友方`、`敌方`不是相对玩家而言的，是相对拥有该AI的单位阵营而言的。
 
 ## 二、核心类/数据结构
 
@@ -39,7 +40,7 @@ AIController (MonoBehaviour)
 | `baseScore` | 行为基础分 | 越高越优先 |
 | 距离 | 越靠近目标分数越高 | 正相关 |
 | 自身血量 | 防御型 AI 更重视生存 | 低血量时逃跑倾向↑ |
-| 目标血量 | 攻击型 AI 偏好可击杀目标 | 可斩杀时加分 |
+| 目标血量 | 攻击型 AI 偏好可击杀目标 | 低血量目标优先 |
 | 能量效率 | 消耗 vs 每回合能量 | 性价比↑ |
 | 冷却 | 冷却中行为受惩罚 | 冷却中↓ |
 | 逃跑评分 | 低血量时远离敌人、靠近友军 | 防御型↑ |
@@ -53,7 +54,7 @@ skinparam defaultFontName Microsoft YaHei
 
 participant TurnManager
 participant AIController
-participant Unit as 敌方单位
+participant enemyUnit
 participant AsyncEffectExecutor
 participant AIDeck
 
@@ -61,7 +62,7 @@ TurnManager -> AIController : ExecuteTurn()
 AIController -> AIController : 获取所有存活敌方 Unit
 
 group 遍历每个敌方 Unit
-  AIController -> Unit : 获取 AIDeck
+  AIController -> enemyUnit : 获取 AIDeck
   AIController -> AIController : 为链列表逐一评分
   AIController -> AIController : 选择最高分链
 
@@ -72,7 +73,7 @@ group 遍历每个敌方 Unit
     AsyncEffectExecutor -> AsyncEffectExecutor : 执行 EffectStep
     AsyncEffectExecutor --> AIController : 完成
   else 无合适行为
-    AIController -> Unit : 移动（默认行为）
+    AIController -> enemyUnit : 移动（默认行为）
   end
 end
 

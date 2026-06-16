@@ -24,9 +24,19 @@
 ├── README.md                     ← 项目简介与快速上手指南
 ├── docs/
 │   ├── design/                   # 设计/架构
-│   │   ├── CardChess设计文档.md   ← 设计总纲
-│   │   ├── 系统模块详解.md        ← 各系统详细说明
-│   │   └── 数据与表现分离设计.md  ← 架构原则
+│   │   ├── CardChess设计文档.md   ← 设计总纲（HLD）
+│   │   ├── system-overview/      ← 系统级设计概览（LLD）
+│   │   │   ├── card-system.md
+│   │   │   ├── turn-combat-system.md
+│   │   │   ├── level-system.md
+│   │   │   ├── unit-system.md
+│   │   │   ├── ai-system.md
+│   │   │   ├── ui-interaction-system.md
+│   │   │   ├── save-resource-system.md
+│   │   │   └── editor-tools-system.md
+│   │   ├── module-details/       ← 模块详细设计（暂不维护）
+│   │   ├── 系统模块详解.md        ← [待弃用]
+│   │   └── 数据与表现分离设计.md  ← [待弃用]
 │   ├── guides/                   # 制作指南
 │   │   ├── CardChess简明使用文档.md ← 快速上手
 │   │   ├── 地图制作指南.md

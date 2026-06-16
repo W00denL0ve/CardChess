@@ -1,39 +1,32 @@
 # Unit 制作指南
 
-## 目录
+> 最后更新：2026-06-16 | 作者：WoodenLove
 
-1. [准备 Sprite 资源](#1-准备-sprite-资源)
-2. [创建 UnitConfig](#2-创建-unitconfig)
-3. [设置 Unit 预制体](#3-设置-unit-预制体)
-4. [配置 Animator](#4-配置-animator)
-5. [配置血条](#5-配置血条)
-6. [配置 AI（敌人专属）](#6-配置-ai敌人专属)
-7. [注册到关卡](#7-注册到关卡)
-8. [测试](#8-测试)
+## 一、概述
 
----
+> 本文档面向**游戏策划/美术**，提供 Unit 从资源准备到场景配置的完整制作流程。通过本指南，您将能够创建可用的单位配置和预制体，并配置敌人 AI。
 
-## 1. 准备 Sprite 资源
+## 二、前置条件
 
-### 所需素材
+- 已准备好单位的 Sprite/模型资源和动画
+- 熟悉 Unity 预制体编辑和 Animator 基本操作
+
+## 三、操作步骤
+
+### 1. 准备 Sprite 资源
 
 | 素材 | 格式 | 用途 |
 |------|------|------|
 | 单位立绘/图标 | PNG/Sprite | UnitConfig 的 icon、卡牌 artwork |
 | 单位模型/精灵图 | FBX/PSB | 场景中的 Unit 预制体 |
 
-### 导入设置
-
-1. 将 Sprite 拖入 `Assets/Art/Units/`（或对应的分类文件夹）
-2. Inspector 中设置：
-   - `Sprite Mode` → `Multiple`（如果是序列帧）
-   - `Pixels Per Unit` → 按实际需要（通常 100）
+导入设置：Sprite Mode → Multiple（序列帧），Pixels Per Unit → 100，Filter Mode 按美术风格选择。
    - `Filter Mode` → `Point (no filter)`（像素风）或 `Bilinear`
    - 点击 `Sprite Editor` 切割（如果需要）
 
 ---
 
-## 2. 创建 UnitConfig
+### 2. 创建 UnitConfig
 
 ### 操作步骤
 
@@ -76,7 +69,7 @@
 
 ---
 
-## 3. 设置 Unit 预制体
+### 3. 设置 Unit 预制体
 
 ### 预制体结构
 
@@ -115,7 +108,7 @@ UnitPrefab (GameObject)
 
 ---
 
-## 4. 配置 Animator
+### 4. 配置 Animator
 
 ### 必要状态
 
@@ -149,7 +142,7 @@ Idle ──(Walk Trigger)──→ Walk → (Idle Trigger) → Idle
 
 ---
 
-## 5. 配置血条
+### 5. 配置血条
 
 ### 步骤
 
@@ -170,7 +163,7 @@ Idle ──(Walk Trigger)──→ Walk → (Idle Trigger) → Idle
 
 ---
 
-## 6. 配置 AI（敌人专属）
+### 6. 配置 AI（敌人专属）
 
 ### 创建 AIDeck
 
@@ -197,7 +190,7 @@ Idle ──(Walk Trigger)──→ Walk → (Idle Trigger) → Idle
 
 ---
 
-## 7. 注册到关卡
+### 7. 注册到关卡
 
 ### 在 SpawnGroup 中引用
 
@@ -211,27 +204,58 @@ Idle ──(Walk Trigger)──→ Walk → (Idle Trigger) → Idle
 
 在 `LevelData` 或 `LevelTurnData` 中指定 SpawnGroup 与生成位置。
 
----
+## 四、配置参考
 
-## 8. 测试
+### UnitConfig 字段
 
-### 快速测试 Unit
+| 字段 | 说明 | 示例 |
+|------|------|------|
+| `Unit Id` | 唯一标识 | `Warrior` |
+| `Unit Name` | 显示名称 | `战士` |
+| `Occupation` | 职业 | `Warrior` |
+| `Default Faction` | 默认阵营 | `Enemy` |
+| `Icon` | 立绘 Sprite | 拖入 |
+| `Unit Prefab` | 场景预制体 | 拖入 |
+| `AI Deck` | AI 牌库 | 敌方必需 |
+| `Initial Attributes` | 初始属性 | |
+| `Innate Buffs` | 先天 Buff | 可选 |
 
-1. 打开测试场景
-2. 在场景中放置一个 Unit 预制体
-3. 运行游戏，观察：
-   - 初始血量是否正确
-   - 血条是否显示
-   - 受击动画是否正常
-   - AI 是否会使用技能
+### 初始属性
 
-### 常用调试
+| 属性 | 示例值 | 说明 |
+|------|--------|------|
+| `MaxHealth` | 30 | 生命上限 |
+| `Health` | 30 | 当前生命（应与 MaxHealth 一致） |
+| `Attack` | 5 | 基础攻击力 |
+| `PhysicalDefense` | 2 | 物理防御 |
+| `MovePointLimit` | 3 | 每回合移动力上限 |
+| `MovePoints` | 3 | 当前移动力 |
 
-```csharp
-// 手动造成伤害（在 Console 中运行）
-unit.TakeDamage(5);
+### Animator 必要状态
 
-// 查看属性
-Logger.Log(unit.Attack);
-Logger.Log(unit.HpPercent);
-```
+| 状态 | Trigger 参数 | 说明 |
+|------|-------------|------|
+| Idle | `Idle` | 默认待机循环 |
+| Walk | `Walk` | 移动循环 |
+| Attack | `Attack` | 攻击单次，需设 AnimationEvent |
+| Hit | `Hit` | 受击单次 |
+| Dead | `Dead` | 死亡单次 |
+
+> 攻击动画必须在命中帧添加 `OnHitFrame` AnimationEvent，否则不触发伤害。
+
+## 五、常见问题
+
+**问题：单位生成后血量为 0**
+**解决：** 检查 `UnitConfig` 中 `Health` 和 `MaxHealth` 是否设为相同值。
+
+**问题：攻击不造成伤害**
+**解决：** 检查 Attack 动画是否添加了 `OnHitFrame` AnimationEvent。
+
+**问题：敌人不行动**
+**解决：** 检查 `UnitConfig.aiDeck` 是否配置、`AIDeck.entries` 是否有条目。
+
+## 六、相关文档
+
+- [卡牌制作指南](卡牌制作指南.md) — 卡牌与效果链配置
+- [地图制作指南](地图制作指南.md) — 关卡编辑与 Tilemap 使用
+- [架构设计文档](../design/CardChess设计文档.md) — 设计总纲与架构决策

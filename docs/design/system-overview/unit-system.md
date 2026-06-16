@@ -1,6 +1,6 @@
 # 单位系统 设计文档
 
-> 最后更新：2026-06-15 | 作者：WoodenLove
+> 最后更新：2026-06-16 | 作者：WoodenLove
 
 ## 一、子系统概述
 
@@ -125,24 +125,24 @@ finalDamage = (damageBase × 施方乘算 - defenseBase × 受方乘算) × 最�
 skinparam defaultFontName Microsoft YaHei
 
 participant DamageEffect
-participant Unit as 施方
-participant Unit as 受方
+participant executerUnit as 施方
+participant executedUnit as 受方
 participant BuffContainer
-participant ModifierManager
-participant UnitAppearance
-participant FloatingNumberManager
-participant AudioManager
+participant MM as MM
+participant UA as UnitAppearance
+participant FN as FN
+participant AM as AM
 
-DamageEffect -> DamageEffect : 计算 damageBase (Multiplier × 属性)
-DamageEffect -> 施方 : GetModifiers(Physic/Magic)
-DamageEffect -> 受方 : GetModifiers(PhysicalDefense/MagicDefense)
+DamageEffect -> DamageEffect : 计算 damageBase\n(Multiplier × 属性)
+DamageEffect -> 施方 : GetModifiers\n(Physic/Magic)
+DamageEffect -> 受方 : GetModifiers\n(PhysicalDefense/MagicDefense)
 DamageEffect -> 施方 : GetAttackPositionFromTarget(受方)
 
 alt 背刺
   DamageEffect -> 施方 : GetModifiers(BackAttack)
 end
 
-DamageEffect -> AttributeCalculator : CalculateFinalValue(damageBase, 施方mods, defenseBase, 受方mods)
+DamageEffect -> AC : CalculateFinalValue(damageBase, 施方mods, defenseBase, 受方mods)
 DamageEffect -> DamageEffect : _finalDamage = 结果
 
 DamageEffect -> UnitAppearance : PlayAttack()
@@ -153,21 +153,31 @@ UnitAppearance -> 施方 : 等待动画帧
 DamageEffect -> 受方 : TakeDamage(_finalDamage, context)
 受方 -> BuffContainer : 触发 OnBeforeDamage
 BuffContainer -> 受方 : 可能修改 _finalDamage
-受方 -> 受方 : baseValue.currentHealth -= finalDamage
-受方 -> GameEventChannel : 派发 UnitHealthChangedEvent
+受方 -> 受方 : baseValue.currentHealth\n-= finalDamage
+受方 -> GC : 派发 UnitHealthChangedEvent
 alt 血量 ≤ 0
   受方 -> 受方 : IsAlive = false
-  受方 -> LevelManager : HandleUnitDeath()
+  受方 -> LM : HandleUnitDeath()
   受方 -> UnitAppearance : PlayDeathAnimation()
 end
 受方 -> BuffContainer : 触发 OnAfterDamage
 UnitAppearance -> 受方 : PlayHitReaction()
-AudioManager -> AudioManager : PlaySound(受击音效)
-FloatingNumberManager -> FloatingNumberManager : ShowNumber(伤害值)
+AM -> AM : PlaySound\n(受击音效)
+FN -> FN : ShowNumber\n(伤害值)
 
 == OnComplete ==
 @enduml
 ```
+
+>| 缩写 | 全称 | 说明 |
+>|------|------|------|
+>| `AC` | AttributeCalculator | 属性计算公式工具 |
+>| `AM` | AudioManager | 音频管理 |
+>| `FN` | FloatingNumberManager | 伤害浮字 |
+>| `GC` | GameEventChannel | 事件总线 |
+>| `LM` | LevelManager | 关卡管理器 |
+>| `MM` | ModifierManager | 修饰器管理 |
+>| `UA` | UnitAppearance | 单位外观动画 |
 
 ### 3.2 Buff 添加流程
 

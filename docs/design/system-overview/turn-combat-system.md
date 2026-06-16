@@ -1,6 +1,6 @@
 # 回合战斗系统 设计文档
 
-> 最后更新：2026-06-15 | 作者：WoodenLove
+> 最后更新：2026-06-16 | 作者：WoodenLove
 
 ## 一、子系统概述
 
@@ -130,30 +130,40 @@ stop
 
 ### 4.1 回合状态机状态流转
 
-```text
-         ┌────────────────────────────────────┐
-         │                                    │
-         ▼                                    │
-    ┌─────────┐    ┌────────┐    ┌──────────┐ │
-    │  Start   │───→│  Draw  │───→│PlayerPlay│ │
-    └─────────┘    └────────┘    └────┬─────┘ │
-                                      │       │
-                              ┌───────┘       │
-                              ▼               │
-                         ┌───────────┐        │
-                    ┌───→│PlayerAction│        │
-                    │    └─────┬─────┘        │
-                    │         │               │
-                    └─────────┘               │
-                                      │       │
-                                      ▼       │
-                               ┌────────┐     │
-                               │ Enemy  │     │
-                               └───┬────┘     │
-                                   ▼          │
-                              ┌────────┐      │
-                              │  End   │──────┘
-                              └────────┘
+```plantuml
+@startuml
+!theme plain
+skinparam defaultFontName Microsoft YaHei
+skinparam backgroundColor #FEFEFE
+skinparam state {
+  BorderColor #333333
+  BackgroundColor #F8F8F8
+}
+
+[*] --> Start : 第一回合
+
+state Start : 派发 TurnStartedEvent\n执行本回合预设行动
+Start --> Draw : 初始化完成
+
+state Draw : 刷新能量\nDeckManager.DrawCardsAsync
+Draw --> PlayerPlay : 抽牌完成
+
+state PlayerPlay : 等待玩家出牌\n或点击结束回合
+PlayerPlay --> PlayerAction : 玩家出牌
+PlayerPlay --> Enemy : 点击结束回合
+
+state PlayerAction : AsyncEffectExecutor 执行\nUI 等待动画
+PlayerAction --> PlayerPlay : 效果执行完毕\n可继续出牌
+
+state Enemy : 弃掉不保留手牌\nAIController 逐个执行 AI
+Enemy --> End : 所有敌方单位行动完毕
+
+state End : Buff 过期 Tick\n回合收尾
+End --> Start : 自动推进下一回合\n回合数 +1
+
+note right of PlayerPlay : 可反复出牌\n直至点击结束回合
+note right of PlayerAction : 动画期间\n玩家不可操作
+@enduml
 ```
 
 ### 4.2 条件组合树评估

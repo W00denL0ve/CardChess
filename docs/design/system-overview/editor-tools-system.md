@@ -1,6 +1,6 @@
 # 编辑器工具系统 设计文档
 
-> 最后更新：2026-06-15 | 作者：WoodenLove
+> 最后更新：2026-06-16 | 作者：WoodenLove
 
 ## 一、子系统概述
 
@@ -37,21 +37,41 @@
 
 ### 3.1 提取管线
 
-```text
-Tools → Extract LevelData From Scene
-  ├─ 扫描场景中所有 Tilemap 层
-  ├─ Base 层 → LevelGridData (宽高 + CellData[])
-  │    └─ TerrainTile.isWalkable / moveCost → CellData
-  ├─ PlayerSpawn 层 → List<Vector2Int>
-  ├─ Goal 层 → List<Vector2Int>
-  ├─ WinCondition 层 → VictoryCondition 组合树
-  │    └─ 同 y = AND，不同 y = OR
-  │    └─ 相同 Tile 数量 = 参数值
-  ├─ RoundN 层 → TurnAction 列表
-  │    ├─ SpawnUnitAction → UnitSpawn 层解析
-  │    ├─ CellChangeAction → CellChange 层解析
-  │    └─ EffectApplyAction → 指定格子应用效果
-  └─ 自动注册 Addressables
+```plantuml
+@startuml
+!theme plain
+skinparam defaultFontName Microsoft YaHei
+skinparam activityBackgroundColor #F8F8F8
+start
+:Tools → Extract LevelData From Scene;
+:扫描场景中所有 Tilemap 层;
+fork
+  :Base 层 → LevelGridData;
+  note right
+    TerrainTile.isWalkable / moveCost
+    → CellData
+  end note
+fork again
+  :PlayerSpawn 层 → List<Vector2Int>;
+fork again
+  :Goal 层 → List<Vector2Int>;
+fork again
+  :WinCondition 层 → VictoryCondition 组合树;
+  note right
+    同 y = AND，不同 y = OR
+    相同 Tile 数量 = 参数值
+  end note
+fork again
+  :RoundN 层 → TurnAction 列表;
+  note right
+    SpawnUnitAction → UnitSpawn 层
+    CellChangeAction → CellChange 层
+    EffectApplyAction → 指定格子
+  end note
+end fork
+:自动注册 Addressables;
+stop
+@enduml
 ```
 
 ## 四、配置表详细规范

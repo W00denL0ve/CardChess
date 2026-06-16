@@ -1,6 +1,6 @@
 # 存档与资源配置系统 设计文档
 
-> 最后更新：2026-06-15 | 作者：WoodenLove
+> 最后更新：2026-06-16 | 作者：WoodenLove
 
 ## 一、子系统概述
 
@@ -61,22 +61,35 @@ GameStartConfig (ScriptableObject)
 
 ### 3.1 新游戏流程
 
-```text
-GameManager.StartNewGame()
-  → 读取 GameStartConfig
-  → 创建 RunState（初始角色 + 初始卡牌）
-  → ResourceManager 初始化能量/金币
-  → 切换到 Map 场景
+```plantuml
+@startuml
+!theme plain
+skinparam defaultFontName Microsoft YaHei
+
+start
+:GameManager.StartNewGame;
+:读取 GameStartConfig;
+:创建 RunState（初始角色 + 初始卡牌）;
+:ResourceManager 初始化能量/金币;
+:切换到 Map 场景;
+stop
+@enduml
 ```
 
 ### 3.2 存档读写
 
-```text
-SaveRun:
-  RunState → JSON → File.WriteAllText(Saves/run.json)
+```plantuml
+@startuml
+!theme plain
+skinparam defaultFontName Microsoft YaHei
+left to right direction
 
-LoadRun:
-  File.ReadAllText(Saves/run.json) → JSON → RunState
+(SaveRun) --> (RunState) : 序列化为 JSON
+(RunState) --> (Saves/run.json) : 写入文件
+
+(LoadRun) --> (Saves/run.json) : 读取文件
+(Saves/run.json) --> (RunState) : JSON 反序列化
+@enduml
 ```
 
 ## 四、配置表详细规范
